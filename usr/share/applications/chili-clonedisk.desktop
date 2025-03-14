@@ -9,6 +9,6 @@ Exec=pkexec chili-clonedisk %F
 Terminal=true
 MimeType=text/plain;
 Icon=drive-multidisk
-Categories=Utility;Accessories;
+Categories=Utility;Accessories;Chili Apps;
 StartupNotify=true
 Actions=Window;Document;

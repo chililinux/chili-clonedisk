@@ -3,8 +3,6 @@
 pkgname=chili-clonedisk
 pkgdesc="Utility for clone disk"
 depends=(sed dialog grep ncurses)
-# makedepends=('')
-# conflicts=('')
 pkgver=$(date +%Y%m%d)
 pkgrel=$(date +%H%M)
 arch=('any')
