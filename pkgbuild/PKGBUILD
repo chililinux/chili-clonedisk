@@ -2,7 +2,6 @@
 
 pkgname=chili-clonedisk
 pkgdesc="Utility for clone disk"
-depends=(sed dialog grep ncurses)
 pkgver=$(date +%Y%m%d)
 pkgrel=$(date +%H%M)
 arch=('any')
@@ -11,6 +10,18 @@ url="https://github.com/chililinux/$pkgname"
 provides=("$pkgname")
 source=("git+${url}.git")
 md5sums=('SKIP')
+depends=()
+optdepends=(
+  sed
+  dialog
+  grep
+  ncurses
+  gawk
+  coreutils
+  util-linux
+  pv
+  which
+)
 
 if [ -e "${pkgname}.install" ]; then
 	install=${pkgname}.install
@@ -19,23 +30,27 @@ elif [ -e "pkgbuild.install" ]; then
 fi
 
 package() {
-	# Verify default folder
-	if [ -d "${srcdir}/${pkgname}/${pkgname}" ]; then
-		InternalDir="${srcdir}/${pkgname}/${pkgname}"
-	else
-		InternalDir="${srcdir}/${pkgname}"
-	fi
+  cd "${srcdir}/${pkgname}"
 
-	# Copy files
-	if [ -d "${InternalDir}/usr" ]; then
-		cp -r "${InternalDir}/usr" "${pkgdir}/"
-	fi
+  # Instale todos os arquivos em /usr/share/${pkgname} no momento da criação do pacote:
+  install -dm755 "${pkgdir}/usr/share/${pkgname}"
+  printf "%s\n" "${optdepends[@]}" >"${pkgdir}/usr/share/${pkgname}/optdepends"
 
-	if [ -d "${InternalDir}/etc" ]; then
-		cp -r "${InternalDir}/etc" "${pkgdir}/"
-	fi
+  # Copiar a estrutura de /etc, /usr e /opt para /usr/share/${pkgname}
+  local dirs=("usr" "etc" "opt")
+  for dir in "${dirs[@]}"; do
+    if [ -d "${srcdir}/${pkgname}/${dir}" ]; then
+      cp -a "${srcdir}/${pkgname}/${dir}" "${pkgdir}/usr/share/${pkgname}/"
+    fi
+  done
 
-	if [ -d "${InternalDir}/opt" ]; then
-		cp -r "${InternalDir}/opt" "${pkgdir}/"
-	fi
+  # Install license file if present
+  if [ -f "LICENSE" ]; then
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  fi
+
+  # Install documentation if present
+  if [ -f "README.md" ]; then
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  fi
 }
