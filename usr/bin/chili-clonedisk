@@ -10,7 +10,7 @@
 #
 #  Created: 2019/04/05
 #  Altered: 2022/10/14
-#  Updated: sáb 16 ago 2025 23:03:41 -04
+#  Updated: dom 17 ago 2025 22:05:12 -04
 #
 #  Copyright (c) 2019-2025, Vilmar Catafesta <vcatafesta@gmail.com>
 #
@@ -41,11 +41,31 @@ export TEXTDOMAIN=chili-clonedisk
 
 #declare -r APP="${0##*/}"
 declare -r _APP_="chili-clonedisk"
-declare -r _VERSION_="5.8.16.20250816"
+declare -r _VERSION_="5.8.17.20250817"
 declare -gA Alanguage=([pt_BR]=0 [en_US]=1 [de_DE]=2 [fr_FR]=3 [es_ES]=4 [it_IT]=5)
 declare -gA Alocale=([0]=pt_BR [1]=en_US [2]=de_DE [3]=fr_FR [4]=es_ES [5]=it_IT)
-readonly DEPENDENCIES=(awk cat cut dd ionice dialog grep lsblk pv sed tput which)
-dialogRcFile="$HOME/.dialogrc"
+declare dialogRcFile="$HOME/.dialogrc"
+readonly -a DEPENDENCIES=(
+  'dd'
+  'awk'
+  'ionice'
+  'dialog'
+  'pv'
+  'tput'
+  'find'
+  'smartctl'
+)
+readonly -A PACKAGEDEP=(
+  ['dd']='coreutils'
+  ['awk']='gawk'
+  ['ionice']='util-linux'
+  ['dialog']='dialog'
+  ['pv']='pv'
+  ['tput']='ncurses'
+  ['find']='findutils'
+  ['smartctl']='smartmontools'
+)
+
 
 # debug
 export PS4=$'${red}${0##*/}${green}[$FUNCNAME]${pink}[$LINENO]${reset} '
@@ -1110,7 +1130,7 @@ init() {
 			;;
 		esac
 		LC_DEFAULT=$i18
-		sh_choose_source_disk
+    sh_choose_clone_type
 	done
 }
 
@@ -1189,32 +1209,53 @@ log_msg() {
 	local retval="${PIPESTATUS[0]}"
 
 	if [[ $retval -eq 0 ]]; then
-		printf "  %b %s\\n" "${TICK}" "${*}"
+		printf " %b %s\\n" "${TICK}" "${*}"
 	else
-		printf "  %b %s\\n" "${CROSS}" "${*}"
+		printf " %b %s\\n" "${CROSS}" "${*}"
 	fi
+}
+
+sh_setup() {
+  msg_info "Instalando necessários pacotes"
+  pacman -S --needed --quiet --noconfirm \
+    awk \
+    util-linux \
+    dialog \
+    pv \
+    ncurses \
+    findutils 1>/dev/null
 }
 
 sh_checkDependencies() {
-	local errorFound=0
-	local cmd
+  local aBlock_files=()
+  local d
+  local errorFound=false
+  declare -a missing
 
-	for cmd in "${DEPENDENCIES[@]}"; do
-		log_msg "$(gettext "Check :") ${green}${cmd}${rst}"
-		if ! which "$cmd" &>/dev/null; then
-			log_msg "$(gettext "ERRO: não encontrei o comando:") ${cyan}'$cmd'${reset}"
-			errorFound=1
-		fi
-	done
-	if [[ "$errorFound" != "0" ]]; then
-		echo "===================================================="
-		echo "${yellow}             $(gettext "IMPOSSÍVEL CONTINUAR")"
-		echo "${black}$(gettext "Este script precisa dos comandos listados acima")"
-		echo "${black}$(gettext "Instale-os e/ou verifique se eles estão em seu") ${red}\$PATH${reset}"
-		echo "===================================================="
-		die $(gettext "Abortando...")
-	fi
+  for d in "${DEPENDENCIES[@]}"; do
+    if ! command -v "$d" &>/dev/null; then
+      log_err "Check: ${red}ERROR${reset}: $(gettext "Não foi possível encontrar o comando") ${cyan}'$d'${reset} -> $(gettext "instalar pacote") ${cyan}"${PACKAGEDEP[$d]}"${reset}"
+      missing+=("$d")
+      errorFound=true
+    else
+      log_msg "Check: ${cyan}$d"
+      :
+    fi
+  done
+
+  if $errorFound; then
+    replicate '='
+    echo "${yellow}             $(gettext "IMPOSSÍVEL CONTINUAR")"
+    echo "${black}$(gettext "Este script precisa dos comandos listados acima")"
+    echo "${black}$(gettext "Instale-os e/ou verifique se eles estão em seu") ${red}\$PATH${reset}"
+    replicate '='
+    #die $(gettext "Abortando...")
+    if readconf "Deseja instalar os pacotes e suprir os aplicativos necessários ?"; then
+      sh_setup
+    fi
+  fi
 }
+export -f sh_checkDependencies
 
 sh_display() {
 	if [[ "$(tput cols)" -lt 80 ]] || [[ "$(tput lines)" -lt 24 ]]; then
@@ -1304,6 +1345,5 @@ done
 sh_checkroot "$@"
 sh_checkDependencies "${DEPENDENCIES[*]}"
 #init "$@"
-
 sh_choose_clone_type
 sh_choose_source_disk
