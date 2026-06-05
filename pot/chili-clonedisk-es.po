@@ -1,0 +1,231 @@
+# Chili Tradutor Go - 2.1.20-20260201
+# Copyright (C) 2019-2026 Vilmar Catafesta <vcatafesta@gmail.com>
+# This file is distributed under the same license as the chili-tradutor-go package.
+msgid ""
+msgstr ""
+"Project-Id-Version: chili-tradutor-go 2.1.20-20260201\n"
+"POT-Creation-Date: 2026-06-05 00:01-0400\n"
+"PO-Revision-Date: 2026-06-05 00:01-0400\n"
+"Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
+"Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: usr/bin/chili-clonedisk:181
+msgid "Bem vindo ao "
+msgstr "Bienvenido a"
+
+#: usr/bin/chili-clonedisk:578
+msgid "CLONAR DISCO PARA IMAGEM"
+msgstr "Clonar DISCO A IMAGEN"
+
+#: usr/bin/chili-clonedisk:639
+msgid "Selecione o formato da imagem do device"
+msgstr "Seleccione el formato de imagen del dispositivo"
+
+#: usr/bin/chili-clonedisk:1167 usr/bin/chili-clonedisk:1222
+msgid "O disco de DESTINO é menor que o disco de ORIGEM"
+msgstr "El disco DESTINO es más pequeño que el disco FUENTE"
+
+#: usr/bin/chili-clonedisk:1170 usr/bin/chili-clonedisk:1225
+msgid "Prosseguir?"
+msgstr "¿Proceder?"
+
+#: usr/bin/chili-clonedisk:1299
+msgid "Clonagem concluída!"
+msgstr "¡Clonación completa!"
+
+#: usr/bin/chili-clonedisk:1305
+msgid "Clonar Disco para Disco"
+msgstr "Clonar Disco para Disco"
+
+#: usr/bin/chili-clonedisk:1306
+msgid "Clonar Disco para Imagem"
+msgstr "Clonar DISCO A IMAGEN"
+
+#: usr/bin/chili-clonedisk:1307
+msgid "Clonar Partição para Imagem"
+msgstr "Clonar partición a imagen"
+
+#: usr/bin/chili-clonedisk:1308
+msgid "Clonar Partição para Partição"
+msgstr "Clonar partición a partición"
+
+#: usr/bin/chili-clonedisk:1309
+msgid "Clonar Imagem para Partição"
+msgstr "Clonar imagen a partición"
+
+#: usr/bin/chili-clonedisk:1310
+msgid "Gravar ISO para Disco"
+msgstr "Grabar ISO en disco"
+
+#: usr/bin/chili-clonedisk:1311
+msgid "Listar Discos"
+msgstr "Listar Discos"
+
+#: usr/bin/chili-clonedisk:1313
+msgid "Escolha o tipo de clone"
+msgstr "Elija el tipo de clonación"
+
+#: usr/bin/chili-clonedisk:1314
+msgid "Necessário desmontar a partição antes de reparticionar"
+msgstr "Necesidad de desmontar la partición antes de volver a particionar"
+
+#: usr/bin/chili-clonedisk:1315
+msgid "** AVISO **"
+msgstr "** AVISO **"
+
+#: usr/bin/chili-clonedisk:1316
+msgid "Necessário desmontar as partições abaixo antes de prosseguir"
+msgstr "Debes desmontar las particiones siguientes antes de continuar."
+
+#: usr/bin/chili-clonedisk:1317
+msgid "Desmontar ?"
+msgstr "¿Desmontar?"
+
+#: usr/bin/chili-clonedisk:1318
+msgid "ERRO"
+msgstr "ERROR"
+
+#: usr/bin/chili-clonedisk:1319
+msgid "Info disco"
+msgstr "Información del disco"
+
+#: usr/bin/chili-clonedisk:1320
+msgid "Ok"
+msgstr "De acuerdo"
+
+#: usr/bin/chili-clonedisk:1321 usr/bin/chili-clonedisk:1346
+msgid "DISCO DE DESTINO"
+msgstr "DISCO DE DESTINO"
+
+#: usr/bin/chili-clonedisk:1322
+msgid "Escolha o disco ORIGEM"
+msgstr "Elija el disco FUENTE"
+
+#: usr/bin/chili-clonedisk:1323
+msgid "Escolha o disco DESTINO"
+msgstr "Elija el disco de DESTINO"
+
+#: usr/bin/chili-clonedisk:1324
+msgid "Escolha a partição ORIGEM"
+msgstr "Elija la partición ORIGEN"
+
+#: usr/bin/chili-clonedisk:1325
+msgid "Escolha a partição DESTINO"
+msgstr "Elija la partición DESTINO"
+
+#: usr/bin/chili-clonedisk:1326
+msgid "Sim"
+msgstr "Sí"
+
+#: usr/bin/chili-clonedisk:1327
+msgid "Não"
+msgstr "No"
+
+#: usr/bin/chili-clonedisk:1329
+msgid "Use as teclas"
+msgstr "usa las llaves"
+
+#: usr/bin/chili-clonedisk:1330
+msgid "PARA CIMA"
+msgstr "ARRIBA"
+
+#: usr/bin/chili-clonedisk:1331
+msgid "e"
+msgstr "y"
+
+#: usr/bin/chili-clonedisk:1332
+msgid "PARA BAIXO"
+msgstr "ABAJO"
+
+#: usr/bin/chili-clonedisk:1333
+msgid "para navegar"
+msgstr "navegar"
+
+#: usr/bin/chili-clonedisk:1334
+msgid "Use"
+msgstr "Usar"
+
+#: usr/bin/chili-clonedisk:1335
+msgid "para alternar entre os botões"
+msgstr "para cambiar entre botones"
+
+#: usr/bin/chili-clonedisk:1336
+msgid "para selecionar"
+msgstr "para seleccionar"
+
+#: usr/bin/chili-clonedisk:1339
+msgid "Disco ORIGEM e DESTINO não podem ser o mesmo"
+msgstr "El disco FUENTE y DESTINO no pueden ser iguales"
+
+#: usr/bin/chili-clonedisk:1340
+msgid "Formatando partição"
+msgstr "Formatear partición"
+
+#: usr/bin/chili-clonedisk:1341
+msgid "Executando clonagem de disco"
+msgstr "Realizar clonación de disco"
+
+#: usr/bin/chili-clonedisk:1342
+msgid "Selecionar"
+msgstr "Seleccionar"
+
+#: usr/bin/chili-clonedisk:1343
+msgid "Sair"
+msgstr "para salir"
+
+#: usr/bin/chili-clonedisk:1344
+msgid "Voltar"
+msgstr "para volver"
+
+#: usr/bin/chili-clonedisk:1345
+msgid "DISCO DE ORIGEM"
+msgstr "DISCO FUENTE"
+
+#: usr/bin/chili-clonedisk:1347
+msgid "PARTIÇÃO DE ORIGEM"
+msgstr "PARTICIÓN FUENTE"
+
+#: usr/bin/chili-clonedisk:1348
+msgid "PARTIÇÃO DE DESTINO"
+msgstr "PARTICIÓN DE DESTINO"
+
+#: usr/bin/chili-clonedisk:1349
+msgid "AVISO!"
+msgstr "¡AVISO!"
+
+#: usr/bin/chili-clonedisk:1349
+msgid "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
+msgstr "¡Todos los datos de disco/partición de DESTINO a continuación se perderán!"
+
+#: usr/bin/chili-clonedisk:1350
+msgid "Continuar com a clonagem"
+msgstr "Continuar con la clonación"
+
+#: usr/bin/chili-clonedisk:1362
+msgid "Escolha o idioma:"
+msgstr "Elige idioma:"
+
+#: usr/bin/chili-clonedisk:1364
+msgid "Português"
+msgstr "portugués"
+
+#: usr/bin/chili-clonedisk:1365
+msgid "Inglês"
+msgstr "Inglés"
+
+#: usr/bin/chili-clonedisk:1366
+msgid "Alemão"
+msgstr "Alemán"
+
+#: usr/bin/chili-clonedisk:1367
+msgid "Francês"
+msgstr "Francés"
+
+#: usr/bin/chili-clonedisk:1384
+msgid "_"
+msgstr "_"

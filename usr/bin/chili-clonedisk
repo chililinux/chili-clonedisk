@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 #shellcheck disable=SC2154,SC2016,SC2034,SC2059
 #
-#rsync -aAXv /mnt/ /lfs/evili/ --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/lost+found"}
-#
 #  chili-clonedisk - utility written in bash to clone disks
-#  Chili GNU/Linux - https://github.com/vcatafesta/ChiliOS
 #  Chili GNU/Linux - https://chililinux.com
-#  Chili GNU/Linux - https://chilios.com.br
 #
 #  Created: 2019/04/05
 #  Altered: 2022/10/14
-#  Updated: sex 09 jan 2026 18:08:53 -04
+#  Updated: qui 04 jun 2026 23:13:24 -04
 #
-#  Copyright (c) 2019-2025, Vilmar Catafesta <vcatafesta@gmail.com>
+#  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
+#  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
+#  Assembled By Vilmar Catafesta for the ChiliLinux project.
+#  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -34,7 +33,6 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #########################################################################
-#export LANGUAGE=en
 #export LANGUAGE=pt_BR
 export TEXTDOMAINDIR=/usr/share/locale
 export TEXTDOMAIN=chili-clonedisk
@@ -63,6 +61,11 @@ export PS4=$'${red}${0##*/}${green}[$FUNCNAME]${pink}[$LINENO]${reset} '
 #set -e
 shopt -s extglob
 
+cleanup() {
+	rm -f "$dialogRcFile"
+}
+#trap cleanup EXIT
+
 detect_distro() {
 	local id=""
 
@@ -88,11 +91,6 @@ sh_ascii-lines() {
 		export NCURSES_NO_UTF8_ACS=0 # Terminal NÃO suporta ACS
 	fi
 }
-
-cleanup() {
-	rm -f "$dialogRcFile"
-}
-#trap cleanup EXIT
 
 sh_create_dialogrc() {
 	cat >"$dialogRcFile" <<-'EOF'
@@ -153,7 +151,7 @@ sh_configure() {
 	: "${EN_US=1}"
 	: "${DE_DE=2}"
 	: "${FR_FR=3}"
-	: "${LC_DEFAULT=$(sh_getLocale)}"
+  : "${LC_DEFAULT=$(sh_getLocale)}"
 
 	# flag dialog exit status codes
 	: "${D_OK=0}"
@@ -180,7 +178,7 @@ sh_configure() {
 	: "${xapp="$_APP_"}"
 	: "${ccabec="${xapp} $_VERSION_"}"
 	: "${ctitle="$cdistro Linux"}"
-	welcome=$(gettext "Bem vindo ao ")
+	welcome="$(gettext "Bem vindo ao ")"
 
 	# system colors
 	tput sgr0 # reset colors
@@ -251,14 +249,9 @@ sh_unsetvarcolors() {
 }
 
 sh_getLocale() {
-	local lc
-
-	LC_DEFAULT="${Alanguage[pt_BR]}"
-	LOCALE="pt_BR"
-	#	if lc=$(grep _ <(locale -a) | head -1 | cut -c1-5); then
-	#		LOCALE="$lc"
-	#		LC_DEFAULT="${Alanguage[$lc]}"
-	#	fi
+  LOCALE="${LANG%%.*}"
+  LC_DEFAULT="${Alanguage[$LOCALE]}"
+  echo "$LOCALE"
 }
 
 sh_splitarray() {
@@ -403,8 +396,8 @@ conf() {
 		--no-collapse \
 		--no-cr-wrap \
 		--erase-on-exit \
-		--yes-label "${cmsg_yeslabel[$LC_DEFAULT]}" \
-		--no-label "${cmsg_nolabel[$LC_DEFAULT]}" \
+		--yes-label "${cmsg_yeslabel}" \
+		--no-label "${cmsg_nolabel}" \
 		--yesno "$*" \
 		15 100 >/dev/tty
 	nchoice=$?
@@ -417,8 +410,8 @@ confmulti() {
 	${DIALOG} \
 		--title "$xtitle" \
 		--backtitle "$ccabec" \
-		--yes-label "${cmsg_yeslabel[$LC_DEFAULT]}" \
-		--no-label "${cmsg_nolabel[$LC_DEFAULT]}" \
+		--yes-label "${cmsg_yeslabel}" \
+		--no-label "${cmsg_nolabel}" \
 		--yesno "$*" \
 		10 100 >/dev/tty
 	return $?
@@ -454,10 +447,10 @@ sh_checkdisk() {
 	dsk=$(df -hT | grep -F "$target")
 
 	if [[ -n "$dsk" ]]; then
-		if conf "${cwarning[$LC_DEFAULT]}" \
-			"\n${BOLD}${RED}ERROR: ${cmsg_all_mounted_part[$LC_DEFAULT]}${RESET}\n\n \
+		if conf "${cwarning}" \
+			"\n${BOLD}${RED}ERROR: ${cmsg_all_mounted_part}${RESET}\n\n \
 $dsk\n\n \
-${YELLOW}${cmsg_dismount[$LC_DEFAULT]}"; then
+${YELLOW}${cmsg_dismount}"; then
 			# desmontar qualquer ponto montado que contenha "$target"
 			mount | grep -F "$target" | awk '{print $3}' | while read -r mnt; do
 				if ! umount -f "$mnt" 2>/dev/null; then
@@ -582,12 +575,12 @@ sh_conf_image_name() {
 		exec 3>&1
 		txtDiskName=$(${DIALOG} \
 			--backtitle "$ccabec" \
-			--title "** CLONAR DISCO PARA IMAGEM **" \
-			--ok-label "${cmsg_Select[$LC_DEFAULT]}" \
-			--cancel-label "${cmsg_button_voltar[$LC_DEFAULT]}" \
+			--title "** $(gettext "CLONAR DISCO PARA IMAGEM") **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--insecure \
-			--mixedform "${cmsg_LABEL[$LC_DEFAULT]}" \
+			--mixedform "${cmsg_LABEL}" \
 			16 100 0 \
 			"Device                     : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
 			"Name                       : " 2 1 "$DEVICE_NAME" 2 28 20 0 2 \
@@ -642,7 +635,7 @@ sh_choose_image_format() {
 		--clear \
 		--stdout \
 		--colors \
-		--menu "${cmsg_LABEL[$LC_DEFAULT]}\n\n\
+		--menu "${cmsg_LABEL}\n\n\
 ${BOLD}${REVERSE}${WHITE}$(gettext "Selecione o formato da imagem do device"):\
 ${RESET}${BOLD}${YELLOW} ${source}|${SIZE_SOURCE}|${MODEL_SOURCE}${RESET}" \
 		10 100 0 \
@@ -657,7 +650,7 @@ ${RESET}${BOLD}${YELLOW} ${source}|${SIZE_SOURCE}|${MODEL_SOURCE}${RESET}" \
 }
 
 sh_clone_disk_to_image() {
-	local localtitle="${cmsg_disco_origem[$LC_DEFAULT]}"
+	local localtitle="${cmsg_disco_origem}"
 	local diskselected=""
 
 	source=$(sh_list_disk "${localtitle}" "${diskselected}")
@@ -683,13 +676,13 @@ sh_make_clone_disk_to_image() {
 
 		local outfile="$cvdisk_name"
 
-		if conf "${cwarning[$LC_DEFAULT]}" \
+		if conf "${cwarning}" \
 			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
 IMAGEM DESTINO : ${RED}$outfile\n\n" \
-			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem[$LC_DEFAULT]}?\n"; then
+			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 			sh_start_time_elapsed
-			mensagem "${cmsg_formatando_particao[$LC_DEFAULT]}: $source TO $outfile"
+			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
 
 			# RAW simples com pv
 			local src_size
@@ -796,11 +789,11 @@ sh_list_disk() {
 			--default-item "$target" \
 			--backtitle "$ccabec" \
 			--title "${localtitle}" \
-			--ok-label "${cmsg_Select[$LC_DEFAULT]}" \
-			--cancel-label "${cmsg_button_voltar[$LC_DEFAULT]}" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--extra-button \
-			--extra-label "${cmsg_info_disco[$LC_DEFAULT]}" \
+			--extra-label "${cmsg_info_disco}" \
 			--menu "\
 ${YELLOW}${cmsg_disco_origem[LC_DEFAULT]} : ${REVERSE}$csrc${RESET}\n
 ${YELLOW}${cmsg_disco_destino[LC_DEFAULT]}: ${REVERSE}(${cmsg_choose_disk_destino[LC_DEFAULT]})${RESET}\n
@@ -877,11 +870,11 @@ sh_list_partition() {
 			--default-item "$target" \
 			--backtitle "$ccabec" \
 			--title "${localtitle}" \
-			--ok-label "${cmsg_Select[$LC_DEFAULT]}" \
-			--cancel-label "${cmsg_button_voltar[$LC_DEFAULT]}" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--extra-button \
-			--extra-label "${cmsg_info_disco[$LC_DEFAULT]}" \
+			--extra-label "${cmsg_info_disco}" \
 			--menu "\
 ${YELLOW}${cmsg_part_origem[LC_DEFAULT]} : ${REVERSE}$csrc${RESET}\n
 ${YELLOW}${cmsg_part_destino[LC_DEFAULT]}: ${REVERSE}(${cmsg_choose_part_destino[LC_DEFAULT]})${RESET}\n
@@ -992,8 +985,8 @@ sh_list_image() {
 			--default-item "$imageselected" \
 			--backtitle "$ccabec" \
 			--title "${localtitle}" \
-			--ok-label "${cmsg_Select[$LC_DEFAULT]}" \
-			--cancel-label "${cmsg_button_voltar[$LC_DEFAULT]}" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--stdout \
 			--extra-button \
@@ -1057,13 +1050,13 @@ sh_make_clone_part_to_image() {
 
 		local outfile="$cvdisk_name"
 
-		if conf "${cwarning[$LC_DEFAULT]}" \
+		if conf "${cwarning}" \
 			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
 IMAGEM DESTINO : ${RED}$outfile\n\n" \
-			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem[$LC_DEFAULT]}?\n"; then
+			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 			sh_start_time_elapsed
-			mensagem "${cmsg_formatando_particao[$LC_DEFAULT]}: $source TO $outfile"
+			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
 
 			# RAW simples com pv
 			local src_size
@@ -1137,7 +1130,7 @@ sh_clone_disk_to_disk() {
 }
 
 sh_choose_source_disk() {
-	local localtitle="${cmsg_disco_origem[$LC_DEFAULT]}"
+	local localtitle="${cmsg_disco_origem}"
 	local disk_selected=""
 
 	source=$(sh_list_disk "${localtitle}" "${disk_selected}")
@@ -1153,12 +1146,12 @@ sh_choose_source_disk() {
 }
 
 sh_choose_target_disk() {
-	local localtitle="${cmsg_disco_destino[$LC_DEFAULT]}"
+	local localtitle="${cmsg_disco_destino}"
 	local disk_selected="$source"
 
 	target=$(sh_list_disk "${localtitle}" "${disk_selected}")
 	if [ "$source" == "$target" ]; then
-		alerta "${cwarning[$LC_DEFAULT]}" "\n   \Z1${cmsg_disco_identico[$LC_DEFAULT]} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
+		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
 		sh_choose_target_disk
 	fi
 
@@ -1170,7 +1163,7 @@ sh_choose_target_disk() {
 		SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
 
 		if [[ "$(sh_toBytes "$SIZE_SOURCE")" -gt "$(sh_toBytes "$SIZE_TARGET")" ]]; then
-			if ! conf "${YELLOW}${cwarning[$LC_DEFAULT]}" \
+			if ! conf "${YELLOW}${cwarning}" \
 				"\n${BOLD}${RED}${REVERSE}$(gettext "O disco de DESTINO é menor que o disco de ORIGEM")${RESET}\n\n" \
 				"${BOLD}${WHITE}${cmsg_disco_origem[LC_DEFAULT]} : $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE\n" \
 				"${BOLD}${WHITE}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET${RESET}\n\n" \
@@ -1191,7 +1184,7 @@ sh_choose_target_disk() {
 }
 
 sh_choose_source_partition() {
-	local localtitle="${cmsg_part_origem[$LC_DEFAULT]}"
+	local localtitle="${cmsg_part_origem}"
 	local part_selected=
 
 	part_source=$(sh_list_partition "${localtitle}" "${part_selected}")
@@ -1208,12 +1201,12 @@ sh_choose_source_partition() {
 }
 
 sh_choose_target_partition() {
-	local localtitle="${cmsg_part_destino[$LC_DEFAULT]}"
+	local localtitle="${cmsg_part_destino}"
 	local part_selected="$part_source"
 
 	part_target=$(sh_list_partition "${localtitle}" "${part_selected}")
 	if [ "$part_source" == "$part_target" ]; then
-		alerta "${cwarning[$LC_DEFAULT]}" "\n   \Z1${cmsg_disco_identico[$LC_DEFAULT]} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
+		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
 		sh_choose_target_partition
 	fi
 
@@ -1225,7 +1218,7 @@ sh_choose_target_partition() {
 		SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$part_target]}" "$DSK_SIZE")"
 
 		if [[ "$(sh_toBytes "$SIZE_SOURCE")" -gt "$(sh_toBytes "$SIZE_TARGET")" ]]; then
-			if ! conf "${YELLOW}${cwarning[$LC_DEFAULT]}" \
+			if ! conf "${YELLOW}${cwarning}" \
 				"\n${BOLD}${RED}${REVERSE}$(gettext "O disco de DESTINO é menor que o disco de ORIGEM")${RESET}\n\n" \
 				"${BOLD}${WHITE}${cmsg_part_origem[LC_DEFAULT]} : $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE ${RESET} \n" \
 				"${BOLD}${WHITE}${cmsg_part_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET ${RESET} \n\n" \
@@ -1272,11 +1265,11 @@ sh_confclone() {
 	source="$1"
 	local target="$2"
 
-	if conf "${cwarning[$LC_DEFAULT]}" \
-		"\n${cmsg_todos_os_dados_serao_perdidos[$LC_DEFAULT]}\n\n""\
+	if conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
 ${BLUE} ${cmsg_disco_origem[LC_DEFAULT]}:  $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE \n" \
 		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
-		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem[$LC_DEFAULT]}?\n"; then
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
 		sh_domakeclone "$source" "$target"
 		return "$?"
 	fi
@@ -1288,7 +1281,7 @@ sh_domakeclone() {
 	local target="$2"
 	local -i nchoice
 
-	mensagem "${cmsg_formatando_particao[$LC_DEFAULT]}: $source TO $target"
+	mensagem "${cmsg_formatando_particao}: $source TO $target"
 	(pv -n "$source" |
 		dd of="$target" conv=notrunc,noerror) 2>&1 |
 		${DIALOG} \
@@ -1309,43 +1302,52 @@ ${cmsg_disco_destino[LC_DEFAULT]}: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_
 }
 
 sh_Language() {
-	cmsg_nec_dismount[pt_BR]=$(gettext "Necessário desmontar a partição antes de reparticionar")
-	cwarning[pt_BR]=$(gettext "** AVISO **")
-	cmsg_all_mounted_part[pt_BR]=$(gettext "Necessário desmontar as partições abaixo antes de prosseguir")
-	cmsg_dismount[pt_BR]=$(gettext "Desmontar ?")
-	cmsg_Error[pt_BR]=$(gettext "ERRO")
-	cmsg_info_disco[pt_BR]=$(gettext "Info disco")
-	cmsg_Ok[pt_BR]=$(gettext "Ok")
-	cmsg_disco_destino[pt_BR]=$(gettext "DISCO DE DESTINO")
-	cmsg_choose_disk_origem[pt_BR]=$(gettext "Escolha o disco ORIGEM")
-	cmsg_choose_disk_destino[pt_BR]=$(gettext "Escolha o disco DESTINO")
-	cmsg_choose_part_origem[pt_BR]=$(gettext "Escolha a partição ORIGEM")
-	cmsg_choose_part_destino[pt_BR]=$(gettext "Escolha a partição DESTINO")
-	cmsg_yeslabel[pt_BR]=$(gettext "Sim")
-	cmsg_nolabel[pt_BR]=$(gettext "Não")
+  cmsg_Clonar_Disco_para_Disco="$(gettext "Clonar Disco para Disco")"
+  cmsg_Clonar_Disco_para_Imagem="$(gettext "Clonar Disco para Imagem")"
+  cmsg_Clonar_Particao_para_Imagem="$(gettext "Clonar Partição para Imagem")"
+  cmsg_Clonar_Particao_para_Particao="$(gettext "Clonar Partição para Partição")"
+  cmsg_Clonar_Imagem_para_Particao="$(gettext "Clonar Imagem para Partição")"
+  cmsg_Gravar_ISO_para_Disco="$(gettext "Gravar ISO para Disco")"
+  cmsg_Listar_Discos="$(gettext "Listar Discos")"
 
-	cLB1=$(gettext "Use as teclas")
-	cLB2=$(gettext "PARA CIMA")
-	cLB3=$(gettext "e")
-	cLB4=$(gettext "PARA BAIXO")
-	cLB5=$(gettext "para navegar")
-	cLB6=$(gettext "Use")
-	cLB7=$(gettext "para alternar entre os botões")
-	cLB8=$(gettext "para selecionar")
-	cmsg_LABEL[pt_BR]="$cLB1${BLUE} ↑ $cLB2$RESET $cLB3 ${BLUE}↓ $cLB4$RESET $cLB5\n$cLB6${BLUE} TAB${RESET} $cLB7${BLUE} ENTER${RESET} $cLB8"
+  cmsg_Escolha_o_tipo_de_clone="$(gettext "Escolha o tipo de clone")"
+	cmsg_nec_dismount="$(gettext "Necessário desmontar a partição antes de reparticionar")"
+	cwarning="$(gettext "** AVISO **")"
+	cmsg_all_mounted_part="$(gettext "Necessário desmontar as partições abaixo antes de prosseguir")"
+	cmsg_dismount="$(gettext "Desmontar ?")"
+	cmsg_Error="$(gettext "ERRO")"
+	cmsg_info_disco="$(gettext "Info disco")"
+	cmsg_Ok="$(gettext "Ok")"
+	cmsg_disco_destino="$(gettext "DISCO DE DESTINO")"
+	cmsg_choose_disk_origem="$(gettext "Escolha o disco ORIGEM")"
+	cmsg_choose_disk_destino="$(gettext "Escolha o disco DESTINO")"
+	cmsg_choose_part_origem="$(gettext "Escolha a partição ORIGEM")"
+	cmsg_choose_part_destino="$(gettext "Escolha a partição DESTINO")"
+	cmsg_yeslabel="$(gettext "Sim")"
+	cmsg_nolabel="$(gettext "Não")"
 
-	cmsg_disco_identico[pt_BR]=$(gettext "Disco ORIGEM e DESTINO não podem ser o mesmo")
-	cmsg_formatando_particao[pt_BR]=$(gettext "Formatando partição")
-	cmsg_running_disk_cloning[pt_BR]=$(gettext "Executando clonagem de disco")
-	cmsg_Select[pt_BR]=$(gettext "Selecionar")
-	cmsg_Sair[pt_BR]=$(gettext "Sair")
-	cmsg_button_voltar[pt_BR]=$(gettext "Voltar")
-	cmsg_disco_origem[pt_BR]=$(gettext "DISCO DE ORIGEM")
-	cmsg_disco_destino[pt_BR]=$(gettext "DISCO DE DESTINO")
-	cmsg_part_origem[pt_BR]=$(gettext "PARTIÇÃO DE ORIGEM")
-	cmsg_part_destino[pt_BR]=$(gettext "PARTIÇÃO DE DESTINO")
-	cmsg_todos_os_dados_serao_perdidos[pt_BR]="  ${RED}$(gettext "AVISO!")${RESET}  $(gettext "Todos os dados disco/partição de DESTINO abaixo serão perdidos!")"
-	cmsg_continuar_com_a_clonagem[pt_BR]=$(gettext "Continuar com a clonagem")
+	cLB1="$(gettext "Use as teclas")"
+	cLB2="$(gettext "PARA CIMA")"
+	cLB3="$(gettext "e")"
+	cLB4="$(gettext "PARA BAIXO")"
+	cLB5="$(gettext "para navegar")"
+	cLB6="$(gettext "Use")"
+	cLB7="$(gettext "para alternar entre os botões")"
+	cLB8="$(gettext "para selecionar")"
+	cmsg_LABEL="$cLB1${BLUE} ↑ $cLB2$RESET $cLB3 ${BLUE}↓ $cLB4$RESET $cLB5\n$cLB6${BLUE} TAB${RESET} $cLB7${BLUE} ENTER${RESET} $cLB8"
+
+	cmsg_disco_identico="$(gettext "Disco ORIGEM e DESTINO não podem ser o mesmo")"
+	cmsg_formatando_particao="$(gettext "Formatando partição")"
+	cmsg_running_disk_cloning="$(gettext "Executando clonagem de disco")"
+	cmsg_Select="$(gettext "Selecionar")"
+	cmsg_Sair="$(gettext "Sair")"
+	cmsg_button_voltar="$(gettext "Voltar")"
+	cmsg_disco_origem="$(gettext "DISCO DE ORIGEM")"
+	cmsg_disco_destino="$(gettext "DISCO DE DESTINO")"
+	cmsg_part_origem="$(gettext "PARTIÇÃO DE ORIGEM")"
+	cmsg_part_destino="$(gettext "PARTIÇÃO DE DESTINO")"
+	cmsg_todos_os_dados_serao_perdidos="  ${RED}$(gettext "AVISO!")${RESET}  $(gettext "Todos os dados disco/partição de DESTINO abaixo serão perdidos!")"
+	cmsg_continuar_com_a_clonagem="$(gettext "Continuar com a clonagem")"
 }
 
 init() {
@@ -1355,8 +1357,8 @@ init() {
 			--clear \
 			--backtitle "$ccabec" \
 			--title "${welcome}${xapp}" \
-			--ok-label "${cmsg_Ok[$LC_DEFAULT]}" \
-			--cancel-label "${cmsg_Sair[$LC_DEFAULT]}" \
+			--ok-label "${cmsg_Ok}" \
+			--cancel-label "${cmsg_Sair}" \
 			--menu "\n$(gettext "Escolha o idioma:")" \
 			0 80 0 \
 			0 "$(gettext "Português")" \
@@ -1553,21 +1555,20 @@ sh_choose_clone_type() {
 				--clear \
 				--stdout \
 				--aspect 20 \
-				--default-item "$LC_DEFAULT" \
 				--backtitle "$ccabec" \
 				--colors \
 				--title "MENU" \
-				--ok-label "${cmsg_Select[$LC_DEFAULT]}" \
-				--cancel-label "${cmsg_Sair[$LC_DEFAULT]}" \
-				--menu "${cmsg_LABEL[$LC_DEFAULT]}\n\n${YELLOW}$(gettext "Escolha o tipo de clone"):${RESET}" \
+				--ok-label "${cmsg_Select}" \
+				--cancel-label "${cmsg_Sair}" \
+				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_tipo_de_clone}:${RESET}" \
 				10 80 0 \
-				0 "$(gettext "Clonar Disco para Disco")" \
-				1 "$(gettext "Clonar Disco para Imagem")" \
-				2 "$(gettext "Clonar Partição para Imagem")" \
-				3 "$(gettext "Clonar Partição para Partição")" \
-				4 "$(gettext "Clonar Imagem para Partição")" \
-				5 "$(gettext "Gravar ISO para Disco")" \
-				6 "$(gettext "Listar Discos")"
+				0 "${cmsg_Clonar_Disco_para_Disco}" \
+				1 "${cmsg_Clonar_Disco_para_Imagem}" \
+				2 "${cmsg_Clonar_Particao_para_Imagem}" \
+				3 "${cmsg_Clonar_Particao_para_Particao}" \
+				4 "${cmsg_Clonar_Imagem_para_Particao}" \
+				5 "${cmsg_Gravar_ISO_para_Disco}" \
+				6 "${cmsg_Listar_Discos}"
 		)
 
 		exit_status=$?
@@ -1593,8 +1594,6 @@ sh_getLocale
 sh_Language
 sh_display
 
-#opts=$(getopt -o vnh: --long version,nocolor,help:,debugfile:,minheap:,maxheap: -n 'clonedisk' -- "$@")
-#if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 if ! opts=$(getopt -o Vnh --long version,nocolor,help -n "${0##*/}" -- "$@"); then
 	sh_usage
 	exit 0

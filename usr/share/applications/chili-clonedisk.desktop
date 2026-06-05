@@ -8,6 +8,6 @@ Exec=chili-clonedisk
 Terminal=true
 MimeType=text/plain;
 Icon=drive-multidisk
-Categories=Utility;Accessories;Chili Apps;
+Categories=Utility;Accessories;Chili Apps;VoidBR Apps;
 StartupNotify=true
 Actions=Window;Document;

@@ -1,3 +1,3 @@
 # chili-clonedisk
 
-Utility for clone disk
+Chili Utility for clone disk
