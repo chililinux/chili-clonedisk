@@ -12,39 +12,38 @@ source=("git+${url}.git")
 md5sums=('SKIP')
 depends=()
 optdepends=(
-  sed
-  dialog
-  grep
-  ncurses
-  gawk
-  coreutils
-  util-linux
-  pv
-  which
+	sed
+	dialog
+	grep
+	ncurses
+	gawk
+	coreutils
+	util-linux
+	pv
+	which
 )
 
 package() {
-  cd "${srcdir}/${pkgname}"
+	local dirs=("usr" "etc" "opt")
+	#   echo "DESTDIR=$DESTDIR"
+	#   echo "pkgdir=$pkgdir"
+	#   echo "srcdir=$srcdir"
+	#   echo "_pkgsrc=$_pkgsrc"
 
-  # Instale todos os arquivos em /usr/share/${pkgname} no momento da criação do pacote:
-  install -dm755 "${pkgdir}/usr/share/${pkgname}"
-  printf "%s\n" "${optdepends[@]}" >"${pkgdir}/usr/share/${pkgname}/optdepends"
+	cd ${srcdir}/${pkgname}
+	for dir in "${dirs[@]}"; do
+		if [ -d "${_pkgsrc}/${dir}" ]; then
+			cp -a "${_pkgsrc}/${dir}" "$DESTDIR/"
+		fi
+	done
 
-  # Copiar a estrutura de /etc, /usr e /opt para /usr/share/${pkgname}
-  local dirs=("usr" "etc" "opt")
-  for dir in "${dirs[@]}"; do
-    if [ -d "${srcdir}/${pkgname}/${dir}" ]; then
-      cp -a "${srcdir}/${pkgname}/${dir}" "${pkgdir}/usr/share/${pkgname}/"
-    fi
-  done
+	# Install license file if present
+	if [ -f "LICENSE" ]; then
+		install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	fi
 
-  # Install license file if present
-  if [ -f "LICENSE" ]; then
-    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-  fi
-
-  # Install documentation if present
-  if [ -f "README.md" ]; then
-    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-  fi
+	# Install documentation if present
+	if [ -f "README.md" ]; then
+		install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+	fi
 }
