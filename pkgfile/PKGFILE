@@ -1,0 +1,50 @@
+# Maintainer  : Vilmar Catafesta <vcatafesta@gmail.com>
+
+pkgname=chili-clonedisk
+pkgdesc="Utility for clone disk"
+pkgver=$(date +%Y%m%d)
+pkgrel=$(date +%H%M)
+arch=('any')
+license=('GPL3')
+url="https://github.com/chililinux/$pkgname"
+provides=("$pkgname")
+source=("git+${url}.git")
+md5sums=('SKIP')
+depends=()
+optdepends=(
+  sed
+  dialog
+  grep
+  ncurses
+  gawk
+  coreutils
+  util-linux
+  pv
+  which
+)
+
+package() {
+  cd "${srcdir}/${pkgname}"
+
+  # Instale todos os arquivos em /usr/share/${pkgname} no momento da criação do pacote:
+  install -dm755 "${pkgdir}/usr/share/${pkgname}"
+  printf "%s\n" "${optdepends[@]}" >"${pkgdir}/usr/share/${pkgname}/optdepends"
+
+  # Copiar a estrutura de /etc, /usr e /opt para /usr/share/${pkgname}
+  local dirs=("usr" "etc" "opt")
+  for dir in "${dirs[@]}"; do
+    if [ -d "${srcdir}/${pkgname}/${dir}" ]; then
+      cp -a "${srcdir}/${pkgname}/${dir}" "${pkgdir}/usr/share/${pkgname}/"
+    fi
+  done
+
+  # Install license file if present
+  if [ -f "LICENSE" ]; then
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  fi
+
+  # Install documentation if present
+  if [ -f "README.md" ]; then
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  fi
+}

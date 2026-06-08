@@ -5,8 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Altered: 2022/10/14
-#  Updated: qui 04 jun 2026 23:13:24 -04
+#  Updated: seg 08 jun 2026 15:22:52 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -39,7 +38,7 @@ export TEXTDOMAIN=chili-clonedisk
 
 #declare -r APP="${0##*/}"
 declare -r _APP_="chili-clonedisk"
-declare -r _VERSION_="6.1.09.20260109"
+declare -r _VERSION_="6.6.08.20260608"
 declare -gA Alanguage=([pt_BR]=0 [en_US]=1 [de_DE]=2 [fr_FR]=3 [es_ES]=4 [it_IT]=5)
 declare -gA Alocale=([0]=pt_BR [1]=en_US [2]=de_DE [3]=fr_FR [4]=es_ES [5]=it_IT)
 declare dialogRcFile="$HOME/.dialogrc"
@@ -54,6 +53,9 @@ readonly -A PACKAGEDEP=(
 	['find']='findutils'
 	['smartctl']='smartmontools'
 )
+
+# Captura e exporta o caminho correto do vdisk do usuário comum antes de elevar
+export IMGDIR="/home/$SUDO_USER/.chili-fr/vdisk"
 
 # debug
 export PS4=$'${red}${0##*/}${green}[$FUNCNAME]${pink}[$LINENO]${reset} '
@@ -136,7 +138,7 @@ sh_create_dialogrc() {
 		visit_items = off
 		use_shadow = off
 		use_colors = on
-EOF
+	EOF
 	export DIALOGRC="$dialogRcFile"
 }
 
@@ -151,7 +153,7 @@ sh_configure() {
 	: "${EN_US=1}"
 	: "${DE_DE=2}"
 	: "${FR_FR=3}"
-  : "${LC_DEFAULT=$(sh_getLocale)}"
+	: "${LC_DEFAULT=$(sh_getLocale)}"
 
 	# flag dialog exit status codes
 	: "${D_OK=0}"
@@ -171,14 +173,6 @@ sh_configure() {
 	: "${DSK_PTTYPE=7}"
 	: "${DSK_FSTYPE=8}"
 	: "${DSK_PARTTYPENAME=9}"
-
-	# common vars
-	: "${DIALOG=${DIALOG:-"dialog"}}"
-	: "${grafico=$true}"
-	: "${xapp="$_APP_"}"
-	: "${ccabec="${xapp} $_VERSION_"}"
-	: "${ctitle="$cdistro Linux"}"
-	welcome="$(gettext "Bem vindo ao ")"
 
 	# system colors
 	tput sgr0 # reset colors
@@ -220,6 +214,15 @@ sh_configure() {
 	# shellcheck disable=SC2034
 	DONE="${COL_LIGHT_GREEN} done!${COL_NC}"
 	OVER="\\r\\033[K"
+
+	# common vars
+	: "${DIALOG=${DIALOG:-"dialog"}}"
+	: "${grafico=$true}"
+	: "${xapp="$_APP_"}"
+	: "${ccabec="${BOLD}${WHITE}${REVERSE}${xapp} ${YELLOW}v$_VERSION_ ${BLUE}https://github.com/chililinux/chili-clonedisk"}"
+	: "${ctitle="$(detect_distro)"}"
+	welcome="$(gettext "Bem vindo ao ")"
+
 }
 
 sh_toBytes() {
@@ -249,9 +252,9 @@ sh_unsetvarcolors() {
 }
 
 sh_getLocale() {
-  LOCALE="${LANG%%.*}"
-  LC_DEFAULT="${Alanguage[$LOCALE]}"
-  echo "$LOCALE"
+	LOCALE="${LANG%%.*}"
+	LC_DEFAULT="${Alanguage[$LOCALE]}"
+	echo "$LOCALE"
 }
 
 sh_splitarray() {
@@ -343,14 +346,23 @@ display_result() {
 		25 100 >/dev/tty
 }
 
+info_nowait() {
+	${DIALOG} \
+		--colors \
+		--title "$ctitle" \
+		--backtitle "$ccabec" \
+		--infobox "\n\n\Z3$*" \
+		10 60 >/dev/tty
+}
+
 info() {
 	${DIALOG} \
 		--colors \
 		--beep \
-		--title "$ctitle" \
+		--title "$_APP_" \
 		--backtitle "$ccabec" \
 		--msgbox "\Z1$*" \
-		10 60 >/dev/tty
+		10 80 >/dev/tty
 }
 
 debug() {
@@ -563,6 +575,92 @@ sh_conf_image_name() {
 	# Escolhe formato da imagem
 	image_format=$(sh_choose_image_format) || return 1
 
+	# Nome default da imagem base
+	cvdisk_name="${DEVICE_SOURCE//\//_}"
+	cvdisk_name="${PWD}/${cvdisk_name#_}_${FSTYPE_SOURCE}"
+
+	# AJUSTE: Seta a extensão correta baseada no formato escolhido
+	case "$image_format" in
+	raw) cvdisk_name="${cvdisk_name}.img" ;;
+	qcow2) cvdisk_name="${cvdisk_name}.qcow2" ;;
+	zstd) cvdisk_name="${cvdisk_name}.img.zst" ;;
+	xz) cvdisk_name="${cvdisk_name}.img.xz" ;;
+	gzip) cvdisk_name="${cvdisk_name}.img.gz" ;;
+	esac
+
+	while true; do
+		# Debug: verifica se variáveis estão corretas
+		echo "DEBUG: DEVICE_SOURCE='$DEVICE_SOURCE' DEVICE_NAME='$DEVICE_NAME' MODEL_SOURCE='$MODEL_SOURCE' SIZE_SOURCE='$SIZE_SOURCE' LABEL_SOURCE='$LABEL_SOURCE' TRAN_SOURCE='$TRAN_SOURCE'"
+		echo "DEBUG: cvdisk_name='$cvdisk_name'"
+		# Mostra o formulário
+		exec 3>&1
+		txtDiskName=$(${DIALOG} \
+			--backtitle "$ccabec" \
+			--title "** $(gettext "CLONAR DISCO PARA IMAGEM") **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--colors \
+			--insecure \
+			--mixedform "${cmsg_LABEL}" \
+			16 100 0 \
+			"Device                    : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
+			"Name                      : " 2 1 "$DEVICE_NAME" 2 28 20 0 2 \
+			"Tran                      : " 3 1 "$TRAN_SOURCE" 3 28 20 0 2 \
+			"Label                     : " 4 1 "$LABEL_SOURCE" 4 28 20 0 2 \
+			"Modelo                    : " 5 1 "$MODEL_SOURCE" 5 28 20 0 2 \
+			"Tamanho                   : " 6 1 "$SIZE_SOURCE" 6 28 20 0 2 \
+			"File System                : " 7 1 "$FSTYPE_SOURCE" 7 28 20 0 2 \
+			"Entre com o nome da imagem : " 8 1 "$cvdisk_name" 8 28 60 0 0 \
+			2>&1 1>&3)
+
+		local exit_status=$?
+		case $exit_status in
+		1 | 255) # Cancel ou ESC
+			echo "DEBUG: Usuário cancelou ou pressionou ESC"
+			return 1
+			;;
+		0) # OK
+			mapfile -t aDiskName <<<"$txtDiskName"
+			cvdisk_name="${aDiskName[7]}"
+
+			if [[ -z "$cvdisk_name" ]]; then
+				conf "*** IMAGE NAME ***" "\nNome da imagem inválido! Tente novamente.\n" || die "*** IMAGE NAME ***"
+				continue
+			fi
+
+			if [[ -e "$cvdisk_name" ]]; then
+				if conf "*** IMAGE NAME ***" "${RED}Imagem '$cvdisk_name' já existe. Tentar outro nome?"; then
+					continue
+				fi
+				return 1
+			fi
+			echo "DEBUG: Nome da imagem definido: $cvdisk_name"
+			return 0
+			;;
+		*)
+			echo "DEBUG: exit_status inesperado: $exit_status"
+			return 1
+			;;
+		esac
+		exec 3>&-
+	done
+}
+
+sh_conf_image_nameOLD() {
+	source="$1"
+	local txtDiskName
+
+	DEVICE_SOURCE="$source"
+	DEVICE_NAME="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_NAME")"
+	MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
+	SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
+	LABEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_LABEL")"
+	TRAN_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_TRAN")"
+	FSTYPE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_FSTYPE")"
+
+	# Escolhe formato da imagem
+	image_format=$(sh_choose_image_format) || return 1
+
 	# Nome default da imagem
 	cvdisk_name="${DEVICE_SOURCE//\//_}"
 	cvdisk_name="${PWD}/${cvdisk_name#_}_${FSTYPE_SOURCE}.${image_format}"
@@ -625,8 +723,62 @@ sh_conf_image_name() {
 	done
 }
 
-# função para escolher o formato da imagem
 sh_choose_image_format() {
+	while true; do
+		image_format=$(
+			${DIALOG} \
+				--clear \
+				--stdout \
+				--aspect 20 \
+				--backtitle "$ccabec" \
+				--colors \
+				--title "FORMATO DA IMAGEM" \
+				--ok-label "${cmsg_Select}" \
+				--cancel-label "${cmsg_Sair}" \
+				--menu "${cmsg_LABEL}\n\n${YELLOW}Escolha o formato e compressão da imagem de destino:${RESET}" \
+				13 80 0 \
+				"raw" "Imagem Bruta (.img)" \
+				"qcow2" "Qemu Copy-On-Write (.qcow2)" \
+				"zstd" "Imagem Comprimida (.img.zst)" \
+				"xz" "Imagem Comprimida (.img.xz)" \
+				"gzip" "Imagem Comprimida (.img.gz)"
+		)
+
+		exit_status=$?
+		case $exit_status in
+		"$D_ESC" | "$D_CANCEL")
+			return 255
+			;;
+		esac
+
+		case "$image_format" in
+		zstd)
+			if ! command -v zstd >/dev/null 2>&1; then
+				info "Erro: O utilitário 'zstd' não está instalado no sistema."
+				continue
+			fi
+			;;
+		xz)
+			if ! command -v xz >/dev/null 2>&1; then
+				info "Erro: O utilitário 'xz' não está instalado no sistema."
+				continue
+			fi
+			;;
+		gzip)
+			if ! command -v gzip >/dev/null 2>&1; then
+				info "Erro: O utilitário 'gzip' não está instalado no sistema."
+				continue
+			fi
+			;;
+		esac
+
+		echo "$image_format"
+		return 0
+	done
+}
+
+# função para escolher o formato da imagem
+sh_choose_image_formatOLD() {
 	source="$1"
 	local choice
 	choice=$(${DIALOG} \
@@ -665,6 +817,154 @@ sh_clone_disk_to_image() {
 }
 
 sh_make_clone_disk_to_image() {
+	source="$1"
+	local -i nchoice
+	set -o pipefail
+
+	if sh_conf_image_name "$source"; then
+		local outfile="$cvdisk_name"
+
+		if conf "${cwarning}" \
+			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+IMAGEM DESTINO : ${RED}$outfile\n\n" \
+			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
+
+			sh_start_time_elapsed
+			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
+
+			local src_size
+			if [[ -b "$source" ]]; then
+				src_size=$(sudo blockdev --getsize64 "$source")
+			else
+				src_size=$(stat -c%s "$source")
+			fi
+
+			SECTOR_SIZE=$(blockdev --getss $source)
+			DISK_SIZE=$(blockdev --getsize64 $source)
+
+			case "$image_format" in
+			zstd)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
+
+				zstd --adapt=min=1,max=9 -T2 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → zstd)${RESET}\n\n\
+${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+IMAGEM DESTINO : ${RED}$outfile" \
+						10 100 0
+
+				wait "$compress_pid"
+				rm -f "$fifo_tmp"
+				;;
+
+			xz)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
+
+				xz -1 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → xz)${RESET}\n\n\
+${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+IMAGEM DESTINO : ${RED}$outfile" \
+						10 100 0
+
+				wait "$compress_pid"
+				rm -f "$fifo_tmp"
+				;;
+
+			gzip)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
+
+				gzip -1 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → gzip)${RESET}\n\n\
+${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+IMAGEM DESTINO : ${RED}$outfile" \
+						10 100 0
+
+				wait "$compress_pid"
+				rm -f "$fifo_tmp"
+				;;
+
+			*)
+				(
+					pv --numeric --size "$src_size" "$source" >"$outfile"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
+${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+IMAGEM DESTINO : ${RED}$outfile" \
+						10 100 0
+				;;
+			esac
+		fi
+		nchoice=$?
+
+		if [[ $image_format == "qcow2" ]]; then
+			local tmp_raw="$outfile.tmp.raw"
+			mv "$outfile" "$tmp_raw"
+
+			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
+				"\
+      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
+      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
+      Aguarde, esta operação pode levar alguns minutos..." 10 70
+
+			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
+				rm -f "$tmp_raw"
+			fi
+		fi
+
+		sh_end_time_elapsed
+		result="$(fdisk -b $SECTOR_SIZE -l $outfile)"
+		message="$(printf "\n\n%s" "$result")"
+
+		[[ $nchoice -eq 0 ]] && display_result \
+			"fdisk -b $SECTOR_SIZE -l $outfile" \
+			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"${BOLD}${WHITE}$message\n\n" \
+			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+		return $nchoice
+	fi
+}
+
+sh_make_clone_disk_to_imageOLD() {
 	source="$1"
 	local -i nchoice
 	set -o pipefail
@@ -935,15 +1235,25 @@ get_fstype() {
 sh_list_image() {
 	local localtitle="$1"
 	local imageselected="$2"
+	local psearch="."
+
+	info_nowait "Aguarde, Escaneando por imagens..."
 
 	while true; do
-		# Lista imagens no diretório atual (pode trocar o "." pelo diretório que quiser)
-		mapfile -t ARRAY_IMG_FILES < <(find . -maxdepth 1 -type f \( -iname "*.raw" -o -iname "*.qcow2" -o -iname "*.img" \) | sort)
+		sh_search_and_found_files() {
+			# Lista imagens no diretório atual (pode trocar o "." pelo diretório que quiser)
+			mapfile -t ARRAY_IMG_FILES < <(find $psearch -maxdepth 1 -type f \( -iname "*.raw" -o -iname "*.qcow2" -o -iname "*.img" \) | sort)
+			if [[ "${#ARRAY_IMG_FILES[@]}" -eq 0 ]]; then
+				return 1
+			fi
+			return 0
+		}
 
-		if [[ "${#ARRAY_IMG_FILES[@]}" -eq 0 ]]; then
+		sh_search_and_found_files || psearch="$IMGDIR"
+		sh_search_and_found_files || {
 			info "erro: nenhuma imagem encontrada em '$PWD'"
 			return 1
-		fi
+		}
 
 		local array=()
 		local i
@@ -1020,6 +1330,68 @@ $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 		fi
 		break
 	done
+}
+
+sh_clone_image_to_disk() {
+	local -i nchoice
+	set -o pipefail
+
+	image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
+
+	local localtitle="${cmsg_disco_destino}"
+	local disk_selected=""
+	target=$(sh_list_disk "${localtitle}" "${disk_selected}")
+	[[ -z "$target" ]] && return 1
+
+	sh_disk_info
+	DEVICE_TARGET="$target"
+	MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
+	SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
+
+	if conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
+${BLUE} IMAGEM ORIGEM:  $image \n" \
+		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+
+		if ! sh_checkdisk "$target"; then
+			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
+			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+		fi
+
+		sh_start_time_elapsed
+		mensagem "${cmsg_formatando_particao}: $image TO $target"
+
+		SECTOR_SIZE=$(blockdev --getss "$target")
+
+		(
+			pv -n "$image" | dd of="$target" conv=notrunc,noerror
+		) 2>&1 |
+			${DIALOG} \
+				--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+				--colors \
+				--gauge \
+				"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
+ORIGEM : ${YELLOW}$image${RESET}\n\
+DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+				10 100 0
+		nchoice=$?
+
+		sh_end_time_elapsed
+		result=$(fdisk -l "$target")
+		message=$(printf "\n\n%s" "$result")
+
+		[[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")\n\n" \
+			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
+			"${RESET}${BOLD}${WHITE}$message"
+
+		sh_reset_conf
+		return $nchoice
+	fi
+	return 1
 }
 
 sh_clone_image_to_part() {
@@ -1302,15 +1674,19 @@ ${cmsg_disco_destino[LC_DEFAULT]}: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_
 }
 
 sh_Language() {
-  cmsg_Clonar_Disco_para_Disco="$(gettext "Clonar Disco para Disco")"
-  cmsg_Clonar_Disco_para_Imagem="$(gettext "Clonar Disco para Imagem")"
-  cmsg_Clonar_Particao_para_Imagem="$(gettext "Clonar Partição para Imagem")"
-  cmsg_Clonar_Particao_para_Particao="$(gettext "Clonar Partição para Partição")"
-  cmsg_Clonar_Imagem_para_Particao="$(gettext "Clonar Imagem para Partição")"
-  cmsg_Gravar_ISO_para_Disco="$(gettext "Gravar ISO para Disco")"
-  cmsg_Listar_Discos="$(gettext "Listar Discos")"
+	cmsg_Clonar_Disco_para_Disco="$(gettext "Clonar Disco para Disco")"
+	cmsg_Clonar_Disco_para_Imagem="$(gettext "Clonar Disco para Imagem")"
+	cmsg_Clonar_Particao_para_Imagem="$(gettext "Clonar Partição para Imagem")"
+	cmsg_Clonar_Particao_para_Particao="$(gettext "Clonar Partição para Partição")"
+	cmsg_Clonar_Imagem_para_Particao="$(gettext "Clonar Imagem para Partição")"
+	cmsg_Gravar_ISO_para_Disco="$(gettext "Gravar ISO para Disco")"
+	cmsg_Clonar_Imagem_para_Disco="$(gettext "Clonar Imagem para Disco")"
+	cmsg_Listar_Discos="$(gettext "Listar Discos")"
+	cmsg_Escolha_o_Formato_da_Imagem="$(gettext "Escolha o formato e compressão da imagem")"
+	cmsg_Imagem_Bruta_Padrao="$(gettext "Imagem Bruta Padrão (.img)")"
+	cmsg_Imagem_Comprimida_Zstd="$(gettext "Imagem Comprimida de Alta Performance (.img.zst)")"
 
-  cmsg_Escolha_o_tipo_de_clone="$(gettext "Escolha o tipo de clone")"
+	cmsg_Escolha_o_tipo_de_clone="${GREEN}${REVERSE}$(gettext "Escolha o tipo de clone")"
 	cmsg_nec_dismount="$(gettext "Necessário desmontar a partição antes de reparticionar")"
 	cwarning="$(gettext "** AVISO **")"
 	cmsg_all_mounted_part="$(gettext "Necessário desmontar as partições abaixo antes de prosseguir")"
@@ -1325,6 +1701,7 @@ sh_Language() {
 	cmsg_choose_part_destino="$(gettext "Escolha a partição DESTINO")"
 	cmsg_yeslabel="$(gettext "Sim")"
 	cmsg_nolabel="$(gettext "Não")"
+  cmsg_Tema="$(gettext 'Seletor de temas do dialog')"
 
 	cLB1="$(gettext "Use as teclas")"
 	cLB2="$(gettext "PARA CIMA")"
@@ -1334,7 +1711,11 @@ sh_Language() {
 	cLB6="$(gettext "Use")"
 	cLB7="$(gettext "para alternar entre os botões")"
 	cLB8="$(gettext "para selecionar")"
-	cmsg_LABEL="$cLB1${BLUE} ↑ $cLB2$RESET $cLB3 ${BLUE}↓ $cLB4$RESET $cLB5\n$cLB6${BLUE} TAB${RESET} $cLB7${BLUE} ENTER${RESET} $cLB8"
+	ccolor="${BOLD}${RED}"
+	cmsg_LABEL="$cLB1 ${ccolor}↑ $cLB2$RESET \
+$cLB3 ${ccolor}↓ $cLB4$RESET \
+$cLB5\n$cLB6 ${ccolor}⇥ TAB${RESET} \
+$cLB7 ${ccolor}↵ ENTER${RESET} $cLB8"
 
 	cmsg_disco_identico="$(gettext "Disco ORIGEM e DESTINO não podem ser o mesmo")"
 	cmsg_formatando_particao="$(gettext "Formatando partição")"
@@ -1459,13 +1840,14 @@ log_msg() {
 }
 
 run_dialog_stream() {
-  local title="$1"; shift
-    stdbuf -oL -eL "$@" 2>&1 \
-        | dialog \
-    		--backtitle "$ccabec" \
-            --progressbox "$title" 20 70
-  local status=${PIPESTATUS[0]}
-  return "$status"
+	local title="$1"
+	shift
+	stdbuf -oL -eL "$@" 2>&1 |
+		dialog \
+			--backtitle "$ccabec" \
+			--progressbox "$title" 20 70
+	local status=${PIPESTATUS[0]}
+	return "$status"
 }
 
 sh_setup() {
@@ -1543,11 +1925,68 @@ $(gettext "Caso contrário, você não poderá usar as ferramentas de partição
 sh_execute_iso2usb() {
 	if command -v chili-iso2usb >/dev/null; then
 		bash chili-iso2usb
+	else
+		info "Erro: O utilitário 'chili-iso2usb' não está instalado no sistema."
 	fi
 	return
 }
 
-#				--keep-tite \
+sh_choose_compression_type() {
+	while true; do
+		compress_type=$(
+			${DIALOG} \
+				--clear \
+				--stdout \
+				--aspect 20 \
+				--backtitle "$ccabec" \
+				--colors \
+				--title "FORMATO DA IMAGEM" \
+				--ok-label "${cmsg_Select}" \
+				--cancel-label "${cmsg_Sair}" \
+				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_Formato_da_Imagem}:${RESET}" \
+				10 80 0 \
+				0 "${cmsg_Imagem_Bruta_Padrao}" \
+				1 "${cmsg_Imagem_Comprimida_Zstd}"
+		)
+
+		exit_status=$?
+		case $exit_status in
+		"$D_ESC" | "$D_CANCEL")
+			return 255
+			;;
+		esac
+
+		# Se o usuário escolheu Zstd, mas não tem o binário instalado no sistema
+		if [[ "$compress_type" -eq 1 ]] && ! command -v zstd >/dev/null 2>&1; then
+			info "Erro: O utilitário 'zstd' não está instalado no sistema para compressão."
+			continue
+		fi
+
+		echo "$compress_type"
+		return 0
+	done
+}
+
+sh_run_binary() {
+  local binary="${1}"
+  local lang="${2}"
+  local grafic="${3}"
+
+  if [[ -n $(command -v "${binary}") || -n $(command -v ./"${binary}") ]]; then
+    bash "${binary}" "$lang" "${grafic}"
+    return 0
+  fi
+
+  msg "INFO" "$(log_info_msg "$(gettext "Aguarde...") ${cmsg_Gerando} test with "${binary}" ${xurl}")"
+  evaluate_retval 1 "$err_not_fatal"
+  info "${WHITE}${REVERSE}${binary}${RESET}" \
+    "\n\n${RED}✗ $(gettext "binário não foi localizado no") ${YELLOW}\$PATH" \
+    "\n${RED}✗ $(gettext "binário não foi localizado na pasta local:") ${YELLOW}$PWD${RESET}" \
+    "${YELLOW}\n➡ $(gettext "DICA: instale o pacote chili-utils")"
+  return 1
+}
+
+# --keep-tite \
 sh_choose_clone_type() {
 	while true; do
 		clone_type=$(
@@ -1557,19 +1996,21 @@ sh_choose_clone_type() {
 				--aspect 20 \
 				--backtitle "$ccabec" \
 				--colors \
-				--title "MENU" \
+				--title "$(gettext "MENU PRINCIPAL")" \
 				--ok-label "${cmsg_Select}" \
 				--cancel-label "${cmsg_Sair}" \
-				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_tipo_de_clone}:${RESET}" \
+				--menu "${cmsg_LABEL}\n\n${cmsg_Escolha_o_tipo_de_clone}:" \
 				10 80 0 \
 				0 "${cmsg_Clonar_Disco_para_Disco}" \
 				1 "${cmsg_Clonar_Disco_para_Imagem}" \
 				2 "${cmsg_Clonar_Particao_para_Imagem}" \
 				3 "${cmsg_Clonar_Particao_para_Particao}" \
 				4 "${cmsg_Clonar_Imagem_para_Particao}" \
-				5 "${cmsg_Gravar_ISO_para_Disco}" \
-				6 "${cmsg_Listar_Discos}"
-		)
+				5 "${cmsg_Clonar_Imagem_para_Disco}" \
+				6 "${cmsg_Gravar_ISO_para_Disco}" \
+				7 "${cmsg_Listar_Discos}" \
+				8 "${cmsg_Tema}"
+    )
 
 		exit_status=$?
 		case $exit_status in
@@ -1578,13 +2019,15 @@ sh_choose_clone_type() {
 			;;
 		esac
 		case $clone_type in
-		0) sh_clone_disk_to_disk ;;
-		1) sh_clone_disk_to_image ;;
-		2) sh_clone_part_to_image ;;
-		3) sh_clone_part_to_part ;;
-		4) sh_clone_image_to_part ;;
-		5) sh_execute_iso2usb ;;
-		6) sh_list_disk ;;
+  		0) sh_clone_disk_to_disk ;;
+	  	1) sh_clone_disk_to_image ;;
+  		2) sh_clone_part_to_image ;;
+	  	3) sh_clone_part_to_part ;;
+  		4) sh_clone_image_to_part ;;
+	  	5) sh_clone_image_to_disk ;;
+  		6) sh_execute_iso2usb ;;
+	  	7) sh_list_disk ;;
+  		8) sh_run_binary 'chili-dialog-theme-selector' ;;
 		esac
 	done
 }
