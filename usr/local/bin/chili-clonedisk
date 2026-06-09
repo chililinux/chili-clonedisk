@@ -5,7 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Updated: seg 08 jun 2026 15:22:52 -04
+#  Updated: ter 09 jun 2026 11:33:06 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -32,13 +32,13 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #########################################################################
-#export LANGUAGE=pt_BR
+export LANGUAGE="${LANGUAGE:-pt_BR}"
 export TEXTDOMAINDIR=/usr/share/locale
 export TEXTDOMAIN=chili-clonedisk
 
 #declare -r APP="${0##*/}"
 declare -r _APP_="chili-clonedisk"
-declare -r _VERSION_="6.6.08.20260608"
+declare -r _VERSION_="6.6.09.20260609"
 declare -gA Alanguage=([pt_BR]=0 [en_US]=1 [de_DE]=2 [fr_FR]=3 [es_ES]=4 [it_IT]=5)
 declare -gA Alocale=([0]=pt_BR [1]=en_US [2]=de_DE [3]=fr_FR [4]=es_ES [5]=it_IT)
 declare dialogRcFile="$HOME/.dialogrc"
@@ -221,7 +221,7 @@ sh_configure() {
 	: "${xapp="$_APP_"}"
 	: "${ccabec="${BOLD}${WHITE}${REVERSE}${xapp} ${YELLOW}v$_VERSION_ ${BLUE}https://github.com/chililinux/chili-clonedisk"}"
 	: "${ctitle="$(detect_distro)"}"
-	welcome="$(gettext "Bem vindo ao ")"
+	: "${welcome="$(gettext "Bem vindo ao ")"}"
 
 }
 
@@ -1682,6 +1682,8 @@ sh_Language() {
 	cmsg_Gravar_ISO_para_Disco="$(gettext "Gravar ISO para Disco")"
 	cmsg_Clonar_Imagem_para_Disco="$(gettext "Clonar Imagem para Disco")"
 	cmsg_Listar_Discos="$(gettext "Listar Discos")"
+	cmsg_Clonar_via_Rede="$(gettext "Clonar Disco para Imagem via Rede (SSH Criptografado)")"
+
 	cmsg_Escolha_o_Formato_da_Imagem="$(gettext "Escolha o formato e compressão da imagem")"
 	cmsg_Imagem_Bruta_Padrao="$(gettext "Imagem Bruta Padrão (.img)")"
 	cmsg_Imagem_Comprimida_Zstd="$(gettext "Imagem Comprimida de Alta Performance (.img.zst)")"
@@ -1701,7 +1703,7 @@ sh_Language() {
 	cmsg_choose_part_destino="$(gettext "Escolha a partição DESTINO")"
 	cmsg_yeslabel="$(gettext "Sim")"
 	cmsg_nolabel="$(gettext "Não")"
-	cmsg_Tema="$(gettext 'Seletor de temas do dialog')"
+	cmsg_Tema="$(gettext 'Seletor de temas da interface (dialog)')"
 
 	cLB1="$(gettext "Use as teclas")"
 	cLB2="$(gettext "PARA CIMA")"
@@ -1710,7 +1712,7 @@ sh_Language() {
 	cLB5="$(gettext "para navegar")"
 	cLB6="$(gettext "Use")"
 	cLB7="$(gettext "para alternar entre os botões")"
-	cLB8="$(gettext "para selecionar")"
+	cLB8="$(gettext "para selecionar|aceitar")"
 	ccolor="${BOLD}${RED}"
 	cmsg_LABEL="$cLB1 ${ccolor}↑ $cLB2$RESET \
 $cLB3 ${ccolor}↓ $cLB4$RESET \
@@ -1987,267 +1989,267 @@ sh_run_binary() {
 }
 
 sh_get_local_ip() {
-  local local_ip
-  local_ip=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')
-  if [[ -z "$local_ip" ]]; then
-    echo "192.168.1.100"
-  else
-    echo "$local_ip"
-  fi
+	local local_ip
+	local_ip=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')
+	if [[ -z "$local_ip" ]]; then
+		echo "192.168.1.100"
+	else
+		echo "$local_ip"
+	fi
 }
 
 sh_menu_network_ssh() {
-  local source="$1"
-  local txtNetworkData
+	local source="$1"
+	local txtNetworkData
 
-  local local_ip
-  local_ip=$(sh_get_local_ip)
+	local local_ip
+	local_ip=$(sh_get_local_ip)
 
-  local base_ip="${local_ip%.*}"
+	local base_ip="${local_ip%.*}"
 
-  local ssh_user="root"
-  local ssh_ip="${base_ip}.100"
-  local ssh_porta="22"
-  local ssh_password=""
-  local use_sshpass=0
-  local format_type=""
+	local ssh_user="root"
+	local ssh_ip="${base_ip}.100"
+	local ssh_porta="22"
+	local ssh_password=""
+	local use_sshpass=0
+	local format_type=""
 
-  while true; do
-    # 1. Chama a nova função modular para obter o formato desejado
-    format_type=$(sh_get_network_format)
+	while true; do
+		# 1. Chama a nova função modular para obter o formato desejado
+		format_type=$(sh_get_network_format)
 
-    if [[ -z "$format_type" ]]; then
-      return 1
-    fi
+		if [[ -z "$format_type" ]]; then
+			return 1
+		fi
 
-    # 2. Define dinamicamente o arquivo padrão com base no formato retornado
-    local ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img.${format_type}"
-    if [[ "$format_type" == "img" ]]; then
-      ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img"
-    fi
+		# 2. Define dinamicamente o arquivo padrão com base no formato retornado
+		local ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img.${format_type}"
+		if [[ "$format_type" == "img" ]]; then
+			ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img"
+		fi
 
-    # 3. Abre o formulário com o nome do arquivo já preenchido com a extensão correta
-    exec 3>&1
-    txtNetworkData=$(${DIALOG} \
-      --backtitle "$ccabec" \
-      --title "** $(gettext "CLONAGEM REMOTA VIA SSH") **" \
-      --ok-label "${cmsg_Select}" \
-      --cancel-label "${cmsg_button_voltar}" \
-      --colors \
-      --insecure \
-      --mixedform "$(gettext "Entre com as credenciais do servidor SSH de destino e caminho:")" \
-      14 90 0 \
-      "$(gettext "Usuário Remoto  :")" 1 1 "$ssh_user"    1 20 20 0 0 \
-      "$(gettext "IP do Servidor  :")" 2 1 "$ssh_ip"      2 20 30 0 0 \
-      "$(gettext "Porta SSH       :")" 3 1 "$ssh_porta"   3 20 10 0 0 \
-      "$(gettext "Arquivo Destino :")" 4 1 "$ssh_outfile" 4 20 60 0 0 \
-      2>&1 1>&3)
+		# 3. Abre o formulário com o nome do arquivo já preenchido com a extensão correta
+		exec 3>&1
+		txtNetworkData=$(${DIALOG} \
+			--backtitle "$ccabec" \
+			--title "** $(gettext "CLONAGEM REMOTA VIA SSH") **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--colors \
+			--insecure \
+			--mixedform "$(gettext "Entre com as credenciais do servidor SSH de destino e caminho:")" \
+			14 90 0 \
+			"$(gettext "Usuário Remoto  :")" 1 1 "$ssh_user" 1 20 20 0 0 \
+			"$(gettext "IP do Servidor  :")" 2 1 "$ssh_ip" 2 20 30 0 0 \
+			"$(gettext "Porta SSH       :")" 3 1 "$ssh_porta" 3 20 10 0 0 \
+			"$(gettext "Arquivo Destino :")" 4 1 "$ssh_outfile" 4 20 60 0 0 \
+			2>&1 1>&3)
 
-    local exit_status=$?
-    exec 3>&-
+		local exit_status=$?
+		exec 3>&-
 
-    case $exit_status in
-      1 | 255)
-        # Se voltar no formulário, retorna para a tela de escolha de formato
-        continue
-        ;;
-      0)
-        mapfile -t aNetData <<<"$txtNetworkData"
-        ssh_user="${aNetData[0]}"
-        ssh_ip="${aNetData[1]}"
-        ssh_porta="${aNetData[2]}"
-        ssh_outfile="${aNetData[3]}"
+		case $exit_status in
+		1 | 255)
+			# Se voltar no formulário, retorna para a tela de escolha de formato
+			continue
+			;;
+		0)
+			mapfile -t aNetData <<<"$txtNetworkData"
+			ssh_user="${aNetData[0]}"
+			ssh_ip="${aNetData[1]}"
+			ssh_porta="${aNetData[2]}"
+			ssh_outfile="${aNetData[3]}"
 
-        if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_outfile" ]]; then
-          conf "*** SSH CONFIG ***" "\n$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")\n"
-          continue
-        fi
+			if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_outfile" ]]; then
+				conf "*** SSH CONFIG ***" "\n$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")\n"
+				continue
+			fi
 
-        ${DIALOG} --title "$(gettext "TESTANDO CONEXÃO")" --infobox "\n$(gettext "Tentando conexão via Chave Pública em") $ssh_ip..." 5 60
-        if ssh -p "$ssh_porta" -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
-          use_sshpass=0
-        else
-          if ! command -v sshpass >/dev/null 2>&1; then
-            conf "*** ERRO DE REQUISITO ***" "${RED}$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
-            continue
-          fi
+			${DIALOG} --title "$(gettext "TESTANDO CONEXÃO")" --infobox "\n$(gettext "Tentando conexão via Chave Pública em") $ssh_ip..." 5 60
+			if ssh -p "$ssh_porta" -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
+				use_sshpass=0
+			else
+				if ! command -v sshpass >/dev/null 2>&1; then
+					conf "*** ERRO DE REQUISITO ***" "${RED}$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
+					continue
+				fi
 
-          ssh_password=$(${DIALOG} --backtitle "$ccabec" --title "$(gettext "AUTENTICAÇÃO REQUERIDA")" --clear --insecure --passwordbox "$(gettext "A conexão direta por chave falhou.\nDigite a senha para") $ssh_user@$ssh_ip:" 10 60 2>&1 >/dev/tty)
-          if [[ $? -ne 0 || -z "$ssh_password" ]]; then
-            continue
-          fi
+				ssh_password=$(${DIALOG} --backtitle "$ccabec" --title "$(gettext "AUTENTICAÇÃO REQUERIDA")" --clear --insecure --passwordbox "$(gettext "A conexão direta por chave falhou.\nDigite a senha para") $ssh_user@$ssh_ip:" 10 60 2>&1 >/dev/tty)
+				if [[ $? -ne 0 || -z "$ssh_password" ]]; then
+					continue
+				fi
 
-          ${DIALOG} --title "$(gettext "TESTANDO SENHA")" --infobox "\n$(gettext "Validando senha no servidor remoto...")" 5 60
-          if ! sshpass -p "$ssh_password" ssh -p "$ssh_porta" -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
-            conf "*** ERRO DE AUTENTICAÇÃO ***" "${RED}$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")${RESET}\n$(gettext "Verifique suas credenciais e tente novamente.")"
-            continue
-          fi
-          use_sshpass=1
-        fi
+				${DIALOG} --title "$(gettext "TESTANDO SENHA")" --infobox "\n$(gettext "Validando senha no servidor remoto...")" 5 60
+				if ! sshpass -p "$ssh_password" ssh -p "$ssh_porta" -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
+					conf "*** ERRO DE AUTENTICAÇÃO ***" "${RED}$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")${RESET}\n$(gettext "Verifique suas credenciais e tente novamente.")"
+					continue
+				fi
+				use_sshpass=1
+			fi
 
-        sh_make_clone_network_ssh "$source" "$ssh_user" "$ssh_ip" "$ssh_porta" "$ssh_outfile" "$use_sshpass" "$ssh_password" "$format_type"
-        return $?
-        ;;
-    esac
-  done
+			sh_make_clone_network_ssh "$source" "$ssh_user" "$ssh_ip" "$ssh_porta" "$ssh_outfile" "$use_sshpass" "$ssh_password" "$format_type"
+			return $?
+			;;
+		esac
+	done
 }
 
 sh_get_network_format() {
-  local format_type
-  format_type=$(${DIALOG} \
-    --clear \
-    --stdout \
-    --backtitle "$ccabec" \
-    --title "$(gettext "FORMATO DE COMPRESSÃO")" \
-    --ok-label "${cmsg_Select}" \
-    --cancel-label "${cmsg_button_voltar}" \
-    --menu "$(gettext "Escolha o formato de saída para a imagem remota:")" \
-    12 60 0 \
-    "zst"   "Zstandard (Otimizado/Adaptativo)" \
-    "gz"    "Gzip (Compatibilidade)" \
-    "xz"    "XZ / LZMA (Máxima Compressão)" \
-    "img"   "Sem compressão (Imagem Raw / bruto)" \
-    2>&1)
+	local format_type
+	format_type=$(${DIALOG} \
+		--clear \
+		--stdout \
+		--backtitle "$ccabec" \
+		--title "$(gettext "FORMATO DE COMPRESSÃO")" \
+		--ok-label "${cmsg_Select}" \
+		--cancel-label "${cmsg_button_voltar}" \
+		--menu "$(gettext "Escolha o formato de saída para a imagem remota:")" \
+		12 60 0 \
+		"zst" "Zstandard (Otimizado/Adaptativo)" \
+		"gz" "Gzip (Compatibilidade)" \
+		"xz" "XZ / LZMA (Máxima Compressão)" \
+		"img" "Sem compressão (Imagem Raw / bruto)" \
+		2>&1)
 
-  if [[ $? -eq 0 && -n "$format_type" ]]; then
-    echo "$format_type"
-  else
-    echo ""
-  fi
+	if [[ $? -eq 0 && -n "$format_type" ]]; then
+		echo "$format_type"
+	else
+		echo ""
+	fi
 }
 
 sh_make_clone_network_ssh() {
-  local source="$1"
-  local ssh_user="$2"
-  local ssh_ip="$3"
-  local ssh_porta="$4"
-  local ssh_outfile="$5"
-  local use_sshpass="$6"
-  local ssh_password="$7"
-  local format_type="$8"
-  local -i nchoice
-  set -o pipefail
+	local source="$1"
+	local ssh_user="$2"
+	local ssh_ip="$3"
+	local ssh_porta="$4"
+	local ssh_outfile="$5"
+	local use_sshpass="$6"
+	local ssh_password="$7"
+	local format_type="$8"
+	local -i nchoice
+	set -o pipefail
 
-  if conf "${cwarning}" \
-    "${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+	if conf "${cwarning}" \
+		"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
 $(gettext "SERVIDOR DESTINO :") ${YELLOW}$ssh_user@$ssh_ip:$ssh_porta${RESET}\n\
 $(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
-    "${BOLD}${YELLOW}$(gettext "Confirmar o início da clonagem criptografada via rede?")${RESET}\n"; then
+		"${BOLD}${YELLOW}$(gettext "Confirmar o início da clonagem criptografada via rede?")${RESET}\n"; then
 
-    sh_start_time_elapsed
-    mensagem "$(gettext "Iniciando transmissão de") $source $(gettext "para") $ssh_ip:$ssh_outfile"
+		sh_start_time_elapsed
+		mensagem "$(gettext "Iniciando transmissão de") $source $(gettext "para") $ssh_ip:$ssh_outfile"
 
-    local src_size
-    if [[ -b "$source" ]]; then
-      src_size=$(sudo blockdev --getsize64 "$source")
-    else
-      src_size=$(stat -c%s "$source")
-    fi
+		local src_size
+		if [[ -b "$source" ]]; then
+			src_size=$(sudo blockdev --getsize64 "$source")
+		else
+			src_size=$(stat -c%s "$source")
+		fi
 
-    SECTOR_SIZE=$(blockdev --getss "$source")
+		SECTOR_SIZE=$(blockdev --getss "$source")
 
-    # Mapeamento limpo sem o bzip2
-    local compress_cmd="cat"
-    local use_custom_pipeline=0
+		# Mapeamento limpo sem o bzip2
+		local compress_cmd="cat"
+		local use_custom_pipeline=0
 
-    case "$format_type" in
-      zst)   compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
-      gz)    compress_cmd="gzip -c" ;;
-      xz)    compress_cmd="xz -c -T2" ;;
-      img)   compress_cmd="cat" ;;
-      qcow2) use_custom_pipeline=1 ;;
-      *)     compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
-    esac
+		case "$format_type" in
+		zst) compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
+		gz) compress_cmd="gzip -c" ;;
+		xz) compress_cmd="xz -c -T2" ;;
+		img) compress_cmd="cat" ;;
+		qcow2) use_custom_pipeline=1 ;;
+		*) compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
+		esac
 
-    local remote_dir
-    remote_dir=$(dirname "$ssh_outfile")
+		local remote_dir
+		remote_dir=$(dirname "$ssh_outfile")
 
-    ${DIALOG} --title "$(gettext "PREPARANDO DESTINO")" --infobox "\n$(gettext "Garantindo que o diretório remoto existe...")" 5 60
-    local mkdir_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'mkdir -p \"$remote_dir\"'"
-    if [[ "$use_sshpass" -eq 1 ]]; then
-      mkdir_cmd="sshpass -p '$ssh_password' $mkdir_cmd"
-    fi
-    
-    if ! eval "$mkdir_cmd" >/dev/null 2>&1; then
-      conf "*** ERRO DE DIRETÓRIO ***" "${RED}$(gettext "Falha ao criar o diretório remoto:")${RESET} $remote_dir\n$(gettext "Verifique as permissões de escrita do usuário no destino.")"
-      return 1
-    fi
+		${DIALOG} --title "$(gettext "PREPARANDO DESTINO")" --infobox "\n$(gettext "Garantindo que o diretório remoto existe...")" 5 60
+		local mkdir_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'mkdir -p \"$remote_dir\"'"
+		if [[ "$use_sshpass" -eq 1 ]]; then
+			mkdir_cmd="sshpass -p '$ssh_password' $mkdir_cmd"
+		fi
 
-    local fifo_tmp="/tmp/clonereder_fifo_$$"
-    rm -f "$fifo_tmp"
-    mkfifo "$fifo_tmp"
+		if ! eval "$mkdir_cmd" >/dev/null 2>&1; then
+			conf "*** ERRO DE DIRETÓRIO ***" "${RED}$(gettext "Falha ao criar o diretório remoto:")${RESET} $remote_dir\n$(gettext "Verifique as permissões de escrita do usuário no destino.")"
+			return 1
+		fi
 
-    local ssh_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'cat > \"$ssh_outfile\"'"
+		local fifo_tmp="/tmp/clonereder_fifo_$$"
+		rm -f "$fifo_tmp"
+		mkfifo "$fifo_tmp"
 
-    if [[ "$use_sshpass" -eq 1 ]]; then
-      ssh_cmd="sshpass -p '$ssh_password' $ssh_cmd"
-    fi
+		local ssh_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'cat > \"$ssh_outfile\"'"
 
-    if [[ "$use_custom_pipeline" -eq 1 ]]; then
-      qemu-img convert -O qcow2 "$fifo_tmp" /dev/stdout | eval "$ssh_cmd" 2>/dev/null &
-    else
-      ( cat "$fifo_tmp" | $compress_cmd ) | eval "$ssh_cmd" 2>/dev/null &
-    fi
-    local network_pid=$!
+		if [[ "$use_sshpass" -eq 1 ]]; then
+			ssh_cmd="sshpass -p '$ssh_password' $ssh_cmd"
+		fi
 
-    (
-      pv --numeric --size "$src_size" "$source" > "$fifo_tmp"
-    ) 2>&1 |
-      ${DIALOG} \
-        --title "$(gettext "CLONAGEM REMOTA EM ANDAMENTO")" \
-        --colors \
-        --gauge \
-        "${BOLD}${WHITE}${REVERSE}$(gettext "Processando: pv → conversor/compressor → SSH → Rede")${RESET}\n\n\
+		if [[ "$use_custom_pipeline" -eq 1 ]]; then
+			qemu-img convert -O qcow2 "$fifo_tmp" /dev/stdout | eval "$ssh_cmd" 2>/dev/null &
+		else
+			(cat "$fifo_tmp" | $compress_cmd) | eval "$ssh_cmd" 2>/dev/null &
+		fi
+		local network_pid=$!
+
+		(
+			pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+		) 2>&1 |
+			${DIALOG} \
+				--title "$(gettext "CLONAGEM REMOTA EM ANDAMENTO")" \
+				--colors \
+				--gauge \
+				"${BOLD}${WHITE}${REVERSE}$(gettext "Processando: pv → conversor/compressor → SSH → Rede")${RESET}\n\n\
 ${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE ($SIZE_SOURCE)${RESET}\n\
 $(gettext "DESTINO REMOTO :") ${RED}$ssh_ip:$ssh_outfile${RESET}" \
-        11 100 0
+				11 100 0
 
-    nchoice=${PIPESTATUS[1]}
+		nchoice=${PIPESTATUS[1]}
 
-    wait "$network_pid"
-    rm -f "$fifo_tmp"
+		wait "$network_pid"
+		rm -f "$fifo_tmp"
 
-    sh_end_time_elapsed
+		sh_end_time_elapsed
 
-    if [[ $nchoice -eq 0 ]]; then
-      local remote_size="N/A"
-      local size_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'du -sh \"$ssh_outfile\" 2>/dev/null | awk \"{print \\\$1}\"'"
-      if [[ "$use_sshpass" -eq 1 ]]; then
-        size_cmd="sshpass -p '$ssh_password' $size_cmd"
-      fi
-      remote_size=$(eval "$size_cmd")
-      [[ -z "$remote_size" ]] && remote_size="Unknown"
+		if [[ $nchoice -eq 0 ]]; then
+			local remote_size="N/A"
+			local size_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'du -sh \"$ssh_outfile\" 2>/dev/null | awk \"{print \\\$1}\"'"
+			if [[ "$use_sshpass" -eq 1 ]]; then
+				size_cmd="sshpass -p '$ssh_password' $size_cmd"
+			fi
+			remote_size=$(eval "$size_cmd")
+			[[ -z "$remote_size" ]] && remote_size="Unknown"
 
-      display_result \
-        "$(gettext "Resumo da Operação de Rede")" \
-        "${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem Remota Concluída com Sucesso!")${RESET}\n\n" \
-        "$(gettext "Origem Local     :") ${BOLD}${WHITE}$source${RESET}\n" \
-        "$(gettext "Destino Remoto   :") ${BOLD}${WHITE}$ssh_user@$ssh_ip:$ssh_outfile${RESET}\n" \
-        "$(gettext "Tamanho Remoto   :") ${BOLD}${YELLOW}$remote_size${RESET}\n\n" \
-        "$(gettext "Start Date time  :") ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-        "$(gettext "Finish Date Time :") ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-        "$(gettext "Time elapsed     :") ${BOLD}${GREEN}($(sh_time_elapsed))${RESET}\n"
-    fi
+			display_result \
+				"$(gettext "Resumo da Operação de Rede")" \
+				"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem Remota Concluída com Sucesso!")${RESET}\n\n" \
+				"$(gettext "Origem Local     :") ${BOLD}${WHITE}$source${RESET}\n" \
+				"$(gettext "Destino Remoto   :") ${BOLD}${WHITE}$ssh_user@$ssh_ip:$ssh_outfile${RESET}\n" \
+				"$(gettext "Tamanho Remoto   :") ${BOLD}${YELLOW}$remote_size${RESET}\n\n" \
+				"$(gettext "Start Date time  :") ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+				"$(gettext "Finish Date Time :") ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+				"$(gettext "Time elapsed     :") ${BOLD}${GREEN}($(sh_time_elapsed))${RESET}\n"
+		fi
 
-    return $nchoice
-  fi
-  return 1
+		return $nchoice
+	fi
+	return 1
 }
 
 sh_clone_network_ssh() {
-  local localtitle="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
-  local diskselected=""
+	local localtitle="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
+	local diskselected=""
 
-  source=$(sh_list_disk "${localtitle}" "${diskselected}")
+	source=$(sh_list_disk "${localtitle}" "${diskselected}")
 
-  if [[ -n "$source" ]]; then
-    sh_disk_info
-    DEVICE_SOURCE="$source"
-    MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
-    SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
+	if [[ -n "$source" ]]; then
+		sh_disk_info
+		DEVICE_SOURCE="$source"
+		MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
+		SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
 
-    sh_menu_network_ssh "$source"
-  fi
+		sh_menu_network_ssh "$source"
+	fi
 }
 
 # --keep-tite \
@@ -2267,14 +2269,14 @@ sh_choose_clone_type() {
 				10 80 0 \
 				0 "${cmsg_Clonar_Disco_para_Disco}" \
 				1 "${cmsg_Clonar_Disco_para_Imagem}" \
-				2 "${cmsg_Clonar_Particao_para_Imagem}" \
-				3 "${cmsg_Clonar_Particao_para_Particao}" \
-				4 "${cmsg_Clonar_Imagem_para_Particao}" \
-				5 "${cmsg_Clonar_Imagem_para_Disco}" \
-				6 "${cmsg_Gravar_ISO_para_Disco}" \
-				7 "${cmsg_Listar_Discos}" \
-				8 "${cmsg_Tema}" \
-				9 "$(gettext "Clonar via Rede (SSH Criptografado)")"
+				2 "${cmsg_Clonar_via_Rede}" \
+				3 "${cmsg_Clonar_Particao_para_Imagem}" \
+				4 "${cmsg_Clonar_Particao_para_Particao}" \
+				5 "${cmsg_Clonar_Imagem_para_Particao}" \
+				6 "${cmsg_Clonar_Imagem_para_Disco}" \
+				7 "${cmsg_Gravar_ISO_para_Disco}" \
+				8 "${cmsg_Listar_Discos}" \
+				9 "${cmsg_Tema}"
 		)
 
 		exit_status=$?
@@ -2286,14 +2288,14 @@ sh_choose_clone_type() {
 		case $clone_type in
 		0) sh_clone_disk_to_disk ;;
 		1) sh_clone_disk_to_image ;;
-		2) sh_clone_part_to_image ;;
-		3) sh_clone_part_to_part ;;
-		4) sh_clone_image_to_part ;;
-		5) sh_clone_image_to_disk ;;
-		6) sh_execute_iso2usb ;;
-		7) sh_list_disk ;;
-		8) sh_run_binary 'chili-dialog-theme-selector' ;;
-		9) sh_clone_network_ssh ;;
+		2) sh_clone_network_ssh ;;
+		3) sh_clone_part_to_image ;;
+		4) sh_clone_part_to_part ;;
+		5) sh_clone_image_to_part ;;
+		6) sh_clone_image_to_disk ;;
+		7) sh_execute_iso2usb ;;
+		8) sh_list_disk ;;
+		9) sh_run_binary 'chili-dialog-theme-selector' ;;
 		esac
 	done
 }
@@ -2308,6 +2310,7 @@ if ! opts=$(getopt -o Vnh --long version,nocolor,help -n "${0##*/}" -- "$@"); th
 	exit 0
 fi
 eval set -- "$opts"
+
 while true; do
 	case "$1" in
 	-V | --version)

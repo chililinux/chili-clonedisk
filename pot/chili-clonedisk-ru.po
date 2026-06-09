@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: chili-tradutor-go 2.1.20-20260201\n"
-"POT-Creation-Date: 2026-06-09 01:12-0400\n"
-"PO-Revision-Date: 2026-06-09 01:12-0400\n"
+"POT-Creation-Date: 2026-06-09 12:00-0400\n"
+"PO-Revision-Date: 2026-06-09 12:00-0400\n"
 "Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
 "Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
 "MIME-Version: 1.0\n"
@@ -71,181 +71,185 @@ msgid "Listar Discos"
 msgstr "Список дисков"
 
 #: usr/local/bin/chili-clonedisk:1685
+msgid "Clonar Disco para Imagem via Rede (SSH Criptografado)"
+msgstr "Клонировать диск в образ через сеть (зашифрованный SSH)"
+
+#: usr/local/bin/chili-clonedisk:1687
 msgid "Escolha o formato e compressão da imagem"
 msgstr "Выберите формат изображения и сжатие"
 
-#: usr/local/bin/chili-clonedisk:1686
+#: usr/local/bin/chili-clonedisk:1688
 msgid "Imagem Bruta Padrão (.img)"
 msgstr "Стандартное необработанное изображение (.img)"
 
-#: usr/local/bin/chili-clonedisk:1687
+#: usr/local/bin/chili-clonedisk:1689
 msgid "Imagem Comprimida de Alta Performance (.img.zst)"
 msgstr "Высокопроизводительное сжатое изображение (.img.zst)"
 
-#: usr/local/bin/chili-clonedisk:1689
+#: usr/local/bin/chili-clonedisk:1691
 msgid "Escolha o tipo de clone"
 msgstr "Выберите тип клона"
 
-#: usr/local/bin/chili-clonedisk:1690
+#: usr/local/bin/chili-clonedisk:1692
 msgid "Necessário desmontar a partição antes de reparticionar"
 msgstr "Необходимо отключить раздел перед переразметкой"
 
-#: usr/local/bin/chili-clonedisk:1691
+#: usr/local/bin/chili-clonedisk:1693
 msgid "** AVISO **"
 msgstr "** УВЕДОМЛЕНИЕ **"
 
-#: usr/local/bin/chili-clonedisk:1692
+#: usr/local/bin/chili-clonedisk:1694
 msgid "Necessário desmontar as partições abaixo antes de prosseguir"
 msgstr "Прежде чем продолжить, вам необходимо отключить разделы ниже."
 
-#: usr/local/bin/chili-clonedisk:1693
+#: usr/local/bin/chili-clonedisk:1695
 msgid "Desmontar ?"
 msgstr "Разобрать?"
 
-#: usr/local/bin/chili-clonedisk:1694
+#: usr/local/bin/chili-clonedisk:1696
 msgid "ERRO"
 msgstr "ОШИБКА"
 
-#: usr/local/bin/chili-clonedisk:1695
+#: usr/local/bin/chili-clonedisk:1697
 msgid "Info disco"
 msgstr "Информация о диске"
 
-#: usr/local/bin/chili-clonedisk:1696
+#: usr/local/bin/chili-clonedisk:1698
 msgid "Ok"
 msgstr "Хорошо"
 
-#: usr/local/bin/chili-clonedisk:1697 usr/local/bin/chili-clonedisk:1727
+#: usr/local/bin/chili-clonedisk:1699 usr/local/bin/chili-clonedisk:1729
 msgid "DISCO DE DESTINO"
 msgstr "НАЗНАЧЕНИЕ ДИСК"
 
-#: usr/local/bin/chili-clonedisk:1698
+#: usr/local/bin/chili-clonedisk:1700
 msgid "Escolha o disco ORIGEM"
 msgstr "Выберите ИСХОДНЫЙ диск"
 
-#: usr/local/bin/chili-clonedisk:1699
+#: usr/local/bin/chili-clonedisk:1701
 msgid "Escolha o disco DESTINO"
 msgstr "Выберите диск НАЗНАЧЕНИЯ"
 
-#: usr/local/bin/chili-clonedisk:1700
+#: usr/local/bin/chili-clonedisk:1702
 msgid "Escolha a partição ORIGEM"
 msgstr "Выберите раздел ORIGIN."
 
-#: usr/local/bin/chili-clonedisk:1701
+#: usr/local/bin/chili-clonedisk:1703
 msgid "Escolha a partição DESTINO"
 msgstr "Выберите раздел НАЗНАЧЕНИЕ"
 
-#: usr/local/bin/chili-clonedisk:1702
+#: usr/local/bin/chili-clonedisk:1704
 msgid "Sim"
 msgstr "Да"
 
-#: usr/local/bin/chili-clonedisk:1703
+#: usr/local/bin/chili-clonedisk:1705
 msgid "Não"
 msgstr "Нет"
 
-#: usr/local/bin/chili-clonedisk:1704
-msgid "Seletor de temas do dialog"
-msgstr "Выбор темы диалога"
-
 #: usr/local/bin/chili-clonedisk:1706
+msgid "Seletor de temas da interface (dialog)"
+msgstr "Выбор темы интерфейса (диалог)"
+
+#: usr/local/bin/chili-clonedisk:1708
 msgid "Use as teclas"
 msgstr "Используйте ключи"
 
-#: usr/local/bin/chili-clonedisk:1707
+#: usr/local/bin/chili-clonedisk:1709
 msgid "PARA CIMA"
 msgstr "ВВЕРХ"
 
-#: usr/local/bin/chili-clonedisk:1708
+#: usr/local/bin/chili-clonedisk:1710
 msgid "e"
 msgstr "и"
 
-#: usr/local/bin/chili-clonedisk:1709
+#: usr/local/bin/chili-clonedisk:1711
 msgid "PARA BAIXO"
 msgstr "ВНИЗ"
 
-#: usr/local/bin/chili-clonedisk:1710
+#: usr/local/bin/chili-clonedisk:1712
 msgid "para navegar"
 msgstr "ориентироваться"
 
-#: usr/local/bin/chili-clonedisk:1711
+#: usr/local/bin/chili-clonedisk:1713
 msgid "Use"
 msgstr "Использовать"
 
-#: usr/local/bin/chili-clonedisk:1712
+#: usr/local/bin/chili-clonedisk:1714
 msgid "para alternar entre os botões"
 msgstr "для переключения между кнопками"
 
-#: usr/local/bin/chili-clonedisk:1713
-msgid "para selecionar"
-msgstr "выбрать"
+#: usr/local/bin/chili-clonedisk:1715
+msgid "para selecionar|aceitar"
+msgstr "выбрать|принять"
 
-#: usr/local/bin/chili-clonedisk:1720
+#: usr/local/bin/chili-clonedisk:1722
 msgid "Disco ORIGEM e DESTINO não podem ser o mesmo"
 msgstr "Диск SOURCE и DESTINATION не могут быть одинаковыми."
 
-#: usr/local/bin/chili-clonedisk:1721
+#: usr/local/bin/chili-clonedisk:1723
 msgid "Formatando partição"
 msgstr "Форматирование раздела"
 
-#: usr/local/bin/chili-clonedisk:1722
+#: usr/local/bin/chili-clonedisk:1724
 msgid "Executando clonagem de disco"
 msgstr "Выполнение клонирования диска"
 
-#: usr/local/bin/chili-clonedisk:1723
+#: usr/local/bin/chili-clonedisk:1725
 msgid "Selecionar"
 msgstr "Выбирать"
 
-#: usr/local/bin/chili-clonedisk:1724
+#: usr/local/bin/chili-clonedisk:1726
 msgid "Sair"
 msgstr "Чтобы выйти"
 
-#: usr/local/bin/chili-clonedisk:1725
+#: usr/local/bin/chili-clonedisk:1727
 msgid "Voltar"
 msgstr "Чтобы вернуться"
 
-#: usr/local/bin/chili-clonedisk:1726
+#: usr/local/bin/chili-clonedisk:1728
 msgid "DISCO DE ORIGEM"
 msgstr "ИСХОДНЫЙ ДИСК"
 
-#: usr/local/bin/chili-clonedisk:1728
+#: usr/local/bin/chili-clonedisk:1730
 msgid "PARTIÇÃO DE ORIGEM"
 msgstr "ИСТОЧНЫЙ РАЗДЕЛ"
 
-#: usr/local/bin/chili-clonedisk:1729
+#: usr/local/bin/chili-clonedisk:1731
 msgid "PARTIÇÃO DE DESTINO"
 msgstr "РАЗДЕЛ НАЗНАЧЕНИЯ"
 
-#: usr/local/bin/chili-clonedisk:1730
+#: usr/local/bin/chili-clonedisk:1732
 msgid "AVISO!"
 msgstr "УВЕДОМЛЕНИЕ!"
 
-#: usr/local/bin/chili-clonedisk:1730
+#: usr/local/bin/chili-clonedisk:1732
 msgid "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
 msgstr "Все данные диска/раздела НАЗНАЧЕНИЯ, указанные ниже, будут потеряны!"
 
-#: usr/local/bin/chili-clonedisk:1731
+#: usr/local/bin/chili-clonedisk:1733
 msgid "Continuar com a clonagem"
 msgstr "Продолжить клонирование"
 
-#: usr/local/bin/chili-clonedisk:1743
+#: usr/local/bin/chili-clonedisk:1745
 msgid "Escolha o idioma:"
 msgstr "Выберите язык:"
 
-#: usr/local/bin/chili-clonedisk:1745
+#: usr/local/bin/chili-clonedisk:1747
 msgid "Português"
 msgstr "португальский"
 
-#: usr/local/bin/chili-clonedisk:1746
+#: usr/local/bin/chili-clonedisk:1748
 msgid "Inglês"
 msgstr "Английский"
 
-#: usr/local/bin/chili-clonedisk:1747
+#: usr/local/bin/chili-clonedisk:1749
 msgid "Alemão"
 msgstr "немецкий"
 
-#: usr/local/bin/chili-clonedisk:1748
+#: usr/local/bin/chili-clonedisk:1750
 msgid "Francês"
 msgstr "Французский"
 
-#: usr/local/bin/chili-clonedisk:1765
+#: usr/local/bin/chili-clonedisk:1767
 msgid "_"
 msgstr "_"
