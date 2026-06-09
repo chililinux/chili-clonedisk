@@ -10,18 +10,7 @@ url="https://github.com/chililinux/$pkgname"
 provides=("$pkgname")
 source=("git+${url}.git")
 md5sums=('SKIP')
-depends=()
-optdepends=(
-	sed
-	dialog
-	grep
-	ncurses
-	gawk
-	coreutils
-	util-linux
-	pv
-	which
-)
+depends=(sed dialog grep ncurses gawk coreutils util-linux pv which openssh sshpass)
 
 package() {
 	local dirs=("usr" "etc" "opt")
