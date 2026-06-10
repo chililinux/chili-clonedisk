@@ -21,6 +21,9 @@ optdepends=(
   util-linux
   pv
   which
+  openssh
+  sshpass
+  qemu-img
 )
 
 if [ -e "${pkgname}.install" ]; then
