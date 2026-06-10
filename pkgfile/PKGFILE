@@ -10,7 +10,7 @@ url="https://github.com/chililinux/$pkgname"
 provides=("$pkgname")
 source=("git+${url}.git")
 md5sums=('SKIP')
-depends=(sed dialog grep ncurses gawk coreutils util-linux pv which openssh sshpass)
+depends=(sed dialog grep ncurses gawk coreutils util-linux pv which openssh sshpass qemu-img)
 
 package() {
 	local dirs=("usr" "etc" "opt")
