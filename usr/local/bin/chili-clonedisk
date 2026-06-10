@@ -1332,6 +1332,120 @@ $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 	done
 }
 
+sh_clone_image_to_diskGEM() {
+	local -i nchoice
+	local tmp_error
+	local errmsg
+
+	set -o pipefail
+
+	image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
+
+	local localtitle="${cmsg_disco_destino}"
+	local disk_selected=""
+	target=$(sh_list_disk "${localtitle}" "${disk_selected}")
+	[[ -z "$target" ]] && return 1
+
+	sh_disk_info
+	DEVICE_TARGET="$target"
+	MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
+	SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
+
+	if conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
+${BLUE} IMAGEM ORIGEM:  $image \n" \
+		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+
+		if ! sh_checkdisk "$target"; then
+			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
+			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+		fi
+
+		sh_start_time_elapsed
+		mensagem "${cmsg_formatando_particao}: $image TO $target"
+
+		SECTOR_SIZE=$(blockdev --getss "$target")
+
+		if [[ "$image" =~ \.qcow2$ ]]; then
+			if ! command -v qemu-img >/dev/null 2>&1; then
+				conf "*** ERRO DE REQUISITO ***" \
+					"${RED}$(gettext "O utilitário 'qemu-img' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote qemu-utils para restaurar arquivos .qcow2.")"
+				return 1
+			fi
+
+			tmp_error=$(mktemp)
+
+			# Redireciona stderr para o arquivo temporário e mantém o stdout (progresso) no pipe
+			qemu-img convert -p -O raw "$image" "$target" 2>"$tmp_error" |
+				tr '\r' '\n' |
+				stdbuf -oL sed -n -e 's/.*(\([0-9]*\)\..*/\1/p' |
+				${DIALOG} \
+					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+					--colors \
+					--gauge \
+					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
+ORIGEM (QCOW2): ${YELLOW}$image${RESET}\n\
+DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+					10 100 0
+
+			nchoice=${PIPESTATUS[0]}
+
+			if [[ $nchoice -ne 0 ]]; then
+				errmsg=$(<"$tmp_error")
+				[[ -z "$errmsg" ]] && errmsg="$(gettext "Erro desconhecido durante a conversão.")"
+
+				display_result \
+					"qemu-img convert" \
+					"${BOLD}${RED}${REVERSE}$(gettext "Falha ao clonar a imagem QCOW2")${RESET}\n\n" \
+					"${WHITE}Imagem : ${YELLOW}$image${RESET}\n" \
+					"${WHITE}Destino: ${YELLOW}$target${RESET}\n\n" \
+					"${BOLD}${RED}$(gettext "Erro retornado pelo qemu-img:")${RESET}\n\n" \
+					"$errmsg"
+
+				rm -f "$tmp_error"
+				sh_reset_conf
+				return "$nchoice"
+			fi
+
+			rm -f "$tmp_error"
+
+		else
+			(
+				pv -n "$image" | dd of="$target" bs=4M conv=notrunc,noerror status=none
+			) 2>&1 |
+				${DIALOG} \
+					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+					--colors \
+					--gauge \
+					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
+ORIGEM : ${YELLOW}$image${RESET}\n\
+DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+					10 100 0
+
+			nchoice=${PIPESTATUS[0]}
+		fi
+
+		sh_end_time_elapsed
+
+		result=$(fdisk -l "$target" 2>/dev/null)
+		message=$(printf "\n\n%s" "$result")
+
+		[[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
+			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
+			"${RESET}${BOLD}${WHITE}$message"
+
+		sh_reset_conf
+		return $nchoice
+	fi
+
+	return 1
+}
+
+
 sh_clone_image_to_disk() {
   local -i nchoice
   local tmp_error
