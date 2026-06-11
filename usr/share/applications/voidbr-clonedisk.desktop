@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Chili clonedisk
-GenericName=Chili Clonedisk
+Name=VoidBR clonedisk
+GenericName=VoidBr Clonedisk
 Comment=utility to clone disks
-Exec=chili-clonedisk
+Exec=voidbr-clonedisk
 Terminal=true
 MimeType=text/plain;
 Icon=drive-multidisk
-Categories=Utility;Accessories;Chili Apps;
+Categories=Utility;Accessories;X-VoidBR-Apps;
 StartupNotify=true
 Actions=Window;Document;
