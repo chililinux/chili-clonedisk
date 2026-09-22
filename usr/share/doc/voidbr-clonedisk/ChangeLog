@@ -16,6 +16,7 @@ voidbr-clonedisk.desktop.
 Organizados os arquivos, visando facilitar a geração e o empacotamento para diferentes 
 distribuições Linux.
 Algumas frases no script chili-clonedisk faltava gettext.
+Criado o ícone void-clonedisk.png.
 
 ##########################################################################################
 
