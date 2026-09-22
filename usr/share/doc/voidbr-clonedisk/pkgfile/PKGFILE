@@ -1,0 +1,39 @@
+# Maintainer  : Vilmar Catafesta <vcatafesta@gmail.com>
+
+pkgname=chili-clonedisk
+pkgdesc="Utility for clone disk"
+pkgver=$(date +%Y%m%d)
+pkgrel=$(date +%H%M)
+arch=('any')
+license=('GPL3')
+url="https://github.com/chililinux/$pkgname"
+provides=()
+replaces=()
+source=("git+${url}.git")
+md5sums=('SKIP')
+depends=(sed dialog grep ncurses gawk coreutils util-linux pv which openssh sshpass qemu-img)
+
+package() {
+	local dirs=("usr" "etc" "opt")
+	#   echo "DESTDIR=$DESTDIR"
+	#   echo "pkgdir=$pkgdir"
+	#   echo "srcdir=$srcdir"
+	#   echo "_pkgsrc=$_pkgsrc"
+
+	cd ${srcdir}/${pkgname}
+	for dir in "${dirs[@]}"; do
+		if [ -d "${_pkgsrc}/${dir}" ]; then
+			cp -a "${_pkgsrc}/${dir}" "$DESTDIR/"
+		fi
+	done
+
+	# Install license file if present
+	if [ -f "LICENSE" ]; then
+		install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	fi
+
+	# Install documentation if present
+	if [ -f "README.md" ]; then
+		install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+	fi
+}
