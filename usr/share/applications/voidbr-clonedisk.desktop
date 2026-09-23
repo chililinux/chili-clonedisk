@@ -128,7 +128,7 @@ Comment[vi]=Tiện ích sao chép ổ đĩa
 Comment[zh_CN]=用于克隆磁盘的工具
 Comment[zh_TW]=用於複製磁碟的工具
 
-Exec=voidbr-clonedisk
+Exec=clonedisk
 Terminal=true
 MimeType=text/plain;
 Icon=/usr/share/pixmaps/voidbr-clonedisk.png
