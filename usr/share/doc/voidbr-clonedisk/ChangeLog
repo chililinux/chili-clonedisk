@@ -1,0 +1,23 @@
+
+
+##########################################################################################
+#                                      CHANGELOG                                         #
+##########################################################################################
+
+
+
+22/09/2026 - Fernando Souza
+------------------------------------------------------------------------------------------
+
+
+Adicionado suporte a múltiplos idiomas aos arquivos chili-clonedisk.desktop e 
+voidbr-clonedisk.desktop.
+
+Organizados os arquivos, visando facilitar a geração e o empacotamento para diferentes 
+distribuições Linux.
+Algumas frases no script chili-clonedisk faltava gettext.
+Criado o ícone void-clonedisk.png.
+
+##########################################################################################
+
+

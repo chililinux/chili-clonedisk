@@ -31,7 +31,8 @@
 #  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#########################################################################
+##########################################################################################
+
 export LANGUAGE="${LANGUAGE:-pt_BR}"
 export TEXTDOMAINDIR=/usr/share/locale
 export TEXTDOMAIN=chili-clonedisk
@@ -616,7 +617,7 @@ sh_conf_image_name() {
 		local exit_status=$?
 		case $exit_status in
 		1 | 255) # Cancel ou ESC
-			echo "DEBUG: Usuário cancelou ou pressionou ESC"
+			echo "$(gettext "DEBUG: Usuário cancelou ou pressionou ESC")"
 			return 1
 			;;
 		0) # OK
@@ -624,21 +625,32 @@ sh_conf_image_name() {
 			cvdisk_name="${aDiskName[7]}"
 
 			if [[ -z "$cvdisk_name" ]]; then
-				conf "*** IMAGE NAME ***" "\nNome da imagem inválido! Tente novamente.\n" || die "*** IMAGE NAME ***"
+				conf "*** $(gettext "IMAGE NAME") ***" "\n$(gettext "Nome da imagem inválido! Tente novamente.")\n" || die "*** $(gettext "IMAGE NAME") ***"
 				continue
 			fi
 
 			if [[ -e "$cvdisk_name" ]]; then
-				if conf "*** IMAGE NAME ***" "${RED}Imagem '$cvdisk_name' já existe. Tentar outro nome?"; then
+
+                msg="$(gettext "Imagem '%s' já existe. Tentar outro nome?")"
+
+				if conf "*** $(gettext "IMAGE NAME") ***" "${RED}$(printf "$msg" "$cvdisk_name")"; then
 					continue
 				fi
 				return 1
 			fi
-			echo "DEBUG: Nome da imagem definido: $cvdisk_name"
+
+            msg="$(gettext "DEBUG: Nome da imagem definido: %s")"
+
+			echo "$(printf "$msg" "$cvdisk_name")"
+
 			return 0
 			;;
 		*)
-			echo "DEBUG: exit_status inesperado: $exit_status"
+
+            msg="$(gettext "DEBUG: exit_status inesperado: %s")"
+
+			echo "$(printf "$msg" "$exit_status")"
+
 			return 1
 			;;
 		esac
@@ -680,20 +692,20 @@ sh_conf_image_nameOLD() {
 			--insecure \
 			--mixedform "${cmsg_LABEL}" \
 			16 100 0 \
-			"Device                     : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
-			"Name                       : " 2 1 "$DEVICE_NAME" 2 28 20 0 2 \
-			"Tran                       : " 3 1 "$TRAN_SOURCE" 3 28 20 0 2 \
-			"Label                      : " 4 1 "$LABEL_SOURCE" 4 28 20 0 2 \
-			"Modelo                     : " 5 1 "$MODEL_SOURCE" 5 28 20 0 2 \
-			"Tamanho                    : " 6 1 "$SIZE_SOURCE" 6 28 20 0 2 \
-			"File System                : " 7 1 "$FSTYPE_SOURCE" 7 28 20 0 2 \
-			"Entre com o nome da imagem : " 8 1 "$cvdisk_name" 8 28 60 0 0 \
+			"$(gettext "Device")                     : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
+			"$(gettext "Name")                       : " 2 1 "$DEVICE_NAME"   2 28 20 0 2 \
+			"$(gettext "Tran")                       : " 3 1 "$TRAN_SOURCE"   3 28 20 0 2 \
+			"$(gettext "Label")                      : " 4 1 "$LABEL_SOURCE"  4 28 20 0 2 \
+			"$(gettext "Modelo")                     : " 5 1 "$MODEL_SOURCE"  5 28 20 0 2 \
+			"$(gettext "Tamanho")                    : " 6 1 "$SIZE_SOURCE"   6 28 20 0 2 \
+			"$(gettext "File System")                : " 7 1 "$FSTYPE_SOURCE" 7 28 20 0 2 \
+			"$(gettext "Entre com o nome da imagem") : " 8 1 "$cvdisk_name"   8 28 60 0 0 \
 			2>&1 1>&3)
 
 		local exit_status=$?
 		case $exit_status in
 		1 | 255) # Cancel ou ESC
-			echo "DEBUG: Usuário cancelou ou pressionou ESC"
+			echo "$(gettext "DEBUG: Usuário cancelou ou pressionou ESC")"
 			return 1
 			;;
 		0) # OK
@@ -701,21 +713,31 @@ sh_conf_image_nameOLD() {
 			cvdisk_name="${aDiskName[7]}"
 
 			if [[ -z "$cvdisk_name" ]]; then
-				conf "*** IMAGE NAME ***" "\nNome da imagem inválido! Tente novamente.\n" || die "*** IMAGE NAME ***"
+				conf "*** $(gettext "IMAGE NAME") ***" "\n$(gettext "Nome da imagem inválido! Tente novamente.")\n" || die "*** $(gettext "IMAGE NAME") ***"
 				continue
 			fi
 
 			if [[ -e "$cvdisk_name" ]]; then
-				if conf "*** IMAGE NAME ***" "${RED}Imagem '$cvdisk_name' já existe. Tentar outro nome?"; then
+
+                msg="$(gettext "Imagem '%s' já existe. Tentar outro nome?")"
+
+				if conf "*** $(gettext "IMAGE NAME") ***" "${RED}$(printf "$msg" "$cvdisk_name")"; then
 					continue
 				fi
 				return 1
 			fi
-			echo "DEBUG: Nome da imagem definido: $cvdisk_name"
+
+            msg="$(gettext "DEBUG: Nome da imagem definido: %s")"
+
+			echo "$(printf "$msg" "$cvdisk_name")"
+
 			return 0
 			;;
 		*)
-			echo "DEBUG: exit_status inesperado: $exit_status"
+            msg="$(gettext "DEBUG: exit_status inesperado: %s")"
+
+			echo "$(printf "$msg" "$exit_status")"
+
 			return 1
 			;;
 		esac
@@ -732,16 +754,16 @@ sh_choose_image_format() {
 				--aspect 20 \
 				--backtitle "$ccabec" \
 				--colors \
-				--title "FORMATO DA IMAGEM" \
+				--title "$(gettext "FORMATO DA IMAGEM")" \
 				--ok-label "${cmsg_Select}" \
 				--cancel-label "${cmsg_Sair}" \
-				--menu "${cmsg_LABEL}\n\n${YELLOW}Escolha o formato e compressão da imagem de destino:${RESET}" \
+				--menu "${cmsg_LABEL}\n\n${YELLOW}$(gettext "Escolha o formato e compressão da imagem de destino:")${RESET}" \
 				13 80 0 \
-				"raw" "Imagem Bruta (.img)" \
-				"qcow2" "Qemu Copy-On-Write (.qcow2)" \
-				"zstd" "Imagem Comprimida (.img.zst)" \
-				"xz" "Imagem Comprimida (.img.xz)" \
-				"gzip" "Imagem Comprimida (.img.gz)"
+				"raw"   "$(gettext "Imagem Bruta") (.img)" \
+				"qcow2" "$(gettext "Qemu Copy-On-Write") (.qcow2)" \
+				"zstd"  "$(gettext "Imagem Comprimida") (.img.zst)" \
+				"xz"    "$(gettext "Imagem Comprimida") (.img.xz)" \
+				"gzip"  "$(gettext "Imagem Comprimida") (.img.gz)"
 		)
 
 		exit_status=$?
@@ -754,19 +776,19 @@ sh_choose_image_format() {
 		case "$image_format" in
 		zstd)
 			if ! command -v zstd >/dev/null 2>&1; then
-				info "Erro: O utilitário 'zstd' não está instalado no sistema."
+				info "$(gettext "Erro: O utilitário 'zstd' não está instalado no sistema.")"
 				continue
 			fi
 			;;
 		xz)
 			if ! command -v xz >/dev/null 2>&1; then
-				info "Erro: O utilitário 'xz' não está instalado no sistema."
+				info "$(gettext "Erro: O utilitário 'xz' não está instalado no sistema.")"
 				continue
 			fi
 			;;
 		gzip)
 			if ! command -v gzip >/dev/null 2>&1; then
-				info "Erro: O utilitário 'gzip' não está instalado no sistema."
+				info "$(gettext "Erro: O utilitário 'gzip' não está instalado no sistema.")"
 				continue
 			fi
 			;;
@@ -783,7 +805,7 @@ sh_choose_image_formatOLD() {
 	local choice
 	choice=$(${DIALOG} \
 		--backtitle "$ccabec" \
-		--title "** ESCOLHA O FORMATO DE SAIDA DA IMAGEM**" \
+		--title "** $(gettext "ESCOLHA O FORMATO DE SAIDA DA IMAGEM") **" \
 		--clear \
 		--stdout \
 		--colors \
@@ -938,10 +960,10 @@ IMAGEM DESTINO : ${RED}$outfile" \
 
 			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
 				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
+      ${BOLD}${WHITE}${REVERSE}$(gettext "Convertendo para QCOW2...")${RESET}\n\n\
+      ${BOLD}$(gettext "Origem (RAW):")${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}$(gettext "Destino (QCOW2):")${RESET} ${RED}$outfile${RESET}\n\n\
+      $(gettext "Aguarde, esta operação pode levar alguns minutos...")" 10 70
 
 			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
 				rm -f "$tmp_raw"
@@ -954,12 +976,12 @@ IMAGEM DESTINO : ${RED}$outfile" \
 
 		[[ $nchoice -eq 0 ]] && display_result \
 			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Info disk") : $outfile${RESET}\n" \
 			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+			"$(gettext "Start Date time")  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"$(gettext "Finish Date Time") : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"$(gettext "Time elapsed")     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
 		return $nchoice
 	fi
 }
@@ -1007,8 +1029,8 @@ IMAGEM DESTINO : ${RED}$outfile\n\n" \
 					--colors \
 					--gauge \
 					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+${cmsg_disco_origem[LC_DEFAULT]}:${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
+$(gettext "IMAGEM DESTINO"):${RED}$outfile" \
 					10 100 0
 		fi
 		nchoice=$?
@@ -1020,10 +1042,10 @@ IMAGEM DESTINO : ${RED}$outfile" \
 			# Infobox estilizado enquanto converte
 			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
 				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
+      ${BOLD}${WHITE}${REVERSE}$(gettext "Convertendo para QCOW2...")${RESET}\n\n\
+      ${BOLD}$(gettext "Origem (RAW)"):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}$(gettext "Destino (QCOW2)"):${RESET} ${RED}$outfile${RESET}\n\n\
+      $(gettext "Aguarde, esta operação pode levar alguns minutos...")" 10 70
 
 			# Conversão efetiva
 			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
@@ -1037,12 +1059,12 @@ IMAGEM DESTINO : ${RED}$outfile" \
 
 		[[ $nchoice -eq 0 ]] && display_result \
 			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Info disk") : $outfile${RESET}\n" \
 			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+			"$(gettext "Start Date time")  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"$(gettext "Finish Date Time") : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"$(gettext "Time elapsed")     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
 		return $nchoice
 	fi
 }
@@ -1114,7 +1136,7 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 			result0=$(smartctl --all "$selected")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
 			display_result "$cmsg_disco_origem" \
-				"${BOLD}${GREEN}${REVERSE}Info disk : $selected${RESET}" \
+				"${BOLD}${GREEN}${REVERSE}$(gettext "Info disk") : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1197,7 +1219,7 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 			result0=$(smartctl --all "$selected")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
 			display_result "$cmsg_disco_origem" \
-				"${BOLD}${GREEN}${REVERSE}Info disk : $selected${RESET}" \
+				"${BOLD}${GREEN}${REVERSE}$(gettext "Info disk") : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1237,7 +1259,7 @@ sh_list_image() {
 	local imageselected="$2"
 	local psearch="."
 
-	info_nowait "Aguarde, Escaneando por imagens..."
+	info_nowait "$(gettext "Aguarde, Escaneando por imagens...")"
 
 	while true; do
 		sh_search_and_found_files() {
@@ -1251,7 +1273,11 @@ sh_list_image() {
 
 		sh_search_and_found_files || psearch="$IMGDIR"
 		sh_search_and_found_files || {
-			info "erro: nenhuma imagem encontrada em '$PWD'"
+
+            msg="$(gettext "erro: nenhuma imagem encontrada em '%s'")"
+
+			info "$(printf "$msg" "$PWD")"
+
 			return 1
 		}
 
@@ -1300,9 +1326,9 @@ sh_list_image() {
 			--colors \
 			--stdout \
 			--extra-button \
-			--extra-label "Info image" \
+			--extra-label "$(gettext "Info image")" \
 			--menu "\
-${YELLOW}Imagens encontradas (.img, .raw, .qcow2]:${RESET}\n
+${YELLOW}$(gettext "Imagens encontradas (.img, .raw, .qcow2):")${RESET}\n
 $(replicate '─' $((maxcols - 4)))\n
 $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 			15 $maxcols 0 "${array[@]}")
@@ -1314,10 +1340,10 @@ $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 			;;
 		3)
 			result=$(file "$selected")
-			result0=$(qemu-img info "$selected" 2>/dev/null || echo "No qemu-img info available")
+			result0=$(qemu-img info "$selected" 2>/dev/null || echo "$(gettext "No qemu-img info available")")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
-			display_result "Image info" \
-				"${BOLD}${GREEN}${REVERSE}Info image : $selected${RESET}" \
+			display_result "$(gettext "Image info")" \
+				"${BOLD}${GREEN}${REVERSE}$(gettext "Info image") : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1339,7 +1365,7 @@ sh_clone_image_to_diskGEM() {
 
 	set -o pipefail
 
-	image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
+	image=$(sh_list_image "** $(gettext "SELECIONE A IMAGEM DE ORIGEM") **") || return 1
 
 	local localtitle="${cmsg_disco_destino}"
 	local disk_selected=""
@@ -1353,13 +1379,13 @@ sh_clone_image_to_diskGEM() {
 
 	if conf "${cwarning}" \
 		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
-${BLUE} IMAGEM ORIGEM:  $image \n" \
+${BLUE} $(gettext "IMAGEM ORIGEM:")  $image \n" \
 		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
 		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 		if ! sh_checkdisk "$target"; then
 			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+			die "$(gettext "ERRO:") ${cmsg_nec_dismount[LC_DEFAULT]}"
 		fi
 
 		sh_start_time_elapsed
@@ -1369,7 +1395,7 @@ ${BLUE} IMAGEM ORIGEM:  $image \n" \
 
 		if [[ "$image" =~ \.qcow2$ ]]; then
 			if ! command -v qemu-img >/dev/null 2>&1; then
-				conf "*** ERRO DE REQUISITO ***" \
+				conf "*** $(gettext "ERRO DE REQUISITO") ***" \
 					"${RED}$(gettext "O utilitário 'qemu-img' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote qemu-utils para restaurar arquivos .qcow2.")"
 				return 1
 			fi
@@ -1385,8 +1411,8 @@ ${BLUE} IMAGEM ORIGEM:  $image \n" \
 					--colors \
 					--gauge \
 					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM (QCOW2): ${YELLOW}$image${RESET}\n\
-DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+$(gettext "ORIGEM") (QCOW2): ${YELLOW}$image${RESET}\n\
+$(gettext "DESTINO")       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 					10 100 0
 
 			nchoice=${PIPESTATUS[0]}
@@ -1398,8 +1424,8 @@ DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 				display_result \
 					"qemu-img convert" \
 					"${BOLD}${RED}${REVERSE}$(gettext "Falha ao clonar a imagem QCOW2")${RESET}\n\n" \
-					"${WHITE}Imagem : ${YELLOW}$image${RESET}\n" \
-					"${WHITE}Destino: ${YELLOW}$target${RESET}\n\n" \
+					"${WHITE}$(gettext "Imagem") : ${YELLOW}$image${RESET}\n" \
+					"${WHITE}$(gettext "Destino"): ${YELLOW}$target${RESET}\n\n" \
 					"${BOLD}${RED}$(gettext "Erro retornado pelo qemu-img:")${RESET}\n\n" \
 					"$errmsg"
 
@@ -1419,8 +1445,8 @@ DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 					--colors \
 					--gauge \
 					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM : ${YELLOW}$image${RESET}\n\
-DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+$(gettext "ORIGEM") : ${YELLOW}$image${RESET}\n\
+$(gettext "DESTINO"): ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 					10 100 0
 
 			nchoice=${PIPESTATUS[0]}
@@ -1433,9 +1459,9 @@ DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 
 		[[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
 			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
+			"$(gettext "Start Date time")  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"$(gettext "Finish Date Time") : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"$(gettext "Time elapsed")     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
 			"${RESET}${BOLD}${WHITE}$message"
 
 		sh_reset_conf
@@ -1453,7 +1479,7 @@ sh_clone_image_to_disk() {
 
   set -o pipefail
 
-  image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
+  image=$(sh_list_image "** $(gettext "SELECIONE A IMAGEM DE ORIGEM") **") || return 1
 
   local localtitle="${cmsg_disco_destino}"
   local disk_selected=""
@@ -1467,13 +1493,13 @@ sh_clone_image_to_disk() {
 
   if conf "${cwarning}" \
     "\n${cmsg_todos_os_dados_serao_perdidos}\n\n\
-${BLUE} IMAGEM ORIGEM:  $image \n\
+${BLUE} $(gettext "IMAGEM ORIGEM"):  $image \n\
 ${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n\
 ${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
 
     if ! sh_checkdisk "$target"; then
       alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-      die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+      die "$(gettext "ERRO"): ${cmsg_nec_dismount[LC_DEFAULT]}"
     fi
 
     sh_start_time_elapsed
@@ -1484,7 +1510,7 @@ ${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
 
     if [[ "$image" =~ \.qcow2$ ]]; then
       if ! command -v qemu-img >/dev/null 2>&1; then
-        conf "*** ERRO DE REQUISITO ***" \
+        conf "*** $(gettext "ERRO DE REQUISITO") ***" \
           "${RED}$(gettext "O utilitário 'qemu-img' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote qemu-utils para restaurar arquivos .qcow2.")"
         return 1
       fi
@@ -1512,8 +1538,8 @@ ${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
         --colors \
         --gauge \
         "${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM (QCOW2): ${YELLOW}$image${RESET}\n\
-DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+$(gettext "ORIGEM") (QCOW2): ${YELLOW}$image${RESET}\n\
+$(gettext "DESTINO")       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
         10 100 0
 
       nchoice=${PIPESTATUS[0]}
@@ -1524,8 +1550,8 @@ DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
         display_result \
           "qemu-img convert" \
           "${BOLD}${RED}${REVERSE}$(gettext "Falha ao clonar a imagem QCOW2")${RESET}\n\n" \
-          "${WHITE}Imagem : ${YELLOW}$image${RESET}\n" \
-          "${WHITE}Destino: ${YELLOW}$target${RESET}\n\n" \
+          "${WHITE}$(gettext "Imagem") : ${YELLOW}$image${RESET}\n" \
+          "${WHITE}$(gettext "Destino"): ${YELLOW}$target${RESET}\n\n" \
           "${BOLD}${RED}$(gettext "Erro retornado pelo qemu-img:")${RESET}\n\n" \
           "$errmsg"
 
@@ -1546,8 +1572,8 @@ DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
         --colors \
         --gauge \
         "${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM : ${YELLOW}$image${RESET}\n\
-DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
+$(gettext "ORIGEM") : ${YELLOW}$image${RESET}\n\
+$(gettext "DESTINO"): ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
         10 100 0
 
       nchoice=${PIPESTATUS[1]}
@@ -1560,9 +1586,9 @@ DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 
     [[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
       "${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
-      "Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-      "Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-      "Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
+      "$(gettext "Start Date time")  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+      "$(gettext "Finish Date Time") : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+      "$(gettext "Time elapsed")     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
       "${RESET}${BOLD}${WHITE}$message"
 
     sh_reset_conf
@@ -1573,7 +1599,10 @@ DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
 }
 
 sh_clone_image_to_part() {
-	image=$(sh_list_image "** IMAGENS em $PWD **") || return 1
+
+    msg="$(gettext "IMAGENS em %s")"
+
+	image=$(sh_list_image "** $(printf "$msg" "$PWD") **") || return 1
 
 	if sh_choose_target_partition; then
 		sh_confclone "$part_source" "$target"
@@ -1602,7 +1631,7 @@ sh_make_clone_part_to_image() {
 
 		if conf "${cwarning}" \
 			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile\n\n" \
+$(gettext "IMAGEM DESTINO") : ${RED}$outfile\n\n" \
 			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 			sh_start_time_elapsed
@@ -1632,7 +1661,7 @@ IMAGEM DESTINO : ${RED}$outfile\n\n" \
 					--gauge \
 					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
 ${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+$(gettext "IMAGEM DESTINO") : ${RED}$outfile" \
 					10 100 0
 		fi
 		nchoice=$?
@@ -1644,10 +1673,10 @@ IMAGEM DESTINO : ${RED}$outfile" \
 			# Infobox estilizado enquanto converte
 			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
 				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
+      ${BOLD}${WHITE}${REVERSE}$(gettext "Convertendo para QCOW2...")${RESET}\n\n\
+      ${BOLD}$(gettext "Origem (RAW)"):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}$(gettext "Destino (QCOW2)"):${RESET} ${RED}$outfile${RESET}\n\n\
+      $(gettext "Aguarde, esta operação pode levar alguns minutos...")" 10 70
 
 			# Conversão efetiva
 			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
@@ -1661,12 +1690,12 @@ IMAGEM DESTINO : ${RED}$outfile" \
 
 		[[ $nchoice -eq 0 ]] && display_result \
 			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}$(gettext "Info disk") : $outfile${RESET}\n" \
 			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+			"$(gettext "Start Date time")  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+			"$(gettext "Finish Date Time") : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+			"$(gettext "Time elapsed")     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
 		return $nchoice
 	fi
 }
@@ -1726,7 +1755,7 @@ sh_choose_target_disk() {
 		sh_backup_partitions "$target" "$NAME_TARGET"
 		if ! sh_checkdisk "$target"; then
 			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+			die "$(gettext "ERRO"): ${cmsg_nec_dismount[LC_DEFAULT]}"
 		fi
 		sh_confclone "$source" "$target"
 		sh_reset_conf
@@ -1779,7 +1808,7 @@ sh_choose_target_partition() {
 		sh_backup_partitions "$part_target" "$NAME_TARGET"
 		if ! sh_checkdisk "$part_target"; then
 			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+			die "$(gettext "ERRO"): ${cmsg_nec_dismount[LC_DEFAULT]}"
 		fi
 		return 0
 	fi
@@ -1984,7 +2013,7 @@ log_err() {
 }
 
 elevate_to_root() {
-	log_err "This script must be run as root. Elevating privileges..."
+	log_err "$(gettext "Este script deve ser executado como root. Elevando os privilégios...")"
 
 	# Tenta usar sudo primeiro (caso esteja configurado)
 	if command -v sudo >/dev/null 2>&1; then
@@ -1995,7 +2024,7 @@ elevate_to_root() {
 	if command -v su >/dev/null 2>&1; then
 		exec su -c "$0 $*"
 	fi
-	die "Error: Unable to elevate privileges. Run manually as root."
+	die "$(gettext "Erro: Não foi possível elevar os privilégios. Execute manualmente como root.")"
 }
 
 DOT() {
@@ -2032,19 +2061,19 @@ run_dialog_stream() {
 
 sh_setup() {
 	local DISTRO=$(detect_distro)
-	msg "$_APP_" "Instalando necessários pacotes"
+	msg "$_APP_" "$(gettext "Instalando necessários pacotes")"
 
 	case "$DISTRO" in
 	void | voidlinux | void-live)
 		if ! run_dialog_stream "Instalando pacoates no ${DISTRO^^}" \
 			xbps-install -Sy "${PACKAGEDEP[@]}"; then
-			die "[ERRO] Falha ao instalar pacotes."
+			die "$(gettext "[ERRO] Falha ao instalar pacotes.")"
 		fi
 		;;
 	chili | chililinux | arch | manjaro | biglinux)
 		if ! run_dialog_stream "Instalando pacoates no ${DISTRO^^}" \
 			pacman -S --neeeded --quiet --noconfirm "${PACKAGEDEP[@]}"; then
-			die "[ERRO] Falha ao instalar pacotes."
+			die "$(gettext "[ERRO] Falha ao instalar pacotes.")"
 		fi
 		;;
 	manjaro) : ;;
@@ -2054,7 +2083,11 @@ sh_setup() {
 	fedora) : ;;
 	endeavouros) : ;;
 	*)
-		echo "Outra distro: $DISTRO"
+
+        msg="$(gettext "Outra distro: %s")"
+
+		echo "$(printf "$msg" "$DISTRO")"
+
 		;;
 	esac
 }
@@ -2083,7 +2116,7 @@ sh_checkDependencies() {
 		echo "${black}$(gettext "Instale-os e/ou verifique se eles estão em seu") ${red}\$PATH${reset}"
 		replicate '='
 		#die $(gettext "Abortando...")
-		if readconf "Deseja instalar os pacotes e suprir os aplicativos necessários ?"; then
+		if readconf "$(gettext "Deseja instalar os pacotes e suprir os aplicativos necessários ?")"; then
 			sh_setup
 		else
 			exit 1
@@ -2106,7 +2139,7 @@ sh_execute_iso2usb() {
 	if command -v chili-iso2usb >/dev/null; then
 		bash chili-iso2usb
 	else
-		info "Erro: O utilitário 'chili-iso2usb' não está instalado no sistema."
+		info "$(gettext "Erro: O utilitário 'chili-iso2usb' não está instalado no sistema.")"
 	fi
 	return
 }
@@ -2120,7 +2153,7 @@ sh_choose_compression_type() {
 				--aspect 20 \
 				--backtitle "$ccabec" \
 				--colors \
-				--title "FORMATO DA IMAGEM" \
+				--title "$(gettext "FORMATO DA IMAGEM")" \
 				--ok-label "${cmsg_Select}" \
 				--cancel-label "${cmsg_Sair}" \
 				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_Formato_da_Imagem}:${RESET}" \
@@ -2137,8 +2170,9 @@ sh_choose_compression_type() {
 		esac
 
 		# Se o usuário escolheu Zstd, mas não tem o binário instalado no sistema
+
 		if [[ "$compress_type" -eq 1 ]] && ! command -v zstd >/dev/null 2>&1; then
-			info "Erro: O utilitário 'zstd' não está instalado no sistema para compressão."
+			info "$(gettext "Erro: O utilitário 'zstd' não está instalado no sistema para compressão.")"
 			continue
 		fi
 
@@ -2239,7 +2273,7 @@ sh_menu_network_ssh() {
 			ssh_outfile="${aNetData[3]}"
 
 			if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_outfile" ]]; then
-				conf "*** SSH CONFIG ***" "\n$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")\n"
+				conf "*** $(gettext "SSH CONFIG") ***" "\n$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")\n"
 				continue
 			fi
 
@@ -2248,7 +2282,7 @@ sh_menu_network_ssh() {
 				use_sshpass=0
 			else
 				if ! command -v sshpass >/dev/null 2>&1; then
-					conf "*** ERRO DE REQUISITO ***" "${RED}$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
+					conf "*** $(gettext "ERRO DE REQUISITO") ***" "${RED}$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
 					continue
 				fi
 
@@ -2259,7 +2293,7 @@ sh_menu_network_ssh() {
 
 				${DIALOG} --title "$(gettext "TESTANDO SENHA")" --infobox "\n$(gettext "Validando senha no servidor remoto...")" 5 60
 				if ! sshpass -p "$ssh_password" ssh -p "$ssh_porta" -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
-					conf "*** ERRO DE AUTENTICAÇÃO ***" "${RED}$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")${RESET}\n$(gettext "Verifique suas credenciais e tente novamente.")"
+					conf "*** $(gettext "ERRO DE AUTENTICAÇÃO") ***" "${RED}$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")${RESET}\n$(gettext "Verifique suas credenciais e tente novamente.")"
 					continue
 				fi
 				use_sshpass=1
@@ -2283,10 +2317,10 @@ sh_get_network_format() {
 		--cancel-label "${cmsg_button_voltar}" \
 		--menu "$(gettext "Escolha o formato de saída para a imagem remota:")" \
 		12 60 0 \
-		"zst" "Zstandard (Otimizado/Adaptativo)" \
-		"gz" "Gzip (Compatibilidade)" \
-		"xz" "XZ / LZMA (Máxima Compressão)" \
-		"img" "Sem compressão (Imagem Raw / bruto)" \
+		"zst" "Zstandard ($(gettext "Otimizado/Adaptativo"))" \
+		"gz" "Gzip ($(gettext "Compatibilidade"))" \
+		"xz" "XZ / LZMA ($(gettext "Máxima Compressão"))" \
+		"img" "$(gettext "Sem compressão (Imagem Raw / bruto)")" \
 		2>&1)
 
 	if [[ $? -eq 0 && -n "$format_type" ]]; then
@@ -2310,8 +2344,8 @@ sh_make_clone_network_ssh() {
 
 	if conf "${cwarning}" \
 		"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-$(gettext "SERVIDOR DESTINO :") ${YELLOW}$ssh_user@$ssh_ip:$ssh_porta${RESET}\n\
-$(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
+$(gettext "SERVIDOR DESTINO") : ${YELLOW}$ssh_user@$ssh_ip:$ssh_porta${RESET}\n\
+$(gettext "ARQUIVO REMOTO")   : ${RED}$ssh_outfile\n\n" \
 		"${BOLD}${YELLOW}$(gettext "Confirmar o início da clonagem criptografada via rede?")${RESET}\n"; then
 
 		sh_start_time_elapsed
@@ -2349,7 +2383,7 @@ $(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
 		fi
 
 		if ! eval "$mkdir_cmd" >/dev/null 2>&1; then
-			conf "*** ERRO DE DIRETÓRIO ***" "${RED}$(gettext "Falha ao criar o diretório remoto:")${RESET} $remote_dir\n$(gettext "Verifique as permissões de escrita do usuário no destino.")"
+			conf "*** $(gettext "ERRO DE DIRETÓRIO") ***" "${RED}$(gettext "Falha ao criar o diretório remoto:")${RESET} $remote_dir\n$(gettext "Verifique as permissões de escrita do usuário no destino.")"
 			return 1
 		fi
 
@@ -2379,7 +2413,7 @@ $(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
 				--gauge \
 				"${BOLD}${WHITE}${REVERSE}$(gettext "Processando: pv → conversor/compressor → SSH → Rede")${RESET}\n\n\
 ${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE ($SIZE_SOURCE)${RESET}\n\
-$(gettext "DESTINO REMOTO :") ${RED}$ssh_ip:$ssh_outfile${RESET}" \
+$(gettext "DESTINO REMOTO") : ${RED}$ssh_ip:$ssh_outfile${RESET}" \
 				11 100 0
 
 		nchoice=${PIPESTATUS[1]}
@@ -2510,3 +2544,4 @@ sh_checkroot "$@"
 sh_checkDependencies "${DEPENDENCIES[*]}"
 #init "$@"
 sh_choose_clone_type
+
