@@ -5,7 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Updated: qua 23 set 2026 22:06:36 -04
+#  Updated: qui 24 set 2026 10:45:02 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -1337,6 +1337,10 @@ read -r -d '' BUSY_SH <<'EOF_BUSY'
 busy() {
 	d="$1"
 	[ -b "$d" ] || return 0
+	# sem as ferramentas da verificação não dá para afirmar que está livre
+	for t in lsblk awk readlink; do
+		command -v "$t" >/dev/null 2>&1 || { echo "$d|unknown|$d $t"; return 0; }
+	done
 	lsblk -nrpo NAME,KNAME,MAJ:MIN "$d" 2>/dev/null | while read -r name kname mm; do
 		real=$(readlink -f "$name")
 		kname=$(basename "$kname") # com -p o lsblk devolve /dev/...; o sysfs usa só o nome
@@ -1369,6 +1373,7 @@ busy() {
 	done
 }
 for dev in "$@"; do busy "$dev"; done
+echo "__fim__" # marca que a verificação rodou até o fim
 EOF_BUSY
 
 # Verifica se o dispositivo está em uso; $2 não vazio = na máquina remota (SSH_BASE/RSUDO).
@@ -1376,11 +1381,15 @@ EOF_BUSY
 sh_disk_busy() {
 	local dev="$1"
 	local remote="$2"
-	local line
+	local line done=0
 
 	BUSY_LINES=()
 	while IFS= read -r line; do
-		[[ -n "$line" ]] && BUSY_LINES+=("${line#*|}")
+		if [[ "$line" == "__fim__" ]]; then
+			done=1
+		elif [[ -n "$line" ]]; then
+			BUSY_LINES+=("${line#*|}")
+		fi
 	done < <(
 		if [[ -n "$remote" ]]; then
 			"${SSH_BASE[@]}" "$RSUDO sh -s -- $(printf '%q' "$dev")" <<<"$BUSY_SH" 2>/dev/null
@@ -1388,6 +1397,8 @@ sh_disk_busy() {
 			sh -s -- "$dev" <<<"$BUSY_SH" 2>/dev/null
 		fi | sort -u
 	)
+	# não rodou até o fim (ssh caiu, sh ausente...): trata como em uso
+	((done)) || BUSY_LINES+=("noresp|$dev")
 	((${#BUSY_LINES[@]} > 0))
 }
 
@@ -1404,6 +1415,8 @@ sh_busy_text() {
 		holder) out+="  • $(printf "${cmsg_busy_holder}" "$a" "$b")\n" ;;
 		proc) out+="  • $(printf "${cmsg_busy_proc}" "$a" "$b" "$c")\n" ;;
 		zfs) out+="  • $(printf "${cmsg_busy_zfs}" "$a")\n" ;;
+		unknown) out+="  • $(printf "${cmsg_busy_unknown}" "$a" "${b:-?}")\n" ;;
+		noresp) out+="  • $(printf "${cmsg_busy_noresp}" "$a")\n" ;;
 		esac
 	done
 	printf '%s' "$out"
@@ -2538,6 +2551,23 @@ $cLB7 ${ccolor}↵ ENTER${RESET} $cLB8"
 	cmsg_Tamanho_Remoto="$(gettext "Tamanho Remoto   :")"
 	cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
 	cmsg_MENU_PRINCIPAL="$(gettext "MENU PRINCIPAL")"
+	cmsg_remoto_sem_ferramentas="$(gettext "O computador remoto %s não tem as ferramentas necessárias para esta operação.")"
+	cmsg_remoto_ferramentas_opcionais="$(gettext "O computador remoto %s não tem algumas ferramentas opcionais.")"
+	cmsg_tools_obrigatorias="$(gettext "Obrigatórias (a operação não pode continuar):")"
+	cmsg_tools_opcionais="$(gettext "Opcionais (a operação continua sem estas etapas):")"
+	cmsg_tools_comando="$(gettext "Para instalar no remoto (%s):")"
+	cmsg_tools_pacotes="$(gettext "Pacotes a instalar no remoto (%s):")"
+	cmsg_tools_manifesto="$(gettext "Lista salva em: %s")"
+	cmsg_tool_fuser="$(gettext "verificar processos usando o disco")"
+	cmsg_tool_blkid="$(gettext "mostrar tipo e rótulo das partições")"
+	cmsg_tool_sfdisk="$(gettext "backup da tabela de partições")"
+	cmsg_tool_partx="$(gettext "reler a tabela de partições")"
+	cmsg_tool_fdisk="$(gettext "mostrar o resultado final")"
+	cmsg_tool_sha256sum="$(gettext "hash e verificação da imagem")"
+	cmsg_tool_compress="$(gettext "comprimir/testar no remoto (passa a ser feito aqui)")"
+	cmsg_tool_df="$(gettext "conferir espaço livre e FAT32")"
+	cmsg_busy_unknown="$(gettext "não foi possível verificar se %s está em uso (falta: %s)")"
+	cmsg_busy_noresp="$(gettext "não foi possível verificar se %s está em uso (a verificação não respondeu)")"
 	cmsg_dir_rede_lpart_img="$(gettext "Partição local -> Imagem remota")"
 	cmsg_desc_rede_lpart_img="$(gettext "clonar partição local para imagem remota")"
 	cmsg_dir_rede_lpart_rpart="$(gettext "Partição local -> Partição remota")"
@@ -3099,6 +3129,14 @@ ${cmsg_ARQUIVO_REMOTO} ${RED}$ssh_outfile\n\n" \
 		local remote_dir
 		remote_dir=$(dirname "$ssh_outfile")
 
+		SSH_BASE=("${ssh_base[@]}")
+		RSUDO=""
+		REMOTE_HOST="$ssh_user@$ssh_ip"
+		if ! sh_remote_check_tools "mkdir cat" "df sha256sum"; then
+			unset SSHPASS
+			return 2 # volta ao formulário
+		fi
+
 		${DIALOG} --title "${cmsg_PREPARANDO_DESTINO}" --infobox "\n${cmsg_Garantindo_que_o_diretorio_remoto_existe}" 5 60
 		if ! "${ssh_base[@]}" "mkdir -p $(printf '%q' "$remote_dir")" >/dev/null 2>&1; then
 			sh_log "falha ao criar diretório remoto: $ssh_user@$ssh_ip:$remote_dir"
@@ -3126,7 +3164,8 @@ ${cmsg_ARQUIVO_REMOTO} ${RED}$ssh_outfile\n\n" \
 
 		# onde o arquivo vai ficar, tipo do sistema de arquivos e espaço livre no remoto
 		local r_src r_fstype r_avail
-		read -r r_src r_fstype r_avail < <("${ssh_base[@]}" "df --output=source,fstype,avail -B1 $(printf '%q' "$remote_dir") | tail -n1" 2>/dev/null)
+		# df -P é POSIX (existe no BusyBox, que não tem --output); o tipo vem do /proc/mounts
+		read -r r_src r_fstype r_avail < <("${ssh_base[@]}" "set -- \$(df -Pk $(printf '%q' "$remote_dir") | tail -n1); fs=\$(awk -v m=\"\$6\" '\$2==m{f=\$3} END{print f}' /proc/mounts); echo \"\$1 \$fs \$((\$4 * 1024))\"" 2>/dev/null)
 
 		# remoto = esta máquina e o arquivo cairia no próprio disco de origem
 		if [[ "$("${ssh_base[@]}" "cat /proc/sys/kernel/random/boot_id" 2>/dev/null)" == "$(cat /proc/sys/kernel/random/boot_id)" ]] &&
@@ -3266,6 +3305,143 @@ sh_system_disks() {
 	done | sort -u
 }
 
+# Confere, com um só comando SSH, as ferramentas do computador remoto.
+#   uso: sh_remote_check_tools "obrigatória ..." "opcional ..."
+# Falta obrigatória: mostra o que falta (e o pacote) e retorna 1.
+# Falta opcional: segue e registra no log o que deixa de ser feito.
+# Pacote de cada ferramenta conforme a família da distro remota
+#   uso: sh_tool_pkg ferramenta familia   (familia: void arch debian fedora alpine suse)
+sh_tool_pkg() {
+	local t="$1"
+	local fam="$2"
+	case "$t" in
+	lsblk | blockdev | partx | blkid) echo "util-linux" ;;
+	sfdisk | fdisk) [[ "$fam" == "debian" ]] && echo "fdisk" || echo "util-linux" ;;
+	dd | cat | sha256sum | stat | df | mkdir | readlink) echo "coreutils" ;;
+	awk) echo "gawk" ;;
+	fuser) echo "psmisc" ;;
+	xz) [[ "$fam" == "debian" ]] && echo "xz-utils" || echo "xz" ;;
+	*) echo "$t" ;;
+	esac
+}
+
+# Comando de instalação conforme a família da distro remota
+sh_install_cmd() {
+	case "$1" in
+	void) echo "xbps-install -S" ;;
+	arch) echo "pacman -S --needed" ;;
+	debian) echo "apt install" ;;
+	fedora) echo "dnf install" ;;
+	alpine) echo "apk add" ;;
+	suse) echo "zypper install" ;;
+	*) echo "" ;;
+	esac
+}
+
+# O que deixa de ser feito quando falta uma ferramenta opcional
+sh_tool_desc() {
+	case "$1" in
+	fuser) echo "${cmsg_tool_fuser}" ;;
+	blkid) echo "${cmsg_tool_blkid}" ;;
+	sfdisk) echo "${cmsg_tool_sfdisk}" ;;
+	partx) echo "${cmsg_tool_partx}" ;;
+	fdisk) echo "${cmsg_tool_fdisk}" ;;
+	sha256sum) echo "${cmsg_tool_sha256sum}" ;;
+	zstd | xz | gzip) echo "${cmsg_tool_compress}" ;;
+	df) echo "${cmsg_tool_df}" ;;
+	*) echo "" ;;
+	esac
+}
+
+# Confere, com um só comando SSH, as ferramentas do computador remoto.
+#   uso: sh_remote_check_tools "obrigatória ..." "opcional ..."
+# Mostra uma tela com o que falta (obrigatórias e opcionais), o pacote de cada uma,
+# o comando para instalar na distro remota, e salva um manifesto em /tmp.
+# Falta obrigatória: retorna 1. Só opcionais: pergunta se quer prosseguir.
+sh_remote_check_tools() {
+	local req="$1"
+	local opt="$2"
+	local t line pk fam="" rid="" pkgs="" text="" missing_req="" missing_opt=""
+	local -A have=() seen=()
+
+	while IFS= read -r line; do
+		case "$line" in
+		__ID__*) rid="${line#__ID__ }" ;;
+		?*) have[$line]=1 ;;
+		esac
+	done < <("${SSH_BASE[@]}" "$RSUDO sh -c 'for t in $req $opt; do command -v \$t >/dev/null 2>&1 && echo \$t; done; . /etc/os-release 2>/dev/null; echo \"__ID__ \$ID \$ID_LIKE\"'" 2>/dev/null)
+
+	for t in $req; do [[ -n "${have[$t]}" ]] || missing_req+=" $t"; done
+	for t in $opt; do [[ -n "${have[$t]}" ]] || missing_opt+=" $t"; done
+	[[ -z "$missing_req$missing_opt" ]] && return 0
+
+	# família da distro remota (ID e depois ID_LIKE)
+	for t in $rid; do
+		case "$t" in
+		void*) fam=void ;;
+		arch | chili* | manjaro | endeavouros | biglinux) fam=arch ;;
+		debian | ubuntu | linuxmint | pop) fam=debian ;;
+		fedora | rhel | centos | rocky | almalinux) fam=fedora ;;
+		alpine) fam=alpine ;;
+		opensuse* | suse | sles) fam=suse ;;
+		esac
+		[[ -n "$fam" ]] && break
+	done
+
+	if [[ -n "$missing_req" ]]; then
+		text+="${cmsg_tools_obrigatorias}\n"
+		for t in $missing_req; do
+			text+="$(printf '  • %-10s %s' "$t" "$(sh_tool_pkg "$t" "$fam")")\n"
+			pk="$(sh_tool_pkg "$t" "$fam")"
+			if [[ -z "${seen[$pk]}" ]]; then
+				pkgs="$pkgs $pk"
+				seen[$pk]=1
+			fi
+		done
+		text+="\n"
+	fi
+	if [[ -n "$missing_opt" ]]; then
+		text+="${cmsg_tools_opcionais}\n"
+		for t in $missing_opt; do
+			text+="$(printf '  • %-10s %-12s %s' "$t" "$(sh_tool_pkg "$t" "$fam")" "$(sh_tool_desc "$t")")\n"
+			pk="$(sh_tool_pkg "$t" "$fam")"
+			if [[ -z "${seen[$pk]}" ]]; then
+				pkgs="$pkgs $pk"
+				seen[$pk]=1
+			fi
+		done
+		text+="\n"
+	fi
+	local cmd
+	cmd="$(sh_install_cmd "$fam")"
+	if [[ -n "$cmd" ]]; then
+		text+="$(printf "${cmsg_tools_comando}" "${rid%% *}")\n  $cmd$pkgs\n"
+	else
+		text+="$(printf "${cmsg_tools_pacotes}" "${rid%% *}")\n $pkgs\n"
+	fi
+
+	# manifesto salvo para copiar e colar no remoto
+	local manifest="/tmp/${_APP_}-remoto-${REMOTE_HOST#*@}-$(date '+%Y%m%d-%H%M%S').txt"
+	{
+		echo "# ${_APP_} - ferramentas ausentes no computador remoto"
+		echo "remoto=$REMOTE_HOST"
+		echo "distro=${rid:-?}"
+		echo "data=$(date '+%Y-%m-%d %H:%M:%S %z')"
+		echo "obrigatorias_ausentes=${missing_req# }"
+		echo "opcionais_ausentes=${missing_opt# }"
+		echo "pacotes=${pkgs# }"
+		[[ -n "$cmd" ]] && echo "comando=$cmd$pkgs"
+	} >"$manifest" 2>/dev/null
+	text+="\n$(printf "${cmsg_tools_manifesto}" "$manifest")"
+	sh_log "remoto $REMOTE_HOST | obrigatórias ausentes:${missing_req:- nenhuma} | opcionais ausentes:${missing_opt:- nenhuma} | manifesto: $manifest"
+
+	if [[ -n "$missing_req" ]]; then
+		alerta "${cwarning}" "\n$(printf "${cmsg_remoto_sem_ferramentas}" "$REMOTE_HOST")\n\n$text"
+		return 1
+	fi
+	conf "${cwarning}" "\n$(printf "${cmsg_remoto_ferramentas_opcionais}" "$REMOTE_HOST")\n\n$text\n\n${cmsg_Prosseguir}"
+}
+
 # Conecta num servidor SSH e escolhe um disco remoto.
 # Define: REMOTE_HOST (usuario@ip), REMOTE_DEV, REMOTE_SIZE (bytes), REMOTE_DESC, REMOTE_SECTOR, RSUDO e SSH_BASE.
 sh_remote_pick_disk() {
@@ -3311,10 +3487,26 @@ sh_remote_pick_disk() {
 		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
 
 		# ler disco cru exige root: sudo sem senha quando o usuário não é root
+		# root pelo uid (não pelo nome); sem id no remoto, decide pelo nome
 		RSUDO=""
-		[[ "$ssh_user" != "root" ]] && RSUDO="sudo -n"
+		local ruid
+		ruid="$("${SSH_BASE[@]}" "id -u" 2>/dev/null)"
+		if [[ "$ruid" =~ ^[0-9]+$ ]]; then
+			((ruid == 0)) || RSUDO="sudo -n"
+		elif [[ "$ssh_user" != "root" ]]; then
+			RSUDO="sudo -n"
+		fi
 		if ! "${SSH_BASE[@]}" "$RSUDO true" >/dev/null 2>&1; then
 			info "${cmsg_remoto_sem_root}"
+			unset SSHPASS
+			continue
+		fi
+
+		# ferramentas: ler um disco remoto / gravar num disco remoto
+		REMOTE_HOST="$ssh_user@$ssh_ip"
+		local req="lsblk awk readlink blockdev cat" opt="fuser blkid"
+		[[ "$mode" == "destino" ]] && req="lsblk awk readlink blockdev dd" opt="fuser blkid sfdisk partx fdisk sha256sum"
+		if ! sh_remote_check_tools "$req" "$opt"; then
 			unset SSHPASS
 			continue
 		fi
@@ -3876,6 +4068,11 @@ sh_restore_network_ssh() {
 
 		sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
 		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
+		REMOTE_HOST="$ssh_user@$ssh_ip"
+		if ! sh_remote_check_tools "cat stat" "sha256sum zstd xz gzip"; then
+			unset SSHPASS
+			continue
+		fi
 
 		rsize=$("${SSH_BASE[@]}" "stat -c%s -- $(printf '%q' "$rfile")" 2>/dev/null)
 		if ! [[ "$rsize" =~ ^[0-9]+$ ]]; then
@@ -4186,6 +4383,22 @@ sh_choose_clone_type
 #########################################################################
 # ChangeLog
 #########################################################################
+#
+# 2026-09-24 (v6.9.23.20260923)
+#
+# Segurança de dados
+#  - Ferramentas do computador remoto conferidas logo após o login, conforme
+#    a operação: falta obrigatória (ex.: lsblk, dd) mostra o que instalar e
+#    não começa; falta opcional segue e fica registrada no log.
+#  - Verificação de "em uso" falha fechada: se não puder rodar (ferramenta
+#    ausente, SSH caiu), destino é bloqueado e origem gera aviso.
+#  - Espaço livre e tipo do sistema de arquivos no remoto via "df -P" e
+#    /proc/mounts (funciona em BusyBox, que não tem "df --output").
+#  - Root no remoto identificado pelo uid (id -u), não pelo nome do usuário.
+#  - Ferramentas ausentes no remoto: tela com obrigatórias e opcionais (e o
+#    que cada opcional deixa de fazer), pacote de cada uma, comando de
+#    instalação conforme a distro remota (Void, Arch, Debian, Fedora, Alpine,
+#    openSUSE) e manifesto salvo em /tmp/chili-clonedisk-remoto-<ip>-<data>.txt.
 #
 # 2026-09-23 (v6.9.23.20260923)
 #

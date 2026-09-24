@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: chili-tradutor-go 2.1.24-20260816\n"
-"POT-Creation-Date: 2026-09-23 22:12-0400\n"
-"PO-Revision-Date: 2026-09-23 22:12-0400\n"
+"POT-Creation-Date: 2026-09-24 10:50-0400\n"
+"PO-Revision-Date: 2026-09-24 10:50-0400\n"
 "Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
 "Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
 "MIME-Version: 1.0\n"
@@ -18,909 +18,986 @@ msgstr ""
 msgid "findmnt"
 msgstr "descobri"
 
-#: usr/local/bin/chili-clonedisk:2392
+#: usr/local/bin/chili-clonedisk:2405
 msgid "Clonar Disco para Imagem"
 msgstr "CLONAR DISCO PARA IMAGEM"
 
-#: usr/local/bin/chili-clonedisk:2393
+#: usr/local/bin/chili-clonedisk:2406
 msgid "Clonar Partição para Imagem"
 msgstr "Clonar Partição para Imagem"
 
-#: usr/local/bin/chili-clonedisk:2394
+#: usr/local/bin/chili-clonedisk:2407
 msgid "Listar Discos"
 msgstr "Listar discos"
 
-#: usr/local/bin/chili-clonedisk:2397
+#: usr/local/bin/chili-clonedisk:2410
 msgid "Escolha o tipo de clone"
 msgstr "Escolha o tipo de clone"
 
-#: usr/local/bin/chili-clonedisk:2398
+#: usr/local/bin/chili-clonedisk:2411
 msgid "** AVISO **"
 msgstr "** AVISO **"
 
-#: usr/local/bin/chili-clonedisk:2399
+#: usr/local/bin/chili-clonedisk:2412
 msgid "Necessário desmontar as partições abaixo antes de prosseguir"
 msgstr "Necessário desmontar as partições abaixo antes de prosseguir"
 
-#: usr/local/bin/chili-clonedisk:2400
+#: usr/local/bin/chili-clonedisk:2413
 msgid "Desmontar ?"
 msgstr "Desmontar ?"
 
-#: usr/local/bin/chili-clonedisk:2401
+#: usr/local/bin/chili-clonedisk:2414
 msgid "ERRO"
 msgstr "ERRO"
 
-#: usr/local/bin/chili-clonedisk:2402
+#: usr/local/bin/chili-clonedisk:2415
 msgid "Info disco"
 msgstr "Discoteca de informações"
 
-#: usr/local/bin/chili-clonedisk:2403
+#: usr/local/bin/chili-clonedisk:2416
 msgid "DISCO DE DESTINO"
 msgstr "DISCO DE DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2404
+#: usr/local/bin/chili-clonedisk:2417
 msgid "Escolha o disco ORIGEM"
 msgstr "Escolha o disco ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2405
+#: usr/local/bin/chili-clonedisk:2418
 msgid "Escolha o disco DESTINO"
 msgstr "Escolha o disco DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2406
+#: usr/local/bin/chili-clonedisk:2419
 msgid "Escolha a partição ORIGEM"
 msgstr "Escolha a partição ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2407
+#: usr/local/bin/chili-clonedisk:2420
 msgid "Escolha a partição DESTINO"
 msgstr "Escolha a partição DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2408
+#: usr/local/bin/chili-clonedisk:2421
 msgid "Sim"
 msgstr "Sim"
 
-#: usr/local/bin/chili-clonedisk:2409
+#: usr/local/bin/chili-clonedisk:2422
 msgid "Não"
 msgstr "Não"
 
-#: usr/local/bin/chili-clonedisk:2410
+#: usr/local/bin/chili-clonedisk:2423
 msgid "Seletor de temas da interface (dialog)"
 msgstr "Seletor de temas da interface (dialog)"
 
-#: usr/local/bin/chili-clonedisk:2412
+#: usr/local/bin/chili-clonedisk:2425
 msgid "Use as teclas"
 msgstr "Usar como teclas"
 
-#: usr/local/bin/chili-clonedisk:2413
+#: usr/local/bin/chili-clonedisk:2426
 msgid "PARA CIMA"
 msgstr "PARA O TOPO"
 
-#: usr/local/bin/chili-clonedisk:2414
+#: usr/local/bin/chili-clonedisk:2427
 msgid "e"
 msgstr "e"
 
-#: usr/local/bin/chili-clonedisk:2415
+#: usr/local/bin/chili-clonedisk:2428
 msgid "PARA BAIXO"
 msgstr "PARA BAIXO"
 
-#: usr/local/bin/chili-clonedisk:2416
+#: usr/local/bin/chili-clonedisk:2429
 msgid "para navegar"
 msgstr "para navegar"
 
-#: usr/local/bin/chili-clonedisk:2417
+#: usr/local/bin/chili-clonedisk:2430
 msgid "Use"
 msgstr "Usar"
 
-#: usr/local/bin/chili-clonedisk:2418
+#: usr/local/bin/chili-clonedisk:2431
 msgid "para alternar entre os botões"
 msgstr "para alternar entre os botões"
 
-#: usr/local/bin/chili-clonedisk:2419
+#: usr/local/bin/chili-clonedisk:2432
 msgid "para selecionar|aceitar"
 msgstr "para selecionar|aceitar"
 
-#: usr/local/bin/chili-clonedisk:2426
+#: usr/local/bin/chili-clonedisk:2439
 msgid "ORIGEM e DESTINO não podem ser o mesmo dispositivo"
 msgstr "ORIGEM e DESTINO não podem ser o mesmo dispositivo"
 
-#: usr/local/bin/chili-clonedisk:2427
+#: usr/local/bin/chili-clonedisk:2440
 msgid "Executando clonagem de disco"
 msgstr "Executando clonagem de disco"
 
-#: usr/local/bin/chili-clonedisk:2428
+#: usr/local/bin/chili-clonedisk:2441
 msgid "Selecionar"
 msgstr "Selecionar"
 
-#: usr/local/bin/chili-clonedisk:2429
+#: usr/local/bin/chili-clonedisk:2442
 msgid "Sair"
 msgstr "Sair"
 
-#: usr/local/bin/chili-clonedisk:2430
+#: usr/local/bin/chili-clonedisk:2443
 msgid "Voltar"
 msgstr "Voltar"
 
-#: usr/local/bin/chili-clonedisk:2431
+#: usr/local/bin/chili-clonedisk:2444
 msgid "DISCO DE ORIGEM"
 msgstr "DISCO DE ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2432
+#: usr/local/bin/chili-clonedisk:2445
 msgid "PARTIÇÃO DE ORIGEM"
 msgstr "PARTIÇÃO DE ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2433
+#: usr/local/bin/chili-clonedisk:2446
 msgid "PARTIÇÃO DE DESTINO"
 msgstr "PARTIÇÃO DE DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2434
+#: usr/local/bin/chili-clonedisk:2447
 msgid "AVISO!"
 msgstr "AVISO!"
 
-#: usr/local/bin/chili-clonedisk:2434
+#: usr/local/bin/chili-clonedisk:2447
 msgid "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
 msgstr "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
 
-#: usr/local/bin/chili-clonedisk:2435
+#: usr/local/bin/chili-clonedisk:2448
 msgid "Continuar com a clonagem"
 msgstr "Continuar com a clonagem"
 
-#: usr/local/bin/chili-clonedisk:2436
+#: usr/local/bin/chili-clonedisk:2449
 msgid "IMAGEM ORIGEM"
 msgstr "IMAGEM ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2437
+#: usr/local/bin/chili-clonedisk:2450
 msgid "IMAGEM DESTINO"
 msgstr "IMAGEM DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2438
+#: usr/local/bin/chili-clonedisk:2451
 msgid "Clonagem concluída!"
 msgstr "Clonagem concluída!"
 
-#: usr/local/bin/chili-clonedisk:2439
+#: usr/local/bin/chili-clonedisk:2452
 msgid "para"
 msgstr "para"
 
-#: usr/local/bin/chili-clonedisk:2442
+#: usr/local/bin/chili-clonedisk:2455
 msgid "S"
 msgstr "S"
 
-#: usr/local/bin/chili-clonedisk:2443
+#: usr/local/bin/chili-clonedisk:2456
 msgid "n"
 msgstr "n"
 
-#: usr/local/bin/chili-clonedisk:2444
+#: usr/local/bin/chili-clonedisk:2457
 msgid "Data/hora de início"
 msgstr "Data/hora de início"
 
-#: usr/local/bin/chili-clonedisk:2445
+#: usr/local/bin/chili-clonedisk:2458
 msgid "Data/hora de término"
 msgstr "Data/hora de término"
 
-#: usr/local/bin/chili-clonedisk:2446
+#: usr/local/bin/chili-clonedisk:2459
 msgid "Tempo decorrido"
 msgstr "Tempo decorrido"
 
-#: usr/local/bin/chili-clonedisk:2447
+#: usr/local/bin/chili-clonedisk:2460
 msgid "Dispositivo"
 msgstr "Dispositivo"
 
-#: usr/local/bin/chili-clonedisk:2448
+#: usr/local/bin/chili-clonedisk:2461
 msgid "Nome"
 msgstr "Nome"
 
-#: usr/local/bin/chili-clonedisk:2449
+#: usr/local/bin/chili-clonedisk:2462
 msgid "Transporte"
 msgstr "Transporte"
 
-#: usr/local/bin/chili-clonedisk:2450
+#: usr/local/bin/chili-clonedisk:2463
 msgid "Rótulo"
 msgstr "Rótulo"
 
-#: usr/local/bin/chili-clonedisk:2451
+#: usr/local/bin/chili-clonedisk:2464
 msgid "Modelo"
 msgstr "Modelo"
 
-#: usr/local/bin/chili-clonedisk:2452
+#: usr/local/bin/chili-clonedisk:2465
 msgid "Tamanho"
 msgstr "Tamanho"
 
-#: usr/local/bin/chili-clonedisk:2453
+#: usr/local/bin/chili-clonedisk:2466
 msgid "Sistema de arquivos"
 msgstr "Sistema de Arquivos"
 
-#: usr/local/bin/chili-clonedisk:2454
+#: usr/local/bin/chili-clonedisk:2467
 msgid "Entre com o nome da imagem"
 msgstr "Entre com o nome da imagem"
 
-#: usr/local/bin/chili-clonedisk:2455
+#: usr/local/bin/chili-clonedisk:2468
 msgid "NOME DA IMAGEM"
 msgstr "NOME DA IMAGEM"
 
-#: usr/local/bin/chili-clonedisk:2456
+#: usr/local/bin/chili-clonedisk:2469
 msgid "Nome da imagem inválido! Tente novamente."
 msgstr "Nome da imagem inválido! Tente novamente."
 
-#: usr/local/bin/chili-clonedisk:2457
+#: usr/local/bin/chili-clonedisk:2470
 #, sh-printf-format
 msgid "Imagem '%s' já existe. Tentar outro nome?"
 msgstr "Imagem '%s' já existe. Tentar outro nome?"
 
-#: usr/local/bin/chili-clonedisk:2458
+#: usr/local/bin/chili-clonedisk:2471
 msgid "FORMATO DA IMAGEM"
 msgstr "FORMATO DA IMAGEM"
 
-#: usr/local/bin/chili-clonedisk:2459
+#: usr/local/bin/chili-clonedisk:2472
 msgid "Escolha o formato e compressão da imagem de destino:"
 msgstr "Escolha o formato e compressão da imagem de destino:"
 
-#: usr/local/bin/chili-clonedisk:2460
+#: usr/local/bin/chili-clonedisk:2473
 msgid "Imagem Bruta"
 msgstr "Imagem Bruta"
 
-#: usr/local/bin/chili-clonedisk:2461
+#: usr/local/bin/chili-clonedisk:2474
 msgid "Imagem Comprimida"
 msgstr "Imagem Comprimida"
 
-#: usr/local/bin/chili-clonedisk:2462
+#: usr/local/bin/chili-clonedisk:2475
 #, sh-printf-format
 msgid "Erro: O utilitário '%s' não está instalado no sistema."
 msgstr "Erro: O utilitário '%s' não está instalado no sistema."
 
-#: usr/local/bin/chili-clonedisk:2463
+#: usr/local/bin/chili-clonedisk:2476
 msgid "Convertendo para QCOW2..."
 msgstr "Convertendo para QCOW2..."
 
-#: usr/local/bin/chili-clonedisk:2464
+#: usr/local/bin/chili-clonedisk:2477
 msgid "Origem"
 msgstr "Origem"
 
-#: usr/local/bin/chili-clonedisk:2465
+#: usr/local/bin/chili-clonedisk:2478
 msgid "Destino"
 msgstr "Destino"
 
-#: usr/local/bin/chili-clonedisk:2466
+#: usr/local/bin/chili-clonedisk:2479
 msgid "Aguarde, esta operação pode levar alguns minutos..."
 msgstr "Aguarde, esta operação pode levar alguns minutos..."
 
-#: usr/local/bin/chili-clonedisk:2467
+#: usr/local/bin/chili-clonedisk:2480
 msgid "Aguarde, escaneando por imagens..."
 msgstr "Aguarde, escaneando por imagens..."
 
-#: usr/local/bin/chili-clonedisk:2468
+#: usr/local/bin/chili-clonedisk:2481
 #, sh-printf-format
 msgid "Erro: nenhuma imagem encontrada em '%s'"
 msgstr "Erro: nenhuma imagem encontrada em '%s'"
 
-#: usr/local/bin/chili-clonedisk:2469
+#: usr/local/bin/chili-clonedisk:2482
 msgid "Info imagem"
 msgstr "Info imagem"
 
-#: usr/local/bin/chili-clonedisk:2470
+#: usr/local/bin/chili-clonedisk:2483
 msgid "Imagens encontradas"
 msgstr "Imagens encontradas"
 
-#: usr/local/bin/chili-clonedisk:2471
+#: usr/local/bin/chili-clonedisk:2484
 msgid "SELECIONE A IMAGEM DE ORIGEM"
 msgstr "SELECIONE A IMAGEM DE ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2472
+#: usr/local/bin/chili-clonedisk:2485
 #, sh-printf-format
 msgid "IMAGENS em %s"
 msgstr "IMAGENS em %s"
 
-#: usr/local/bin/chili-clonedisk:2473
+#: usr/local/bin/chili-clonedisk:2486
 msgid "O disco de DESTINO é menor que o disco de ORIGEM"
 msgstr "O disco de DESTINO é menor que o disco de ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2474
+#: usr/local/bin/chili-clonedisk:2487
 msgid "A partição de DESTINO é menor que a partição de ORIGEM"
 msgstr "A partição de DESTINO é menor que a partição de ORIGEM"
 
-#: usr/local/bin/chili-clonedisk:2475
+#: usr/local/bin/chili-clonedisk:2488
 msgid "Prosseguir?"
 msgstr "Prosseguir?"
 
-#: usr/local/bin/chili-clonedisk:2476
+#: usr/local/bin/chili-clonedisk:2489
 msgid "Informações do qemu-img indisponíveis"
 msgstr "Informações do qemu-img indisponíveis"
 
-#: usr/local/bin/chili-clonedisk:2477
+#: usr/local/bin/chili-clonedisk:2490
 msgid "Este programa pode ser redistribuído livremente"
 msgstr "Este programa pode ser redistribuído livremente"
 
-#: usr/local/bin/chili-clonedisk:2478
+#: usr/local/bin/chili-clonedisk:2491
 msgid "sob os termos da Licença Pública Geral GNU"
 msgstr "sob os termos da Licença Pública Geral GNU"
 
-#: usr/local/bin/chili-clonedisk:2479
+#: usr/local/bin/chili-clonedisk:2492
 msgid "Este script precisa ser executado como root. Elevando privilégios..."
 msgstr "Este script precisa ser executado como root. Elevando privilégios..."
 
-#: usr/local/bin/chili-clonedisk:2480
+#: usr/local/bin/chili-clonedisk:2493
 msgid ""
 "Erro: não foi possível elevar os privilégios. Execute manualmente como root."
 msgstr "Erro: não foi possível elevar os privilégios. Execute manualmente como root."
 
-#: usr/local/bin/chili-clonedisk:2481
+#: usr/local/bin/chili-clonedisk:2494
 msgid "Instalando pacotes necessários"
 msgstr "Instalando pacotes necessários"
 
-#: usr/local/bin/chili-clonedisk:2482
+#: usr/local/bin/chili-clonedisk:2495
 msgid "Instalando pacotes no"
 msgstr "Instalando pacotes no"
 
-#: usr/local/bin/chili-clonedisk:2483
+#: usr/local/bin/chili-clonedisk:2496
 msgid "Falha ao instalar pacotes."
 msgstr "Falha ao instalar pacotes."
 
-#: usr/local/bin/chili-clonedisk:2484
+#: usr/local/bin/chili-clonedisk:2497
 msgid "Outra distro:"
 msgstr "Outra distro:"
 
-#: usr/local/bin/chili-clonedisk:2485
+#: usr/local/bin/chili-clonedisk:2498
 msgid "Não foi possível encontrar o comando"
 msgstr "Não foi possível encontrar o comando"
 
-#: usr/local/bin/chili-clonedisk:2486
+#: usr/local/bin/chili-clonedisk:2499
 msgid "instalar pacote"
 msgstr "instalar pacote"
 
-#: usr/local/bin/chili-clonedisk:2487
+#: usr/local/bin/chili-clonedisk:2500
 msgid "IMPOSSÍVEL CONTINUAR"
 msgstr "IMPOSSÍVEL CONTINUAR"
 
-#: usr/local/bin/chili-clonedisk:2488
+#: usr/local/bin/chili-clonedisk:2501
 msgid "Este script precisa dos comandos listados acima"
 msgstr "Este script precisa dos comandos listados acima"
 
-#: usr/local/bin/chili-clonedisk:2489
+#: usr/local/bin/chili-clonedisk:2502
 msgid "Instale-os e/ou verifique se eles estão em seu"
 msgstr "Instale-os e/ou verifique se eles estão em seu"
 
-#: usr/local/bin/chili-clonedisk:2490
+#: usr/local/bin/chili-clonedisk:2503
 msgid "Deseja instalar os pacotes e suprir os aplicativos necessários?"
 msgstr "Deseja instalar os pacotes e suprir os aplicativos necessários?"
 
-#: usr/local/bin/chili-clonedisk:2491
+#: usr/local/bin/chili-clonedisk:2504
 msgid "TERMINAL MUITO PEQUENO"
 msgstr "TERMINAL MUITO PEQUENO"
 
-#: usr/local/bin/chili-clonedisk:2492
+#: usr/local/bin/chili-clonedisk:2505
 msgid ""
 "Antes de continuar, redimensione seu terminal\\npara que ele meça pelo menos "
 "80 x 24 caracteres"
 msgstr "Antes de continuar, redimensione seu terminal\\\npara que ele meça pelo menos 80 x 24 caracteres"
 
-#: usr/local/bin/chili-clonedisk:2493
+#: usr/local/bin/chili-clonedisk:2506
 msgid ""
 "Caso contrário, você não poderá usar as ferramentas de partição de disco"
 msgstr "Caso contrário, você não poderá usar as ferramentas de partição de disco"
 
-#: usr/local/bin/chili-clonedisk:2494
+#: usr/local/bin/chili-clonedisk:2507
 msgid "binário não foi localizado no"
 msgstr "binário não foi localizado no"
 
-#: usr/local/bin/chili-clonedisk:2495
+#: usr/local/bin/chili-clonedisk:2508
 msgid "binário não foi localizado na pasta local:"
 msgstr "binário não foi localizado na pasta local:"
 
-#: usr/local/bin/chili-clonedisk:2496
+#: usr/local/bin/chili-clonedisk:2509
 msgid "DICA: instale o pacote chili-utils"
 msgstr "DICA: instale o pacote chili-utils"
 
-#: usr/local/bin/chili-clonedisk:2497
+#: usr/local/bin/chili-clonedisk:2510
 msgid "Entre com as credenciais do servidor SSH de destino e caminho:"
 msgstr "Entre com as credenciais do servidor SSH de destino e caminho:"
 
-#: usr/local/bin/chili-clonedisk:2498
+#: usr/local/bin/chili-clonedisk:2511
 msgid "Usuário Remoto  :"
 msgstr "Usuário Remoto  :"
 
-#: usr/local/bin/chili-clonedisk:2499
+#: usr/local/bin/chili-clonedisk:2512
 msgid "IP do Servidor  :"
 msgstr "IP do Servidor:"
 
-#: usr/local/bin/chili-clonedisk:2500
+#: usr/local/bin/chili-clonedisk:2513
 msgid "Porta SSH       :"
 msgstr "Porta SSH:"
 
-#: usr/local/bin/chili-clonedisk:2501
+#: usr/local/bin/chili-clonedisk:2514
 msgid "Arquivo Destino :"
 msgstr "Arquivo Destino :"
 
-#: usr/local/bin/chili-clonedisk:2502
+#: usr/local/bin/chili-clonedisk:2515
 msgid "CONFIGURAÇÃO SSH"
 msgstr "CONFIGURAÇÃO SSH"
 
-#: usr/local/bin/chili-clonedisk:2503
+#: usr/local/bin/chili-clonedisk:2516
 msgid "Todos os campos devem ser preenchidos! Tente novamente."
 msgstr "Todos os campos devem ser preenchidos! Tente novamente."
 
-#: usr/local/bin/chili-clonedisk:2504
+#: usr/local/bin/chili-clonedisk:2517
 msgid "TESTANDO CONEXÃO"
 msgstr "TESTANDO CONEXÃO"
 
-#: usr/local/bin/chili-clonedisk:2505
+#: usr/local/bin/chili-clonedisk:2518
 msgid "Tentando conexão via Chave Pública em"
 msgstr "Tentando conexão via Chave Pública em"
 
-#: usr/local/bin/chili-clonedisk:2506
+#: usr/local/bin/chili-clonedisk:2519
 msgid "ERRO DE REQUISITO"
 msgstr "ERRO DE REQUISITO"
 
-#: usr/local/bin/chili-clonedisk:2507
+#: usr/local/bin/chili-clonedisk:2520
 msgid "O utilitário 'sshpass' não foi encontrado no sistema!"
 msgstr "O utilitário 'sshpass' não foi encontrado no sistema!"
 
-#: usr/local/bin/chili-clonedisk:2508
+#: usr/local/bin/chili-clonedisk:2521
 msgid ""
 "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a "
 "clonagem via rede."
 msgstr "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede."
 
-#: usr/local/bin/chili-clonedisk:2509
+#: usr/local/bin/chili-clonedisk:2522
 msgid "AUTENTICAÇÃO REQUERIDA"
 msgstr "AUTENTICAÇÃO REQUERIDA"
 
-#: usr/local/bin/chili-clonedisk:2510
+#: usr/local/bin/chili-clonedisk:2523
 msgid "A conexão direta por chave falhou.\\nDigite a senha para"
 msgstr "A conexão direta por chave falhou.\\\nDigite a senha para"
 
-#: usr/local/bin/chili-clonedisk:2511
+#: usr/local/bin/chili-clonedisk:2524
 msgid "TESTANDO SENHA"
 msgstr "TESTANDO SENHA"
 
-#: usr/local/bin/chili-clonedisk:2512
+#: usr/local/bin/chili-clonedisk:2525
 msgid "Validando senha no servidor remoto..."
 msgstr "Validando senha no servidor remoto..."
 
-#: usr/local/bin/chili-clonedisk:2513
+#: usr/local/bin/chili-clonedisk:2526
 msgid "ERRO DE AUTENTICAÇÃO"
 msgstr "ERRO DE AUTENTICAÇÃO"
 
-#: usr/local/bin/chili-clonedisk:2514
+#: usr/local/bin/chili-clonedisk:2527
 msgid "Senha incorreta ou acesso rejeitado pelo servidor remoto!"
 msgstr "Senha incorreta ou acesso rejeitado pelo servidor remoto!"
 
-#: usr/local/bin/chili-clonedisk:2515
+#: usr/local/bin/chili-clonedisk:2528
 msgid "Verifique suas credenciais e tente novamente."
 msgstr "Verifique suas credenciais e tente novamente."
 
-#: usr/local/bin/chili-clonedisk:2516
+#: usr/local/bin/chili-clonedisk:2529
 msgid "FORMATO DE COMPRESSÃO"
 msgstr "FORMATO DE COMPRESSÃO"
 
-#: usr/local/bin/chili-clonedisk:2517
+#: usr/local/bin/chili-clonedisk:2530
 msgid "Escolha o formato de saída para a imagem remota:"
 msgstr "Escolha o formato de saída para a imagem remota:"
 
-#: usr/local/bin/chili-clonedisk:2518
+#: usr/local/bin/chili-clonedisk:2531
 msgid "Otimizado/Adaptativo"
 msgstr "Otimizado/Adaptativo"
 
-#: usr/local/bin/chili-clonedisk:2519
+#: usr/local/bin/chili-clonedisk:2532
 msgid "Compatibilidade"
 msgstr "Compatibilidade"
 
-#: usr/local/bin/chili-clonedisk:2520
+#: usr/local/bin/chili-clonedisk:2533
 msgid "Máxima Compressão"
 msgstr "Máxima Compressão"
 
-#: usr/local/bin/chili-clonedisk:2521
+#: usr/local/bin/chili-clonedisk:2534
 msgid "Sem compressão (Imagem Raw / bruto)"
 msgstr "Sem compressão (Imagem Raw / bruto)"
 
-#: usr/local/bin/chili-clonedisk:2522
+#: usr/local/bin/chili-clonedisk:2535
 msgid "SERVIDOR DESTINO :"
 msgstr "SERVIDOR DE DESTINO:"
 
-#: usr/local/bin/chili-clonedisk:2523
+#: usr/local/bin/chili-clonedisk:2536
 msgid "ARQUIVO REMOTO   :"
 msgstr "ARQUIVO REMOTO   :"
 
-#: usr/local/bin/chili-clonedisk:2524
+#: usr/local/bin/chili-clonedisk:2537
 msgid "Confirmar o início da clonagem criptografada via rede?"
 msgstr "Confirmar o início da clonagem criptografada via rede?"
 
-#: usr/local/bin/chili-clonedisk:2525
+#: usr/local/bin/chili-clonedisk:2538
 msgid "Iniciando transmissão de"
 msgstr "Iniciando transmissão de"
 
-#: usr/local/bin/chili-clonedisk:2526
+#: usr/local/bin/chili-clonedisk:2539
 msgid "PREPARANDO DESTINO"
 msgstr "PREPARANDO O DESTINO"
 
-#: usr/local/bin/chili-clonedisk:2527
+#: usr/local/bin/chili-clonedisk:2540
 msgid "Garantindo que o diretório remoto existe..."
 msgstr "Garantindo que o diretório remoto existe..."
 
-#: usr/local/bin/chili-clonedisk:2528
+#: usr/local/bin/chili-clonedisk:2541
 msgid "ERRO DE DIRETÓRIO"
 msgstr "ERRO DE DIRETÓRIO"
 
-#: usr/local/bin/chili-clonedisk:2529
+#: usr/local/bin/chili-clonedisk:2542
 msgid "Falha ao criar o diretório remoto:"
 msgstr "Falha ao criar o diretório remoto:"
 
-#: usr/local/bin/chili-clonedisk:2530
+#: usr/local/bin/chili-clonedisk:2543
 msgid "Verifique as permissões de escrita do usuário no destino."
 msgstr "Verifique as permissões de escrita do usuário no destino."
 
-#: usr/local/bin/chili-clonedisk:2531
+#: usr/local/bin/chili-clonedisk:2544
 msgid "CLONAGEM REMOTA EM ANDAMENTO"
 msgstr "CLONAGEM REMOTA EM ANDAMENTO"
 
-#: usr/local/bin/chili-clonedisk:2532
+#: usr/local/bin/chili-clonedisk:2545
 msgid "Processando: pv -> conversor/compressor -> SSH -> Rede"
 msgstr "Processando: pv -> conversor/compressor -> SSH -> Rede"
 
-#: usr/local/bin/chili-clonedisk:2533
+#: usr/local/bin/chili-clonedisk:2546
 msgid "DESTINO REMOTO :"
 msgstr "DESTINO REMOTO:"
 
-#: usr/local/bin/chili-clonedisk:2534
+#: usr/local/bin/chili-clonedisk:2547
 msgid "Resumo da Operação de Rede"
 msgstr "Resumo da Operação de Rede"
 
-#: usr/local/bin/chili-clonedisk:2535
+#: usr/local/bin/chili-clonedisk:2548
 msgid "Clonagem Remota Concluída com Sucesso!"
 msgstr "Clonagem Remota Concluída com Sucesso!"
 
-#: usr/local/bin/chili-clonedisk:2536
+#: usr/local/bin/chili-clonedisk:2549
 msgid "Origem Local     :"
 msgstr "Origem Local     :"
 
-#: usr/local/bin/chili-clonedisk:2537
+#: usr/local/bin/chili-clonedisk:2550
 msgid "Destino Remoto   :"
 msgstr "Destino remoto:"
 
-#: usr/local/bin/chili-clonedisk:2538
+#: usr/local/bin/chili-clonedisk:2551
 msgid "Tamanho Remoto   :"
 msgstr "Tamanho Remoto   :"
 
-#: usr/local/bin/chili-clonedisk:2539
+#: usr/local/bin/chili-clonedisk:2552
 msgid "SELECIONE O DISCO DE ORIGEM PARA REDE"
 msgstr "SELECIONE O DISCO DE ORIGEM PARA REDE"
 
-#: usr/local/bin/chili-clonedisk:2540
+#: usr/local/bin/chili-clonedisk:2553
 msgid "MENU PRINCIPAL"
 msgstr "Menu principal"
 
-#: usr/local/bin/chili-clonedisk:2541
+#: usr/local/bin/chili-clonedisk:2554
+#, sh-printf-format
+msgid ""
+"O computador remoto %s não tem as ferramentas necessárias para esta operação."
+msgstr "O computador remoto %s não tem as ferramentas necessárias para esta operação."
+
+#: usr/local/bin/chili-clonedisk:2555
+#, sh-printf-format
+msgid "O computador remoto %s não tem algumas ferramentas opcionais."
+msgstr "O computador remoto %s não tem algumas ferramentas opcionais."
+
+#: usr/local/bin/chili-clonedisk:2556
+msgid "Obrigatórias (a operação não pode continuar):"
+msgstr "Obrigatórias (a operação não pode continuar):"
+
+#: usr/local/bin/chili-clonedisk:2557
+msgid "Opcionais (a operação continua sem estas etapas):"
+msgstr "Opcionais (a operação continua sem estas etapas):"
+
+#: usr/local/bin/chili-clonedisk:2558
+#, sh-printf-format
+msgid "Para instalar no remoto (%s):"
+msgstr "Para instalar não remoto (%s):"
+
+#: usr/local/bin/chili-clonedisk:2559
+#, sh-printf-format
+msgid "Pacotes a instalar no remoto (%s):"
+msgstr "Pacotes a instalar no remoto (%s):"
+
+#: usr/local/bin/chili-clonedisk:2560
+#, sh-printf-format
+msgid "Lista salva em: %s"
+msgstr "Lista salva em: %s"
+
+#: usr/local/bin/chili-clonedisk:2561
+msgid "verificar processos usando o disco"
+msgstr "verificar processos usando o disco"
+
+#: usr/local/bin/chili-clonedisk:2562
+msgid "mostrar tipo e rótulo das partições"
+msgstr "mostrar tipo e rótulo das partições"
+
+#: usr/local/bin/chili-clonedisk:2563
+msgid "backup da tabela de partições"
+msgstr "backup da tabela de partições"
+
+#: usr/local/bin/chili-clonedisk:2564
+msgid "reler a tabela de partições"
+msgstr "reler a tabela de partições"
+
+#: usr/local/bin/chili-clonedisk:2565
+msgid "mostrar o resultado final"
+msgstr "mostrar o resultado final"
+
+#: usr/local/bin/chili-clonedisk:2566
+msgid "hash e verificação da imagem"
+msgstr "hash e verificação da imagem"
+
+#: usr/local/bin/chili-clonedisk:2567
+msgid "comprimir/testar no remoto (passa a ser feito aqui)"
+msgstr "comprimir/testar no remoto (passa a ser feito aqui)"
+
+#: usr/local/bin/chili-clonedisk:2568
+msgid "conferir espaço livre e FAT32"
+msgstr "conferir espaço livre e FAT32"
+
+#: usr/local/bin/chili-clonedisk:2569
+#, sh-printf-format
+msgid "não foi possível verificar se %s está em uso (falta: %s)"
+msgstr "não foi possível verificar se %s está em uso (falta: %s)"
+
+#: usr/local/bin/chili-clonedisk:2570
+#, sh-printf-format
+msgid ""
+"não foi possível verificar se %s está em uso (a verificação não respondeu)"
+msgstr "não foi possível verificar se %s está em uso (a verificação não respondeu)"
+
+#: usr/local/bin/chili-clonedisk:2571
 msgid "Partição local -> Imagem remota"
 msgstr "Partição local -> Imagem remota"
 
-#: usr/local/bin/chili-clonedisk:2542
+#: usr/local/bin/chili-clonedisk:2572
 msgid "clonar partição local para imagem remota"
 msgstr "clonar partição local para imagem remota"
 
-#: usr/local/bin/chili-clonedisk:2543
+#: usr/local/bin/chili-clonedisk:2573
 msgid "Partição local -> Partição remota"
 msgstr "Partição local -> Partição remota"
 
-#: usr/local/bin/chili-clonedisk:2544
+#: usr/local/bin/chili-clonedisk:2574
 msgid "clonar partição local para partição remota"
 msgstr "clonar partição local para partição remota"
 
-#: usr/local/bin/chili-clonedisk:2545
+#: usr/local/bin/chili-clonedisk:2575
 msgid "Partição remota -> Imagem local"
 msgstr "Partição remota -> Imagem local"
 
-#: usr/local/bin/chili-clonedisk:2546
+#: usr/local/bin/chili-clonedisk:2576
 msgid "clonar partição remota para imagem local"
 msgstr "clonar partição remota para imagem local"
 
-#: usr/local/bin/chili-clonedisk:2547
+#: usr/local/bin/chili-clonedisk:2577
 msgid "Partição remota -> Partição local"
 msgstr "Partição remota -> Partição local"
 
-#: usr/local/bin/chili-clonedisk:2548
+#: usr/local/bin/chili-clonedisk:2578
 msgid "clonar partição remota para partição local"
 msgstr "clonar partição remota para partição local"
 
-#: usr/local/bin/chili-clonedisk:2549
+#: usr/local/bin/chili-clonedisk:2579
 msgid "Partição remota"
 msgstr "Partição remota"
 
-#: usr/local/bin/chili-clonedisk:2550
+#: usr/local/bin/chili-clonedisk:2580
 msgid "Verificação de integridade"
 msgstr "Verificação de integridade"
 
-#: usr/local/bin/chili-clonedisk:2551
+#: usr/local/bin/chili-clonedisk:2581
 msgid "Calculando sha256..."
 msgstr "Calculando sha256..."
 
-#: usr/local/bin/chili-clonedisk:2552
+#: usr/local/bin/chili-clonedisk:2582
 msgid "Testando o checksum embutido no formato..."
 msgstr "Testando o checksum embutido no formato..."
 
-#: usr/local/bin/chili-clonedisk:2553
+#: usr/local/bin/chili-clonedisk:2583
 msgid "Relendo o destino para comparar..."
 msgstr "Relendo o destino para comparar..."
 
-#: usr/local/bin/chili-clonedisk:2554
+#: usr/local/bin/chili-clonedisk:2584
 #, sh-printf-format
 msgid "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la."
 msgstr "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la."
 
-#: usr/local/bin/chili-clonedisk:2555
+#: usr/local/bin/chili-clonedisk:2585
 msgid "esperado"
 msgstr "esperado"
 
-#: usr/local/bin/chili-clonedisk:2556
+#: usr/local/bin/chili-clonedisk:2586
 msgid "obtido"
 msgstr "obtido"
 
-#: usr/local/bin/chili-clonedisk:2557
+#: usr/local/bin/chili-clonedisk:2587
 #, sh-printf-format
 msgid "A imagem %s não tem hash guardado (.sha256/.info)."
 msgstr "A imagem %s não tem hash guardado (.sha256/.info)."
 
-#: usr/local/bin/chili-clonedisk:2558
+#: usr/local/bin/chili-clonedisk:2588
 msgid ""
 "Verificado só o checksum embutido no formato: detecta corrupção, mas não uma "
 "troca da imagem."
 msgstr "Verificado só o checksum embutido no formato: detecta corrupção, mas não uma troca da imagem."
 
-#: usr/local/bin/chili-clonedisk:2559
+#: usr/local/bin/chili-clonedisk:2589
 msgid ""
 "Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam "
 "ser conferidos."
 msgstr "Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam ser conferidos."
 
-#: usr/local/bin/chili-clonedisk:2560
+#: usr/local/bin/chili-clonedisk:2590
 msgid "Imagem raw sem hash: não há como verificar se ela está íntegra."
 msgstr "Imagem raw sem hash: não há como verificar se ela está íntegra."
 
-#: usr/local/bin/chili-clonedisk:2561
+#: usr/local/bin/chili-clonedisk:2591
 msgid ""
 "Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a "
 "criação, mas serve de referência daqui para frente."
 msgstr "Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a criação, mas serve de referência daqui para frente."
 
-#: usr/local/bin/chili-clonedisk:2562
+#: usr/local/bin/chili-clonedisk:2592
 msgid ""
 "Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)"
 msgstr "Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)"
 
-#: usr/local/bin/chili-clonedisk:2563
+#: usr/local/bin/chili-clonedisk:2593
 #, sh-printf-format
 msgid "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado."
 msgstr "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado."
 
-#: usr/local/bin/chili-clonedisk:2564
+#: usr/local/bin/chili-clonedisk:2594
 #, sh-printf-format
 msgid "Gravação verificada: %s confere com o que foi gravado."
 msgstr "Gravação verificada: %s confere com o que foi gravado."
 
-#: usr/local/bin/chili-clonedisk:2565
+#: usr/local/bin/chili-clonedisk:2595
 #, sh-printf-format
 msgid ""
 "O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar "
 "com defeito."
 msgstr "O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar com defeito."
 
-#: usr/local/bin/chili-clonedisk:2566
+#: usr/local/bin/chili-clonedisk:2596
 msgid "Sem ficha (.info) para esta imagem."
 msgstr "Nenhum plugue (.info) para esta imagem."
 
-#: usr/local/bin/chili-clonedisk:2567
+#: usr/local/bin/chili-clonedisk:2597
 #, sh-printf-format
 msgid ""
 "Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem "
 "permissão)."
 msgstr "Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem permissão)."
 
-#: usr/local/bin/chili-clonedisk:2568
+#: usr/local/bin/chili-clonedisk:2598
 #, sh-printf-format
 msgid ""
 "'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. "
 "Escolha outro local ou um formato comprimido."
 msgstr "'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. Escolha outro local ou um formato comprimido."
 
-#: usr/local/bin/chili-clonedisk:2569
+#: usr/local/bin/chili-clonedisk:2599
 #, sh-printf-format
 msgid ""
 "'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar "
 "disso e falhar no meio. Prosseguir?"
 msgstr "'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar disso e falhar no meio. Prosseguir?"
 
-#: usr/local/bin/chili-clonedisk:2570
+#: usr/local/bin/chili-clonedisk:2600
 #, sh-printf-format
 msgid ""
 "Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida "
 "pode não caber. Prosseguir?"
 msgstr "Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida pode não caber. Prosseguir?"
 
-#: usr/local/bin/chili-clonedisk:2571
+#: usr/local/bin/chili-clonedisk:2601
 msgid "Disco local -> Disco remoto"
 msgstr "Disco Local -> Disco Remoto"
 
-#: usr/local/bin/chili-clonedisk:2572
+#: usr/local/bin/chili-clonedisk:2602
 msgid "clonar disco local para disco remoto"
 msgstr "clonar disco local para disco remoto"
 
-#: usr/local/bin/chili-clonedisk:2573
+#: usr/local/bin/chili-clonedisk:2603
 #, sh-printf-format
 msgid "O destino %s está em uso e não pode ser sobrescrito:"
 msgstr "O destino %s está em uso e não pode ser sobrescrito:"
 
-#: usr/local/bin/chili-clonedisk:2574
+#: usr/local/bin/chili-clonedisk:2604
 #, sh-printf-format
 msgid "A origem %s está em uso. A cópia pode ficar inconsistente:"
 msgstr "A origem %s está em uso. A cópia pode ficar inconsistente:"
 
-#: usr/local/bin/chili-clonedisk:2575
+#: usr/local/bin/chili-clonedisk:2605
 msgid "Libere o disco no computador remoto e tente de novo."
 msgstr "Libere o disco no computador remoto e tente de novo."
 
-#: usr/local/bin/chili-clonedisk:2576
+#: usr/local/bin/chili-clonedisk:2606
 #, sh-printf-format
 msgid "%s montado em %s (sistema)"
 msgstr "%s montado em %s (sistema)"
 
-#: usr/local/bin/chili-clonedisk:2577
+#: usr/local/bin/chili-clonedisk:2607
 #, sh-printf-format
 msgid "%s montado em %s"
 msgstr "%s montado em %s"
 
-#: usr/local/bin/chili-clonedisk:2578
+#: usr/local/bin/chili-clonedisk:2608
 #, sh-printf-format
 msgid "%s é swap ativa"
 msgstr "%s é swap ativa"
 
-#: usr/local/bin/chili-clonedisk:2579
+#: usr/local/bin/chili-clonedisk:2609
 #, sh-printf-format
 msgid "%s em uso por %s (LVM/LUKS/RAID)"
 msgstr "%s em uso por %s (LVM/LUKS/RAID)"
 
-#: usr/local/bin/chili-clonedisk:2580
+#: usr/local/bin/chili-clonedisk:2610
 #, sh-printf-format
 msgid "%s aberto pelo processo %s (%s)"
 msgstr "%s aberto pelo processo %s (%s)"
 
-#: usr/local/bin/chili-clonedisk:2581
+#: usr/local/bin/chili-clonedisk:2611
 #, sh-printf-format
 msgid "%s pertence a um pool ZFS"
 msgstr "%s pertence a um pool ZFS"
 
-#: usr/local/bin/chili-clonedisk:2582
+#: usr/local/bin/chili-clonedisk:2612
 #, sh-printf-format
 msgid "O arquivo %s já existe. Sobrescrever?"
 msgstr "O arquivo %s já existe. Sobrescrever?"
 
-#: usr/local/bin/chili-clonedisk:2584
+#: usr/local/bin/chili-clonedisk:2614
 msgid "Disco -> Disco"
 msgstr "Disco -> Disco"
 
-#: usr/local/bin/chili-clonedisk:2585
+#: usr/local/bin/chili-clonedisk:2615
 msgid "clonar disco para outro disco"
 msgstr "clonar disco para outro disco"
 
-#: usr/local/bin/chili-clonedisk:2586
+#: usr/local/bin/chili-clonedisk:2616
 msgid "Partição -> Partição"
 msgstr "Partição -> Partição"
 
-#: usr/local/bin/chili-clonedisk:2587
+#: usr/local/bin/chili-clonedisk:2617
 msgid "clonar partição para outra partição"
 msgstr "clonar partição para outra partição"
 
-#: usr/local/bin/chili-clonedisk:2588
+#: usr/local/bin/chili-clonedisk:2618
 msgid "Disco -> Imagem"
 msgstr "Disco -> Imagem"
 
-#: usr/local/bin/chili-clonedisk:2589
+#: usr/local/bin/chili-clonedisk:2619
 msgid "clonar disco para arquivo de imagem"
 msgstr "clonar disco para arquivo de imagem"
 
-#: usr/local/bin/chili-clonedisk:2590
+#: usr/local/bin/chili-clonedisk:2620
 msgid "Partição -> Imagem"
 msgstr "Partição -> Imagem"
 
-#: usr/local/bin/chili-clonedisk:2591
+#: usr/local/bin/chili-clonedisk:2621
 msgid "clonar partição para arquivo de imagem"
 msgstr "clonar partição para arquivo de imagem"
 
-#: usr/local/bin/chili-clonedisk:2592
+#: usr/local/bin/chili-clonedisk:2622
 msgid "Imagem -> Disco"
 msgstr "Imagem -> Disco"
 
-#: usr/local/bin/chili-clonedisk:2593
+#: usr/local/bin/chili-clonedisk:2623
 msgid "clonar imagem para disco"
 msgstr "Clonar Imagem para Disco"
 
-#: usr/local/bin/chili-clonedisk:2594
+#: usr/local/bin/chili-clonedisk:2624
 msgid "Imagem -> Partição"
 msgstr "Imagem -> Partição"
 
-#: usr/local/bin/chili-clonedisk:2595
+#: usr/local/bin/chili-clonedisk:2625
 msgid "clonar imagem para partição"
 msgstr "Clonar Imagem para Partição"
 
-#: usr/local/bin/chili-clonedisk:2596
+#: usr/local/bin/chili-clonedisk:2626
 msgid "ISO -> Pendrive/Disco"
 msgstr "ISO -> Pendrive/Disco"
 
-#: usr/local/bin/chili-clonedisk:2597
+#: usr/local/bin/chili-clonedisk:2627
 msgid "gravar ISO para dar boot"
 msgstr "gravar ISO para dar boot"
 
-#: usr/local/bin/chili-clonedisk:2598
+#: usr/local/bin/chili-clonedisk:2628
 msgid "Disco local -> Imagem remota"
 msgstr "Disco local -> Imagem remota"
 
-#: usr/local/bin/chili-clonedisk:2599
+#: usr/local/bin/chili-clonedisk:2629
 msgid "clonar disco local para imagem remota"
 msgstr "clonar disco local para imagem remota"
 
-#: usr/local/bin/chili-clonedisk:2600
+#: usr/local/bin/chili-clonedisk:2630
 msgid "Imagem remota -> Disco/Partição local"
 msgstr "Imagem remota -> Disco/Partição local"
 
-#: usr/local/bin/chili-clonedisk:2601
+#: usr/local/bin/chili-clonedisk:2631
 msgid "clonar imagem remota para disco/partição local"
 msgstr "clonar imagem remota para disco/partição local"
 
-#: usr/local/bin/chili-clonedisk:2602
+#: usr/local/bin/chili-clonedisk:2632
 msgid "Disco remoto -> Imagem local"
 msgstr "Disco remoto -> Imagem local"
 
-#: usr/local/bin/chili-clonedisk:2603
+#: usr/local/bin/chili-clonedisk:2633
 msgid "clonar disco remoto para imagem local"
 msgstr "clonar disco remoto para imagem local"
 
-#: usr/local/bin/chili-clonedisk:2604
+#: usr/local/bin/chili-clonedisk:2634
 msgid "Disco remoto -> Disco local"
 msgstr "Disco Remoto -> Disco Local"
 
-#: usr/local/bin/chili-clonedisk:2605
+#: usr/local/bin/chili-clonedisk:2635
 msgid "clonar disco remoto para disco local"
 msgstr "clonar disco remoto para disco local"
 
-#: usr/local/bin/chili-clonedisk:2606
+#: usr/local/bin/chili-clonedisk:2636
 msgid "Clonar (local)"
 msgstr "Clonar (local)"
 
-#: usr/local/bin/chili-clonedisk:2607
+#: usr/local/bin/chili-clonedisk:2637
 msgid "Criar imagem"
 msgstr "Criar imagem"
 
-#: usr/local/bin/chili-clonedisk:2608
+#: usr/local/bin/chili-clonedisk:2638
 msgid "Restaurar imagem"
 msgstr "Restaurar imagem"
 
-#: usr/local/bin/chili-clonedisk:2609
+#: usr/local/bin/chili-clonedisk:2639
 msgid "Rede (SSH)"
 msgstr "Rede (SSH)"
 
-#: usr/local/bin/chili-clonedisk:2610
+#: usr/local/bin/chili-clonedisk:2640
 msgid "Escolha a operação"
 msgstr "Escolha a operação"
 
-#: usr/local/bin/chili-clonedisk:2611
+#: usr/local/bin/chili-clonedisk:2641
 msgid "Entre com as credenciais do servidor SSH:"
 msgstr "Entre com as credenciais do servidor SSH:"
 
-#: usr/local/bin/chili-clonedisk:2612
+#: usr/local/bin/chili-clonedisk:2642
 msgid ""
 "Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha."
 msgstr "Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha."
 
-#: usr/local/bin/chili-clonedisk:2613
+#: usr/local/bin/chili-clonedisk:2643
 msgid "Nenhum disco encontrado no servidor remoto."
 msgstr "Nenhum disco encontrado no servidor remoto."
 
-#: usr/local/bin/chili-clonedisk:2614
+#: usr/local/bin/chili-clonedisk:2644
 msgid "Disco remoto"
 msgstr "disco remoto"
 
-#: usr/local/bin/chili-clonedisk:2615
+#: usr/local/bin/chili-clonedisk:2645
 msgid "em uso"
 msgstr "em uso"
 
-#: usr/local/bin/chili-clonedisk:2616
+#: usr/local/bin/chili-clonedisk:2646
 msgid "Novos UUIDs"
 msgstr "Novos UUIDs"
 
-#: usr/local/bin/chili-clonedisk:2617
+#: usr/local/bin/chili-clonedisk:2647
 msgid ""
 "O destino ficou com os mesmos identificadores da origem (UUID do sistema de "
 "arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\\n\\nGere novos se "
@@ -931,101 +1008,101 @@ msgid ""
 "destino?"
 msgstr "O destino ficou com os mesmos identificadores da origem (UUID do sistema de arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\\\n\\\nGere novos se origem e destino forem ficar ligados na MESMA máquina: senão o sistema pode montar o disco errado ou o LVM acusar PV duplicado.\\\n\\\nNÃO gere se o destino for substituir a origem ou precisar dar boot: o fstab e o GRUB do sistema clonado usam esses identificadores.\\\n\\\nGerar novos UUIDs no destino?"
 
-#: usr/local/bin/chili-clonedisk:2618
+#: usr/local/bin/chili-clonedisk:2648
 msgid "Nenhum identificador encontrado para alterar."
 msgstr "Nenhum identificador encontrado para alterar."
 
-#: usr/local/bin/chili-clonedisk:2619
+#: usr/local/bin/chili-clonedisk:2649
 msgid "Entre com as credenciais do servidor SSH e o caminho da imagem:"
 msgstr "Entre com as credenciais do servidor SSH e o caminho da imagem:"
 
-#: usr/local/bin/chili-clonedisk:2620
+#: usr/local/bin/chili-clonedisk:2650
 msgid "Arquivo Remoto  :"
 msgstr "Arquivo Remoto  :"
 
-#: usr/local/bin/chili-clonedisk:2621
+#: usr/local/bin/chili-clonedisk:2651
 msgid ""
 "Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo "
 "para esta máquina e use Imagem para Disco/Partição."
 msgstr "Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo para esta máquina e use Imagem para Disco/Partição."
 
-#: usr/local/bin/chili-clonedisk:2622
+#: usr/local/bin/chili-clonedisk:2652
 #, sh-printf-format
 msgid "Arquivo remoto não encontrado ou sem permissão de leitura: %s"
 msgstr "Arquivo remoto não encontrado ou sem permissão de leitura: %s"
 
-#: usr/local/bin/chili-clonedisk:2623
+#: usr/local/bin/chili-clonedisk:2653
 msgid "Restaurar em"
 msgstr "Restaurar em"
 
-#: usr/local/bin/chili-clonedisk:2624
+#: usr/local/bin/chili-clonedisk:2654
 msgid "Disco inteiro"
 msgstr "Disco inteiro"
 
-#: usr/local/bin/chili-clonedisk:2625
+#: usr/local/bin/chili-clonedisk:2655
 msgid "Partição"
 msgstr "Partição"
 
-#: usr/local/bin/chili-clonedisk:2626
+#: usr/local/bin/chili-clonedisk:2656
 #, sh-printf-format
 msgid "A imagem (%s) é maior que o destino (%s). Prosseguir?"
 msgstr "A imagem (%s) é maior que o destino (%s). Prosseguir?"
 
-#: usr/local/bin/chili-clonedisk:2627
+#: usr/local/bin/chili-clonedisk:2657
 msgid "Uso:"
 msgstr "Uso:"
 
-#: usr/local/bin/chili-clonedisk:2628
+#: usr/local/bin/chili-clonedisk:2658
 msgid "sem parâmetros, abre a interface (dialog)"
 msgstr "sem parâmetros, abre a interface (dialog)"
 
-#: usr/local/bin/chili-clonedisk:2629
+#: usr/local/bin/chili-clonedisk:2659
 msgid "exibir esta ajuda e sair"
 msgstr "exibir esta ajuda e sair"
 
-#: usr/local/bin/chili-clonedisk:2630
+#: usr/local/bin/chili-clonedisk:2660
 msgid "mostrar versão"
 msgstr "mostrar versão"
 
-#: usr/local/bin/chili-clonedisk:2631
+#: usr/local/bin/chili-clonedisk:2661
 msgid "Idioma da interface"
 msgstr "Idioma da interface"
 
-#: usr/local/bin/chili-clonedisk:2632
+#: usr/local/bin/chili-clonedisk:2662
 msgid "Escolha o idioma:"
 msgstr "Escolha o idioma:"
 
-#: usr/local/bin/chili-clonedisk:2633
+#: usr/local/bin/chili-clonedisk:2663
 #, sh-printf-format
 msgid ""
 "O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro "
 "local."
 msgstr "O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro local."
 
-#: usr/local/bin/chili-clonedisk:2634
+#: usr/local/bin/chili-clonedisk:2664
 #, sh-printf-format
 msgid ""
 "Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha "
 "outro local."
 msgstr "Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha outro local."
 
-#: usr/local/bin/chili-clonedisk:2635
+#: usr/local/bin/chili-clonedisk:2665
 #, sh-printf-format
 msgid "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'."
 msgstr "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'."
 
-#: usr/local/bin/chili-clonedisk:2636
+#: usr/local/bin/chili-clonedisk:2666
 msgid "Falha na clonagem!"
 msgstr "Falha na clonagem!"
 
-#: usr/local/bin/chili-clonedisk:2637
+#: usr/local/bin/chili-clonedisk:2667
 msgid "Falha na clonagem remota!"
 msgstr "Falha na clonagem remota!"
 
-#: usr/local/bin/chili-clonedisk:2638
+#: usr/local/bin/chili-clonedisk:2668
 msgid "instalação automática não suportada. Instale manualmente:"
 msgstr "instalação automática não suportada. Instale manualmente:"
 
-#: usr/local/bin/chili-clonedisk:2645
+#: usr/local/bin/chili-clonedisk:2675
 msgid "_"
 msgstr "_"
