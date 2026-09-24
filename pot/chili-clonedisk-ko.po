@@ -1,11 +1,11 @@
-# Chili Tradutor Go - 2.1.20-20260201
+# Chili Tradutor Go - 2.1.24-20260816
 # Copyright (C) 2019-2026 Vilmar Catafesta <vcatafesta@gmail.com>
 # This file is distributed under the same license as the chili-tradutor-go package.
 msgid ""
 msgstr ""
-"Project-Id-Version: chili-tradutor-go 2.1.20-20260201\n"
-"POT-Creation-Date: 2026-06-09 20:44-0400\n"
-"PO-Revision-Date: 2026-06-09 20:44-0400\n"
+"Project-Id-Version: chili-tradutor-go 2.1.24-20260816\n"
+"POT-Creation-Date: 2026-09-23 22:12-0400\n"
+"PO-Revision-Date: 2026-09-23 22:12-0400\n"
 "Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
 "Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
 "MIME-Version: 1.0\n"
@@ -14,258 +14,1018 @@ msgstr ""
 "Language: ko\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: usr/local/bin/chili-clonedisk:224
-msgid "Bem vindo ao "
-msgstr "에 오신 것을 환영합니다"
+#: usr/local/bin/chili-clonedisk:60
+msgid "findmnt"
+msgstr "발견"
 
-#: usr/local/bin/chili-clonedisk:599 usr/local/bin/chili-clonedisk:676
-msgid "CLONAR DISCO PARA IMAGEM"
-msgstr "디스크를 이미지로 복제"
-
-#: usr/local/bin/chili-clonedisk:791
-msgid "Selecione o formato da imagem do device"
-msgstr "장치 이미지 형식 선택"
-
-#: usr/local/bin/chili-clonedisk:1374
-msgid "O utilitário 'qemu-img' não foi encontrado no sistema!"
-msgstr "시스템에서 'qemu-img' 유틸리티를 찾을 수 없습니다!"
-
-#: usr/local/bin/chili-clonedisk:1374
-msgid "Instale o pacote qemu-utils para restaurar arquivos .qcow2."
-msgstr ".qcow2 파일을 복원하려면 qemu-utils 패키지를 설치하세요."
-
-#: usr/local/bin/chili-clonedisk:1412
-msgid "Falha ao clonar a imagem QCOW2"
-msgstr "QCOW2 이미지를 복제하지 못했습니다."
-
-#: usr/local/bin/chili-clonedisk:1415
-msgid "Erro retornado pelo qemu-img:"
-msgstr "qemu-img에서 반환된 오류:"
-
-#: usr/local/bin/chili-clonedisk:1448 usr/local/bin/chili-clonedisk:1735
-msgid "Clonagem concluída!"
-msgstr "복제 완료!"
-
-#: usr/local/bin/chili-clonedisk:1603 usr/local/bin/chili-clonedisk:1658
-msgid "O disco de DESTINO é menor que o disco de ORIGEM"
-msgstr "DESTINATION 디스크가 SOURCE 디스크보다 작습니다."
-
-#: usr/local/bin/chili-clonedisk:1606 usr/local/bin/chili-clonedisk:1661
-msgid "Prosseguir?"
-msgstr "진행하다?"
-
-#: usr/local/bin/chili-clonedisk:1741
-msgid "Clonar Disco para Disco"
-msgstr "디스크에서 디스크로 복제"
-
-#: usr/local/bin/chili-clonedisk:1742
+#: usr/local/bin/chili-clonedisk:2392
 msgid "Clonar Disco para Imagem"
 msgstr "디스크를 이미지로 복제"
 
-#: usr/local/bin/chili-clonedisk:1743
+#: usr/local/bin/chili-clonedisk:2393
 msgid "Clonar Partição para Imagem"
 msgstr "파티션을 이미지로 복제"
 
-#: usr/local/bin/chili-clonedisk:1744
-msgid "Clonar Partição para Partição"
-msgstr "파티션을 파티션으로 복제"
-
-#: usr/local/bin/chili-clonedisk:1745
-msgid "Clonar Imagem para Partição"
-msgstr "이미지를 파티션에 복제"
-
-#: usr/local/bin/chili-clonedisk:1746
-msgid "Gravar ISO para Disco"
-msgstr "ISO를 디스크에 굽기"
-
-#: usr/local/bin/chili-clonedisk:1747
-msgid "Clonar Imagem para Disco"
-msgstr "이미지를 디스크에 복제"
-
-#: usr/local/bin/chili-clonedisk:1748
+#: usr/local/bin/chili-clonedisk:2394
 msgid "Listar Discos"
 msgstr "디스크 나열"
 
-#: usr/local/bin/chili-clonedisk:1749
-msgid "Clonar Disco para Imagem via Rede (SSH Criptografado)"
-msgstr "네트워크를 통해 디스크를 이미지로 복제(암호화된 SSH)"
-
-#: usr/local/bin/chili-clonedisk:1751
-msgid "Escolha o formato e compressão da imagem"
-msgstr "이미지 형식 및 압축 선택"
-
-#: usr/local/bin/chili-clonedisk:1752
-msgid "Imagem Bruta Padrão (.img)"
-msgstr "표준 Raw 이미지(.img)"
-
-#: usr/local/bin/chili-clonedisk:1753
-msgid "Imagem Comprimida de Alta Performance (.img.zst)"
-msgstr "고성능 압축 이미지(.img.zst)"
-
-#: usr/local/bin/chili-clonedisk:1755
+#: usr/local/bin/chili-clonedisk:2397
 msgid "Escolha o tipo de clone"
 msgstr "클론 유형 선택"
 
-#: usr/local/bin/chili-clonedisk:1756
-msgid "Necessário desmontar a partição antes de reparticionar"
-msgstr "다시 파티션하기 전에 파티션을 마운트 해제해야 합니다."
-
-#: usr/local/bin/chili-clonedisk:1757
+#: usr/local/bin/chili-clonedisk:2398
 msgid "** AVISO **"
 msgstr "** 알아채다 **"
 
-#: usr/local/bin/chili-clonedisk:1758
+#: usr/local/bin/chili-clonedisk:2399
 msgid "Necessário desmontar as partições abaixo antes de prosseguir"
 msgstr "계속하기 전에 아래 파티션을 마운트 해제해야 합니다."
 
-#: usr/local/bin/chili-clonedisk:1759
+#: usr/local/bin/chili-clonedisk:2400
 msgid "Desmontar ?"
 msgstr "분해?"
 
-#: usr/local/bin/chili-clonedisk:1760
+#: usr/local/bin/chili-clonedisk:2401
 msgid "ERRO"
 msgstr "오류"
 
-#: usr/local/bin/chili-clonedisk:1761
+#: usr/local/bin/chili-clonedisk:2402
 msgid "Info disco"
-msgstr "디스크 정보"
+msgstr "정보 디스코"
 
-#: usr/local/bin/chili-clonedisk:1762
-msgid "Ok"
-msgstr "좋아요"
-
-#: usr/local/bin/chili-clonedisk:1763 usr/local/bin/chili-clonedisk:1793
+#: usr/local/bin/chili-clonedisk:2403
 msgid "DISCO DE DESTINO"
 msgstr "대상 디스크"
 
-#: usr/local/bin/chili-clonedisk:1764
+#: usr/local/bin/chili-clonedisk:2404
 msgid "Escolha o disco ORIGEM"
 msgstr "소스 디스크를 선택하세요"
 
-#: usr/local/bin/chili-clonedisk:1765
+#: usr/local/bin/chili-clonedisk:2405
 msgid "Escolha o disco DESTINO"
 msgstr "DESTINATION 디스크를 선택하세요"
 
-#: usr/local/bin/chili-clonedisk:1766
+#: usr/local/bin/chili-clonedisk:2406
 msgid "Escolha a partição ORIGEM"
 msgstr "ORIGIN 파티션을 선택하세요"
 
-#: usr/local/bin/chili-clonedisk:1767
+#: usr/local/bin/chili-clonedisk:2407
 msgid "Escolha a partição DESTINO"
 msgstr "DESTINATION 파티션을 선택하세요"
 
-#: usr/local/bin/chili-clonedisk:1768
+#: usr/local/bin/chili-clonedisk:2408
 msgid "Sim"
-msgstr "예"
+msgstr "심"
 
-#: usr/local/bin/chili-clonedisk:1769
+#: usr/local/bin/chili-clonedisk:2409
 msgid "Não"
 msgstr "아니요"
 
-#: usr/local/bin/chili-clonedisk:1770
+#: usr/local/bin/chili-clonedisk:2410
 msgid "Seletor de temas da interface (dialog)"
 msgstr "인터페이스 테마 선택기(대화상자)"
 
-#: usr/local/bin/chili-clonedisk:1772
+#: usr/local/bin/chili-clonedisk:2412
 msgid "Use as teclas"
-msgstr "열쇠를 사용하세요"
+msgstr "테클라스로 사용"
 
-#: usr/local/bin/chili-clonedisk:1773
+#: usr/local/bin/chili-clonedisk:2413
 msgid "PARA CIMA"
-msgstr "위로"
+msgstr "정상으로"
 
-#: usr/local/bin/chili-clonedisk:1774
+#: usr/local/bin/chili-clonedisk:2414
 msgid "e"
-msgstr "그리고"
+msgstr "이자형"
 
-#: usr/local/bin/chili-clonedisk:1775
+#: usr/local/bin/chili-clonedisk:2415
 msgid "PARA BAIXO"
 msgstr "아래에"
 
-#: usr/local/bin/chili-clonedisk:1776
+#: usr/local/bin/chili-clonedisk:2416
 msgid "para navegar"
 msgstr "탐색하다"
 
-#: usr/local/bin/chili-clonedisk:1777
+#: usr/local/bin/chili-clonedisk:2417
 msgid "Use"
 msgstr "사용"
 
-#: usr/local/bin/chili-clonedisk:1778
+#: usr/local/bin/chili-clonedisk:2418
 msgid "para alternar entre os botões"
 msgstr "버튼 사이를 전환하려면"
 
-#: usr/local/bin/chili-clonedisk:1779
+#: usr/local/bin/chili-clonedisk:2419
 msgid "para selecionar|aceitar"
 msgstr "선택|수락"
 
-#: usr/local/bin/chili-clonedisk:1786
-msgid "Disco ORIGEM e DESTINO não podem ser o mesmo"
-msgstr "SOURCE 및 DESTINATION 디스크는 동일할 수 없습니다."
+#: usr/local/bin/chili-clonedisk:2426
+msgid "ORIGEM e DESTINO não podem ser o mesmo dispositivo"
+msgstr "ORIGIN과 DESTINATION은 동일한 기기일 수 없습니다."
 
-#: usr/local/bin/chili-clonedisk:1787
-msgid "Formatando partição"
-msgstr "파티션 포맷 중"
-
-#: usr/local/bin/chili-clonedisk:1788
+#: usr/local/bin/chili-clonedisk:2427
 msgid "Executando clonagem de disco"
 msgstr "디스크 복제 수행"
 
-#: usr/local/bin/chili-clonedisk:1789
+#: usr/local/bin/chili-clonedisk:2428
 msgid "Selecionar"
 msgstr "선택하다"
 
-#: usr/local/bin/chili-clonedisk:1790
+#: usr/local/bin/chili-clonedisk:2429
 msgid "Sair"
 msgstr "외출하다"
 
-#: usr/local/bin/chili-clonedisk:1791
+#: usr/local/bin/chili-clonedisk:2430
 msgid "Voltar"
 msgstr "돌아가려면"
 
-#: usr/local/bin/chili-clonedisk:1792
+#: usr/local/bin/chili-clonedisk:2431
 msgid "DISCO DE ORIGEM"
 msgstr "소스 디스크"
 
-#: usr/local/bin/chili-clonedisk:1794
+#: usr/local/bin/chili-clonedisk:2432
 msgid "PARTIÇÃO DE ORIGEM"
 msgstr "소스 파티션"
 
-#: usr/local/bin/chili-clonedisk:1795
+#: usr/local/bin/chili-clonedisk:2433
 msgid "PARTIÇÃO DE DESTINO"
 msgstr "대상 파티션"
 
-#: usr/local/bin/chili-clonedisk:1796
+#: usr/local/bin/chili-clonedisk:2434
 msgid "AVISO!"
 msgstr "알아채다!"
 
-#: usr/local/bin/chili-clonedisk:1796
+#: usr/local/bin/chili-clonedisk:2434
 msgid "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
 msgstr "아래의 모든 DESTINATION 디스크/파티션 데이터가 손실됩니다!"
 
-#: usr/local/bin/chili-clonedisk:1797
+#: usr/local/bin/chili-clonedisk:2435
 msgid "Continuar com a clonagem"
 msgstr "복제 계속하기"
 
-#: usr/local/bin/chili-clonedisk:1809
+#: usr/local/bin/chili-clonedisk:2436
+msgid "IMAGEM ORIGEM"
+msgstr "소스 이미지"
+
+#: usr/local/bin/chili-clonedisk:2437
+msgid "IMAGEM DESTINO"
+msgstr "대상 이미지"
+
+#: usr/local/bin/chili-clonedisk:2438
+msgid "Clonagem concluída!"
+msgstr "복제 완료!"
+
+#: usr/local/bin/chili-clonedisk:2439
+msgid "para"
+msgstr "에게"
+
+#: usr/local/bin/chili-clonedisk:2442
+msgid "S"
+msgstr "에스"
+
+#: usr/local/bin/chili-clonedisk:2443
+msgid "n"
+msgstr "N"
+
+#: usr/local/bin/chili-clonedisk:2444
+msgid "Data/hora de início"
+msgstr "시작 날짜/시간"
+
+#: usr/local/bin/chili-clonedisk:2445
+msgid "Data/hora de término"
+msgstr "종료 날짜/시간"
+
+#: usr/local/bin/chili-clonedisk:2446
+msgid "Tempo decorrido"
+msgstr "경과 시간"
+
+#: usr/local/bin/chili-clonedisk:2447
+msgid "Dispositivo"
+msgstr "장치"
+
+#: usr/local/bin/chili-clonedisk:2448
+msgid "Nome"
+msgstr "이름"
+
+#: usr/local/bin/chili-clonedisk:2449
+msgid "Transporte"
+msgstr "수송"
+
+#: usr/local/bin/chili-clonedisk:2450
+msgid "Rótulo"
+msgstr "상표"
+
+#: usr/local/bin/chili-clonedisk:2451
+msgid "Modelo"
+msgstr "모델"
+
+#: usr/local/bin/chili-clonedisk:2452
+msgid "Tamanho"
+msgstr "크기"
+
+#: usr/local/bin/chili-clonedisk:2453
+msgid "Sistema de arquivos"
+msgstr "파일 시스템"
+
+#: usr/local/bin/chili-clonedisk:2454
+msgid "Entre com o nome da imagem"
+msgstr "이미지 이름을 입력하세요."
+
+#: usr/local/bin/chili-clonedisk:2455
+msgid "NOME DA IMAGEM"
+msgstr "이미지 이름"
+
+#: usr/local/bin/chili-clonedisk:2456
+msgid "Nome da imagem inválido! Tente novamente."
+msgstr "이미지 이름이 잘못되었습니다! 다시 시도해 주세요."
+
+#: usr/local/bin/chili-clonedisk:2457
+#, sh-printf-format
+msgid "Imagem '%s' já existe. Tentar outro nome?"
+msgstr "이미지 '%s'이(가) 이미 존재합니다. 다른 이름을 사용하시겠습니까?"
+
+#: usr/local/bin/chili-clonedisk:2458
+msgid "FORMATO DA IMAGEM"
+msgstr "이미지 형식"
+
+#: usr/local/bin/chili-clonedisk:2459
+msgid "Escolha o formato e compressão da imagem de destino:"
+msgstr "대상 이미지의 형식과 압축을 선택합니다."
+
+#: usr/local/bin/chili-clonedisk:2460
+msgid "Imagem Bruta"
+msgstr "원시 이미지"
+
+#: usr/local/bin/chili-clonedisk:2461
+msgid "Imagem Comprimida"
+msgstr "압축된 이미지"
+
+#: usr/local/bin/chili-clonedisk:2462
+#, sh-printf-format
+msgid "Erro: O utilitário '%s' não está instalado no sistema."
+msgstr "오류: '%s' 유틸리티가 시스템에 설치되어 있지 않습니다."
+
+#: usr/local/bin/chili-clonedisk:2463
+msgid "Convertendo para QCOW2..."
+msgstr "QCOW2로 변환 중..."
+
+#: usr/local/bin/chili-clonedisk:2464
+msgid "Origem"
+msgstr "기원"
+
+#: usr/local/bin/chili-clonedisk:2465
+msgid "Destino"
+msgstr "목적지"
+
+#: usr/local/bin/chili-clonedisk:2466
+msgid "Aguarde, esta operação pode levar alguns minutos..."
+msgstr "잠시 기다려 주십시오. 이 작업은 몇 분 정도 걸릴 수 있습니다..."
+
+#: usr/local/bin/chili-clonedisk:2467
+msgid "Aguarde, escaneando por imagens..."
+msgstr "이미지를 검색하는 중입니다..."
+
+#: usr/local/bin/chili-clonedisk:2468
+#, sh-printf-format
+msgid "Erro: nenhuma imagem encontrada em '%s'"
+msgstr "오류: '%s'에 이미지가 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2469
+msgid "Info imagem"
+msgstr "이미지 정보"
+
+#: usr/local/bin/chili-clonedisk:2470
+msgid "Imagens encontradas"
+msgstr "이미지를 찾았습니다."
+
+#: usr/local/bin/chili-clonedisk:2471
+msgid "SELECIONE A IMAGEM DE ORIGEM"
+msgstr "소스 이미지 선택"
+
+#: usr/local/bin/chili-clonedisk:2472
+#, sh-printf-format
+msgid "IMAGENS em %s"
+msgstr "%s의 이미지"
+
+#: usr/local/bin/chili-clonedisk:2473
+msgid "O disco de DESTINO é menor que o disco de ORIGEM"
+msgstr "DESTINATION 디스크가 SOURCE 디스크보다 작습니다."
+
+#: usr/local/bin/chili-clonedisk:2474
+msgid "A partição de DESTINO é menor que a partição de ORIGEM"
+msgstr "DESTINATION 파티션이 SOURCE 파티션보다 작습니다."
+
+#: usr/local/bin/chili-clonedisk:2475
+msgid "Prosseguir?"
+msgstr "진행하다?"
+
+#: usr/local/bin/chili-clonedisk:2476
+msgid "Informações do qemu-img indisponíveis"
+msgstr "qemu-img 정보를 사용할 수 없음"
+
+#: usr/local/bin/chili-clonedisk:2477
+msgid "Este programa pode ser redistribuído livremente"
+msgstr "이 프로그램은 자유롭게 재배포할 수 있습니다."
+
+#: usr/local/bin/chili-clonedisk:2478
+msgid "sob os termos da Licença Pública Geral GNU"
+msgstr "GNU 일반 공중 사용 허가서의 조건에 따라"
+
+#: usr/local/bin/chili-clonedisk:2479
+msgid "Este script precisa ser executado como root. Elevando privilégios..."
+msgstr "이 스크립트는 루트로 실행해야 합니다. 권한 승격 중..."
+
+#: usr/local/bin/chili-clonedisk:2480
+msgid ""
+"Erro: não foi possível elevar os privilégios. Execute manualmente como root."
+msgstr "오류: 권한을 높일 수 없습니다. 루트로 수동으로 실행하십시오."
+
+#: usr/local/bin/chili-clonedisk:2481
+msgid "Instalando pacotes necessários"
+msgstr "필수 패키지 설치"
+
+#: usr/local/bin/chili-clonedisk:2482
+msgid "Instalando pacotes no"
+msgstr "패키지 설치"
+
+#: usr/local/bin/chili-clonedisk:2483
+msgid "Falha ao instalar pacotes."
+msgstr "패키지를 설치하지 못했습니다."
+
+#: usr/local/bin/chili-clonedisk:2484
+msgid "Outra distro:"
+msgstr "기타 배포판:"
+
+#: usr/local/bin/chili-clonedisk:2485
+msgid "Não foi possível encontrar o comando"
+msgstr "명령을 찾을 수 없습니다"
+
+#: usr/local/bin/chili-clonedisk:2486
+msgid "instalar pacote"
+msgstr "패키지 설치"
+
+#: usr/local/bin/chili-clonedisk:2487
+msgid "IMPOSSÍVEL CONTINUAR"
+msgstr "계속할 수 없습니다"
+
+#: usr/local/bin/chili-clonedisk:2488
+msgid "Este script precisa dos comandos listados acima"
+msgstr "이 스크립트에는 위에 나열된 명령이 필요합니다."
+
+#: usr/local/bin/chili-clonedisk:2489
+msgid "Instale-os e/ou verifique se eles estão em seu"
+msgstr "이를 설치하거나 귀하의 컴퓨터에 있는지 확인하십시오."
+
+#: usr/local/bin/chili-clonedisk:2490
+msgid "Deseja instalar os pacotes e suprir os aplicativos necessários?"
+msgstr "패키지를 설치하고 필요한 애플리케이션을 프로비저닝하시겠습니까?"
+
+#: usr/local/bin/chili-clonedisk:2491
+msgid "TERMINAL MUITO PEQUENO"
+msgstr "매우 작은 터미널"
+
+#: usr/local/bin/chili-clonedisk:2492
+msgid ""
+"Antes de continuar, redimensione seu terminal\\npara que ele meça pelo menos "
+"80 x 24 caracteres"
+msgstr "계속하기 전에 터미널 크기를 조정하세요\\\n최소 80 x 24자 이상이어야 합니다."
+
+#: usr/local/bin/chili-clonedisk:2493
+msgid ""
+"Caso contrário, você não poderá usar as ferramentas de partição de disco"
+msgstr "그렇지 않으면 디스크 파티션 도구를 사용할 수 없습니다"
+
+#: usr/local/bin/chili-clonedisk:2494
+msgid "binário não foi localizado no"
+msgstr "바이너리를 찾을 수 없습니다"
+
+#: usr/local/bin/chili-clonedisk:2495
+msgid "binário não foi localizado na pasta local:"
+msgstr "로컬 폴더에서 바이너리를 찾을 수 없습니다:"
+
+#: usr/local/bin/chili-clonedisk:2496
+msgid "DICA: instale o pacote chili-utils"
+msgstr "팁: chilli-utils 패키지를 설치하세요."
+
+#: usr/local/bin/chili-clonedisk:2497
+msgid "Entre com as credenciais do servidor SSH de destino e caminho:"
+msgstr "대상 SSH 서버 자격 증명 및 경로를 입력합니다."
+
+#: usr/local/bin/chili-clonedisk:2498
+msgid "Usuário Remoto  :"
+msgstr "원격 사용자:"
+
+#: usr/local/bin/chili-clonedisk:2499
+msgid "IP do Servidor  :"
+msgstr "IP 서비스 제공자:"
+
+#: usr/local/bin/chili-clonedisk:2500
+msgid "Porta SSH       :"
+msgstr "SSH 포트:"
+
+#: usr/local/bin/chili-clonedisk:2501
+msgid "Arquivo Destino :"
+msgstr "대상 파일:"
+
+#: usr/local/bin/chili-clonedisk:2502
+msgid "CONFIGURAÇÃO SSH"
+msgstr "SSH 구성"
+
+#: usr/local/bin/chili-clonedisk:2503
+msgid "Todos os campos devem ser preenchidos! Tente novamente."
+msgstr "모든 항목을 입력해야 합니다! 다시 시도해 주세요."
+
+#: usr/local/bin/chili-clonedisk:2504
+msgid "TESTANDO CONEXÃO"
+msgstr "연결 테스트"
+
+#: usr/local/bin/chili-clonedisk:2505
+msgid "Tentando conexão via Chave Pública em"
+msgstr "공개 키를 통해 연결을 시도 중입니다."
+
+#: usr/local/bin/chili-clonedisk:2506
+msgid "ERRO DE REQUISITO"
+msgstr "요구 사항 오류"
+
+#: usr/local/bin/chili-clonedisk:2507
+msgid "O utilitário 'sshpass' não foi encontrado no sistema!"
+msgstr "시스템에서 'sshpass' 유틸리티를 찾을 수 없습니다!"
+
+#: usr/local/bin/chili-clonedisk:2508
+msgid ""
+"Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a "
+"clonagem via rede."
+msgstr "네트워크 복제를 활성화하려면 'sshpass' 패키지를 설치하거나 공개 키를 구성하세요."
+
+#: usr/local/bin/chili-clonedisk:2509
+msgid "AUTENTICAÇÃO REQUERIDA"
+msgstr "인증이 필요합니다"
+
+#: usr/local/bin/chili-clonedisk:2510
+msgid "A conexão direta por chave falhou.\\nDigite a senha para"
+msgstr "직접 키 연결에 실패했습니다.\\\n비밀번호를 입력하세요"
+
+#: usr/local/bin/chili-clonedisk:2511
+msgid "TESTANDO SENHA"
+msgstr "테스트 비밀번호"
+
+#: usr/local/bin/chili-clonedisk:2512
+msgid "Validando senha no servidor remoto..."
+msgstr "원격 서버에서 비밀번호를 확인하는 중..."
+
+#: usr/local/bin/chili-clonedisk:2513
+msgid "ERRO DE AUTENTICAÇÃO"
+msgstr "인증 오류"
+
+#: usr/local/bin/chili-clonedisk:2514
+msgid "Senha incorreta ou acesso rejeitado pelo servidor remoto!"
+msgstr "잘못된 비밀번호이거나 원격 서버에서 접근을 거부했습니다!"
+
+#: usr/local/bin/chili-clonedisk:2515
+msgid "Verifique suas credenciais e tente novamente."
+msgstr "자격 증명을 확인하고 다시 시도하십시오."
+
+#: usr/local/bin/chili-clonedisk:2516
+msgid "FORMATO DE COMPRESSÃO"
+msgstr "압축 형식"
+
+#: usr/local/bin/chili-clonedisk:2517
+msgid "Escolha o formato de saída para a imagem remota:"
+msgstr "원격 이미지의 출력 형식을 선택합니다."
+
+#: usr/local/bin/chili-clonedisk:2518
+msgid "Otimizado/Adaptativo"
+msgstr "최적화/적응형"
+
+#: usr/local/bin/chili-clonedisk:2519
+msgid "Compatibilidade"
+msgstr "호환성"
+
+#: usr/local/bin/chili-clonedisk:2520
+msgid "Máxima Compressão"
+msgstr "최대 압축"
+
+#: usr/local/bin/chili-clonedisk:2521
+msgid "Sem compressão (Imagem Raw / bruto)"
+msgstr "압축 없음(원시 이미지)"
+
+#: usr/local/bin/chili-clonedisk:2522
+msgid "SERVIDOR DESTINO :"
+msgstr "대상 서버:"
+
+#: usr/local/bin/chili-clonedisk:2523
+msgid "ARQUIVO REMOTO   :"
+msgstr "원격 파일:"
+
+#: usr/local/bin/chili-clonedisk:2524
+msgid "Confirmar o início da clonagem criptografada via rede?"
+msgstr "네트워크를 통해 암호화된 복제 시작을 확인하시겠습니까?"
+
+#: usr/local/bin/chili-clonedisk:2525
+msgid "Iniciando transmissão de"
+msgstr "전송 시작"
+
+#: usr/local/bin/chili-clonedisk:2526
+msgid "PREPARANDO DESTINO"
+msgstr "목적지 준비 중"
+
+#: usr/local/bin/chili-clonedisk:2527
+msgid "Garantindo que o diretório remoto existe..."
+msgstr "원격 디렉터리가 존재하는지 확인하는 중..."
+
+#: usr/local/bin/chili-clonedisk:2528
+msgid "ERRO DE DIRETÓRIO"
+msgstr "디렉토리 오류"
+
+#: usr/local/bin/chili-clonedisk:2529
+msgid "Falha ao criar o diretório remoto:"
+msgstr "원격 디렉터리를 생성하지 못했습니다:"
+
+#: usr/local/bin/chili-clonedisk:2530
+msgid "Verifique as permissões de escrita do usuário no destino."
+msgstr "대상에 대한 사용자의 쓰기 권한을 확인하십시오."
+
+#: usr/local/bin/chili-clonedisk:2531
+msgid "CLONAGEM REMOTA EM ANDAMENTO"
+msgstr "원격 복제 진행 중"
+
+#: usr/local/bin/chili-clonedisk:2532
+msgid "Processando: pv -> conversor/compressor -> SSH -> Rede"
+msgstr "처리: pv -> 변환기/압축기 -> SSH -> 네트워크"
+
+#: usr/local/bin/chili-clonedisk:2533
+msgid "DESTINO REMOTO :"
+msgstr "원격 대상:"
+
+#: usr/local/bin/chili-clonedisk:2534
+msgid "Resumo da Operação de Rede"
+msgstr "네트워크 운영 요약"
+
+#: usr/local/bin/chili-clonedisk:2535
+msgid "Clonagem Remota Concluída com Sucesso!"
+msgstr "원격 복제가 성공적으로 완료되었습니다!"
+
+#: usr/local/bin/chili-clonedisk:2536
+msgid "Origem Local     :"
+msgstr "지역 원산지:"
+
+#: usr/local/bin/chili-clonedisk:2537
+msgid "Destino Remoto   :"
+msgstr "원격 대상:"
+
+#: usr/local/bin/chili-clonedisk:2538
+msgid "Tamanho Remoto   :"
+msgstr "원격 크기:"
+
+#: usr/local/bin/chili-clonedisk:2539
+msgid "SELECIONE O DISCO DE ORIGEM PARA REDE"
+msgstr "네트워크용 소스 디스크 선택"
+
+#: usr/local/bin/chili-clonedisk:2540
+msgid "MENU PRINCIPAL"
+msgstr "메뉴주체"
+
+#: usr/local/bin/chili-clonedisk:2541
+msgid "Partição local -> Imagem remota"
+msgstr "로컬 파티션 -> 원격 이미지"
+
+#: usr/local/bin/chili-clonedisk:2542
+msgid "clonar partição local para imagem remota"
+msgstr "로컬 파티션을 원격 이미지로 복제"
+
+#: usr/local/bin/chili-clonedisk:2543
+msgid "Partição local -> Partição remota"
+msgstr "로컬 파티션 -> 원격 파티션"
+
+#: usr/local/bin/chili-clonedisk:2544
+msgid "clonar partição local para partição remota"
+msgstr "로컬 파티션을 원격 파티션으로 복제"
+
+#: usr/local/bin/chili-clonedisk:2545
+msgid "Partição remota -> Imagem local"
+msgstr "원격 파티션 -> 로컬 이미지"
+
+#: usr/local/bin/chili-clonedisk:2546
+msgid "clonar partição remota para imagem local"
+msgstr "원격 파티션을 로컬 이미지로 복제"
+
+#: usr/local/bin/chili-clonedisk:2547
+msgid "Partição remota -> Partição local"
+msgstr "원격 파티션 -> 로컬 파티션"
+
+#: usr/local/bin/chili-clonedisk:2548
+msgid "clonar partição remota para partição local"
+msgstr "원격 파티션을 로컬 파티션으로 복제"
+
+#: usr/local/bin/chili-clonedisk:2549
+msgid "Partição remota"
+msgstr "원격 파티션"
+
+#: usr/local/bin/chili-clonedisk:2550
+msgid "Verificação de integridade"
+msgstr "무결성 검사"
+
+#: usr/local/bin/chili-clonedisk:2551
+msgid "Calculando sha256..."
+msgstr "sha256 계산 중..."
+
+#: usr/local/bin/chili-clonedisk:2552
+msgid "Testando o checksum embutido no formato..."
+msgstr "형식에 내장된 체크섬 테스트 중..."
+
+#: usr/local/bin/chili-clonedisk:2553
+msgid "Relendo o destino para comparar..."
+msgstr "운명을 다시 읽어 비교해보세요..."
+
+#: usr/local/bin/chili-clonedisk:2554
+#, sh-printf-format
+msgid "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la."
+msgstr "%s 이미지가 손상되었거나 변경되었습니다. 녹음하는 것은 안전하지 않습니다."
+
+#: usr/local/bin/chili-clonedisk:2555
+msgid "esperado"
+msgstr "예상되는"
+
+#: usr/local/bin/chili-clonedisk:2556
+msgid "obtido"
+msgstr "획득"
+
+#: usr/local/bin/chili-clonedisk:2557
+#, sh-printf-format
+msgid "A imagem %s não tem hash guardado (.sha256/.info)."
+msgstr "%s 이미지에는 저장된 해시(.sha256/.info)가 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2558
+msgid ""
+"Verificado só o checksum embutido no formato: detecta corrupção, mas não uma "
+"troca da imagem."
+msgstr "형식에 포함된 체크섬만 확인되었습니다. 손상은 감지되지만 이미지 변경은 감지되지 않습니다."
+
+#: usr/local/bin/chili-clonedisk:2559
+msgid ""
+"Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam "
+"ser conferidos."
+msgstr "qcow2 구조만 확인되었습니다(qemu-img 확인). 데이터를 확인할 수 없었습니다."
+
+#: usr/local/bin/chili-clonedisk:2560
+msgid "Imagem raw sem hash: não há como verificar se ela está íntegra."
+msgstr "해시가 없는 원시 이미지: 손상되지 않았는지 확인할 방법이 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2561
+msgid ""
+"Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a "
+"criação, mas serve de referência daqui para frente."
+msgstr "지금 .sha256을 생성하시겠습니까? 해당 이미지가 생성 이후 그대로 유지됐다는 것을 증명하는 것은 아니지만, 앞으로 참고할 만한 역할을 합니다."
+
+#: usr/local/bin/chili-clonedisk:2562
+msgid ""
+"Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)"
+msgstr "녹화하기 전에 이미지 무결성을 확인하시겠습니까? (전체 이미지 읽기)"
+
+#: usr/local/bin/chili-clonedisk:2563
+#, sh-printf-format
+msgid "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado."
+msgstr "녹음을 확인하시겠습니까? %s(%s)를 다시 읽고 기록된 내용과 비교합니다."
+
+#: usr/local/bin/chili-clonedisk:2564
+#, sh-printf-format
+msgid "Gravação verificada: %s confere com o que foi gravado."
+msgstr "확인된 녹음: %s가 녹음된 내용과 일치합니다."
+
+#: usr/local/bin/chili-clonedisk:2565
+#, sh-printf-format
+msgid ""
+"O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar "
+"com defeito."
+msgstr "%s에서 읽은 내용이 작성된 내용과 다릅니다! 대상에 결함이 있을 수 있습니다."
+
+#: usr/local/bin/chili-clonedisk:2566
+msgid "Sem ficha (.info) para esta imagem."
+msgstr "이 이미지에는 플러그(.info)가 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2567
+#, sh-printf-format
+msgid ""
+"Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem "
+"permissão)."
+msgstr "'%s'에 쓸 수 없습니다(존재하지 않는 디렉터리, 읽기 전용 또는 권한 없음)."
+
+#: usr/local/bin/chili-clonedisk:2568
+#, sh-printf-format
+msgid ""
+"'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. "
+"Escolha outro local ou um formato comprimido."
+msgstr "'%s'는 FAT32이며 4GiB보다 큰 파일을 허용하지 않으며 이미지에는 %s가 포함됩니다. 다른 위치나 압축 형식을 선택하세요."
+
+#: usr/local/bin/chili-clonedisk:2569
+#, sh-printf-format
+msgid ""
+"'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar "
+"disso e falhar no meio. Prosseguir?"
+msgstr "'%s'는 FAT32(파일당 4GiB 제한)입니다. 압축된 이미지는 이를 넘어서서 그 사이에 실패할 수 있습니다. 진행하다?"
+
+#: usr/local/bin/chili-clonedisk:2570
+#, sh-printf-format
+msgid ""
+"Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida "
+"pode não caber. Prosseguir?"
+msgstr "'%s'(%s)의 여유 공간이 원본(%s)보다 작습니다. 압축된 이미지가 맞지 않을 수 있습니다. 진행하다?"
+
+#: usr/local/bin/chili-clonedisk:2571
+msgid "Disco local -> Disco remoto"
+msgstr "로컬 디스크 -> 원격 디스크"
+
+#: usr/local/bin/chili-clonedisk:2572
+msgid "clonar disco local para disco remoto"
+msgstr "로컬 디스크를 원격 디스크로 복제"
+
+#: usr/local/bin/chili-clonedisk:2573
+#, sh-printf-format
+msgid "O destino %s está em uso e não pode ser sobrescrito:"
+msgstr "%s 대상이 사용 중이므로 덮어쓸 수 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2574
+#, sh-printf-format
+msgid "A origem %s está em uso. A cópia pode ficar inconsistente:"
+msgstr "%s 소스가 사용 중입니다. 사본이 일관성이 없을 수 있습니다."
+
+#: usr/local/bin/chili-clonedisk:2575
+msgid "Libere o disco no computador remoto e tente de novo."
+msgstr "원격 컴퓨터에서 디스크를 비운 후 다시 시도하십시오."
+
+#: usr/local/bin/chili-clonedisk:2576
+#, sh-printf-format
+msgid "%s montado em %s (sistema)"
+msgstr "%s 명령은 %s(시스템)에 있습니다."
+
+#: usr/local/bin/chili-clonedisk:2577
+#, sh-printf-format
+msgid "%s montado em %s"
+msgstr "%s는 %s에서 실행됩니다."
+
+#: usr/local/bin/chili-clonedisk:2578
+#, sh-printf-format
+msgid "%s é swap ativa"
+msgstr "%s는 활성 스왑입니다."
+
+#: usr/local/bin/chili-clonedisk:2579
+#, sh-printf-format
+msgid "%s em uso por %s (LVM/LUKS/RAID)"
+msgstr "%s는 %s(LVM/LUKS/RAID)를 통해 사용됩니다."
+
+#: usr/local/bin/chili-clonedisk:2580
+#, sh-printf-format
+msgid "%s aberto pelo processo %s (%s)"
+msgstr "%s 펠로 프로세스 중단 %s (%s)"
+
+#: usr/local/bin/chili-clonedisk:2581
+#, sh-printf-format
+msgid "%s pertence a um pool ZFS"
+msgstr "%s 성능 및 ZFS 풀"
+
+#: usr/local/bin/chili-clonedisk:2582
+#, sh-printf-format
+msgid "O arquivo %s já existe. Sobrescrever?"
+msgstr "%s 파일이 이미 존재합니다. 덮어쓰시겠습니까?"
+
+#: usr/local/bin/chili-clonedisk:2584
+msgid "Disco -> Disco"
+msgstr "디스크 -> 디스크"
+
+#: usr/local/bin/chili-clonedisk:2585
+msgid "clonar disco para outro disco"
+msgstr "디스크를 다른 디스크에 복제"
+
+#: usr/local/bin/chili-clonedisk:2586
+msgid "Partição -> Partição"
+msgstr "파티션 -> 파티션"
+
+#: usr/local/bin/chili-clonedisk:2587
+msgid "clonar partição para outra partição"
+msgstr "파티션을 다른 파티션으로 복제"
+
+#: usr/local/bin/chili-clonedisk:2588
+msgid "Disco -> Imagem"
+msgstr "디스크 -> 이미지"
+
+#: usr/local/bin/chili-clonedisk:2589
+msgid "clonar disco para arquivo de imagem"
+msgstr "디스크를 이미지 파일로 복제"
+
+#: usr/local/bin/chili-clonedisk:2590
+msgid "Partição -> Imagem"
+msgstr "파티션 -> 이미지"
+
+#: usr/local/bin/chili-clonedisk:2591
+msgid "clonar partição para arquivo de imagem"
+msgstr "파티션을 이미지 파일로 복제"
+
+#: usr/local/bin/chili-clonedisk:2592
+msgid "Imagem -> Disco"
+msgstr "이미지 -> 디스크"
+
+#: usr/local/bin/chili-clonedisk:2593
+msgid "clonar imagem para disco"
+msgstr "이미지를 디스크에 복제"
+
+#: usr/local/bin/chili-clonedisk:2594
+msgid "Imagem -> Partição"
+msgstr "이미지 -> 파티션"
+
+#: usr/local/bin/chili-clonedisk:2595
+msgid "clonar imagem para partição"
+msgstr "이미지를 파티션에 복제"
+
+#: usr/local/bin/chili-clonedisk:2596
+msgid "ISO -> Pendrive/Disco"
+msgstr "ISO -> 펜드라이브/디스크"
+
+#: usr/local/bin/chili-clonedisk:2597
+msgid "gravar ISO para dar boot"
+msgstr "부팅하려면 ISO를 굽으세요"
+
+#: usr/local/bin/chili-clonedisk:2598
+msgid "Disco local -> Imagem remota"
+msgstr "로컬 디스크 -> 원격 이미지"
+
+#: usr/local/bin/chili-clonedisk:2599
+msgid "clonar disco local para imagem remota"
+msgstr "로컬 디스크를 원격 이미지로 복제"
+
+#: usr/local/bin/chili-clonedisk:2600
+msgid "Imagem remota -> Disco/Partição local"
+msgstr "원격 이미지 -> 로컬 디스크/파티션"
+
+#: usr/local/bin/chili-clonedisk:2601
+msgid "clonar imagem remota para disco/partição local"
+msgstr "원격 이미지를 로컬 디스크/파티션에 복제"
+
+#: usr/local/bin/chili-clonedisk:2602
+msgid "Disco remoto -> Imagem local"
+msgstr "원격 디스크 -> 로컬 이미지"
+
+#: usr/local/bin/chili-clonedisk:2603
+msgid "clonar disco remoto para imagem local"
+msgstr "원격 디스크를 로컬 이미지로 복제"
+
+#: usr/local/bin/chili-clonedisk:2604
+msgid "Disco remoto -> Disco local"
+msgstr "원격 디스크 -> 로컬 디스크"
+
+#: usr/local/bin/chili-clonedisk:2605
+msgid "clonar disco remoto para disco local"
+msgstr "원격 디스크를 로컬 디스크로 복제"
+
+#: usr/local/bin/chili-clonedisk:2606
+msgid "Clonar (local)"
+msgstr "클론(로컬)"
+
+#: usr/local/bin/chili-clonedisk:2607
+msgid "Criar imagem"
+msgstr "이미지 생성"
+
+#: usr/local/bin/chili-clonedisk:2608
+msgid "Restaurar imagem"
+msgstr "이미지 복원"
+
+#: usr/local/bin/chili-clonedisk:2609
+msgid "Rede (SSH)"
+msgstr "레드(SSH)"
+
+#: usr/local/bin/chili-clonedisk:2610
+msgid "Escolha a operação"
+msgstr "작업을 선택하세요"
+
+#: usr/local/bin/chili-clonedisk:2611
+msgid "Entre com as credenciais do servidor SSH:"
+msgstr "SSH 서버 자격 증명을 입력하세요."
+
+#: usr/local/bin/chili-clonedisk:2612
+msgid ""
+"Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha."
+msgstr "디스크를 읽으려면 원격 사용자는 루트이거나 비밀번호 없이 sudo를 가지고 있어야 합니다."
+
+#: usr/local/bin/chili-clonedisk:2613
+msgid "Nenhum disco encontrado no servidor remoto."
+msgstr "원격 서버에서 디스크를 찾을 수 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2614
+msgid "Disco remoto"
+msgstr "원격 디스크"
+
+#: usr/local/bin/chili-clonedisk:2615
+msgid "em uso"
+msgstr "사용 중"
+
+#: usr/local/bin/chili-clonedisk:2616
+msgid "Novos UUIDs"
+msgstr "새로운 UUID"
+
+#: usr/local/bin/chili-clonedisk:2617
+msgid ""
+"O destino ficou com os mesmos identificadores da origem (UUID do sistema de "
+"arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\\n\\nGere novos se "
+"origem e destino forem ficar ligados na MESMA máquina: senão o sistema pode "
+"montar o disco errado ou o LVM acusar PV duplicado.\\n\\nNÃO gere se o "
+"destino for substituir a origem ou precisar dar boot: o fstab e o GRUB do "
+"sistema clonado usam esses identificadores.\\n\\nGerar novos UUIDs no "
+"destino?"
+msgstr "대상에는 소스와 동일한 식별자가 있습니다(LVM의 파일 시스템 UUID, PARTUUID, 디스크 ID 및 UUID/VG 이름).\\\n\\\n소스와 대상이 동일한 시스템에 연결될 경우 새 디스크를 생성하십시오. 그렇지 않으면 시스템이 잘못된 디스크를 마운트하거나 LVM이 중복 PV를 보고할 수 있습니다.\\\n\\\n대상이 소스를 교체하거나 부팅해야 하는 경우 생성하지 마십시오. 복제된 시스템의 fstab 및 GRUB는 이러한 식별자를 사용합니다.\\\n\\\n대상에 새로운 UUID를 생성하시겠습니까?"
+
+#: usr/local/bin/chili-clonedisk:2618
+msgid "Nenhum identificador encontrado para alterar."
+msgstr "변경된 식별자가 없습니다."
+
+#: usr/local/bin/chili-clonedisk:2619
+msgid "Entre com as credenciais do servidor SSH e o caminho da imagem:"
+msgstr "SSH 서버 자격 증명과 이미지 경로를 입력하세요."
+
+#: usr/local/bin/chili-clonedisk:2620
+msgid "Arquivo Remoto  :"
+msgstr "원격 파일:"
+
+#: usr/local/bin/chili-clonedisk:2621
+msgid ""
+"Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo "
+"para esta máquina e use Imagem para Disco/Partição."
+msgstr "QCOW2 이미지는 네트워크를 통해 직접 복원할 수 없습니다. 파일을 이 머신에 복사하고 이미지를 디스크/파티션으로 사용합니다."
+
+#: usr/local/bin/chili-clonedisk:2622
+#, sh-printf-format
+msgid "Arquivo remoto não encontrado ou sem permissão de leitura: %s"
+msgstr "원격 파일을 찾을 수 없거나 읽기 권한이 없습니다: %s"
+
+#: usr/local/bin/chili-clonedisk:2623
+msgid "Restaurar em"
+msgstr "다음으로 복원"
+
+#: usr/local/bin/chili-clonedisk:2624
+msgid "Disco inteiro"
+msgstr "디스크 전체"
+
+#: usr/local/bin/chili-clonedisk:2625
+msgid "Partição"
+msgstr "분할"
+
+#: usr/local/bin/chili-clonedisk:2626
+#, sh-printf-format
+msgid "A imagem (%s) é maior que o destino (%s). Prosseguir?"
+msgstr "이미지(%s)가 대상(%s)보다 큽니다. 진행하다?"
+
+#: usr/local/bin/chili-clonedisk:2627
+msgid "Uso:"
+msgstr "사용:"
+
+#: usr/local/bin/chili-clonedisk:2628
+msgid "sem parâmetros, abre a interface (dialog)"
+msgstr "매개변수 없이 인터페이스(대화상자)를 엽니다."
+
+#: usr/local/bin/chili-clonedisk:2629
+msgid "exibir esta ajuda e sair"
+msgstr "이 도움말을 표시하고 종료하세요."
+
+#: usr/local/bin/chili-clonedisk:2630
+msgid "mostrar versão"
+msgstr "버전 표시"
+
+#: usr/local/bin/chili-clonedisk:2631
+msgid "Idioma da interface"
+msgstr "인터페이스 언어"
+
+#: usr/local/bin/chili-clonedisk:2632
 msgid "Escolha o idioma:"
 msgstr "언어 선택:"
 
-#: usr/local/bin/chili-clonedisk:1811
-msgid "Português"
-msgstr "포르투갈 인"
+#: usr/local/bin/chili-clonedisk:2633
+#, sh-printf-format
+msgid ""
+"O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro "
+"local."
+msgstr "대상 '%s'는 소스 장치 자체(%s)에 있습니다. 다른 위치를 선택하세요."
 
-#: usr/local/bin/chili-clonedisk:1812
-msgid "Inglês"
-msgstr "영어"
+#: usr/local/bin/chili-clonedisk:2634
+#, sh-printf-format
+msgid ""
+"Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha "
+"outro local."
+msgstr "'%s'에 여유 공간이 부족합니다. %s가 필요하고 %s가 사용 가능합니다. 다른 위치를 선택하세요."
 
-#: usr/local/bin/chili-clonedisk:1813
-msgid "Alemão"
-msgstr "독일 사람"
+#: usr/local/bin/chili-clonedisk:2635
+#, sh-printf-format
+msgid "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'."
+msgstr "QCOW2로의 변환에 실패했습니다. RAW 파일은 '%s'에 보관되었습니다."
 
-#: usr/local/bin/chili-clonedisk:1814
-msgid "Francês"
-msgstr "프랑스 국민"
+#: usr/local/bin/chili-clonedisk:2636
+msgid "Falha na clonagem!"
+msgstr "복제에 실패했습니다!"
 
-#: usr/local/bin/chili-clonedisk:1831
+#: usr/local/bin/chili-clonedisk:2637
+msgid "Falha na clonagem remota!"
+msgstr "원격 복제에 실패했습니다!"
+
+#: usr/local/bin/chili-clonedisk:2638
+msgid "instalação automática não suportada. Instale manualmente:"
+msgstr "자동 설치는 지원되지 않습니다. 수동으로 설치:"
+
+#: usr/local/bin/chili-clonedisk:2645
 msgid "_"
 msgstr "_"

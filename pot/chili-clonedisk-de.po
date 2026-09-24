@@ -1,11 +1,11 @@
-# Chili Tradutor Go - 2.1.20-20260201
+# Chili Tradutor Go - 2.1.24-20260816
 # Copyright (C) 2019-2026 Vilmar Catafesta <vcatafesta@gmail.com>
 # This file is distributed under the same license as the chili-tradutor-go package.
 msgid ""
 msgstr ""
-"Project-Id-Version: chili-tradutor-go 2.1.20-20260201\n"
-"POT-Creation-Date: 2026-06-09 20:44-0400\n"
-"PO-Revision-Date: 2026-06-09 20:44-0400\n"
+"Project-Id-Version: chili-tradutor-go 2.1.24-20260816\n"
+"POT-Creation-Date: 2026-09-23 22:12-0400\n"
+"PO-Revision-Date: 2026-09-23 22:12-0400\n"
 "Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
 "Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
 "MIME-Version: 1.0\n"
@@ -14,258 +14,1018 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: usr/local/bin/chili-clonedisk:224
-msgid "Bem vindo ao "
-msgstr "Willkommen bei"
+#: usr/local/bin/chili-clonedisk:60
+msgid "findmnt"
+msgstr "findmnt"
 
-#: usr/local/bin/chili-clonedisk:599 usr/local/bin/chili-clonedisk:676
-msgid "CLONAR DISCO PARA IMAGEM"
-msgstr "Klonen Sie die Festplatte auf das Image"
-
-#: usr/local/bin/chili-clonedisk:791
-msgid "Selecione o formato da imagem do device"
-msgstr "Wählen Sie das Gerätebildformat aus"
-
-#: usr/local/bin/chili-clonedisk:1374
-msgid "O utilitário 'qemu-img' não foi encontrado no sistema!"
-msgstr "Das Dienstprogramm „qemu-img“ wurde auf dem System nicht gefunden!"
-
-#: usr/local/bin/chili-clonedisk:1374
-msgid "Instale o pacote qemu-utils para restaurar arquivos .qcow2."
-msgstr "Installieren Sie das Paket qemu-utils, um .qcow2-Dateien wiederherzustellen."
-
-#: usr/local/bin/chili-clonedisk:1412
-msgid "Falha ao clonar a imagem QCOW2"
-msgstr "QCOW2-Image konnte nicht geklont werden"
-
-#: usr/local/bin/chili-clonedisk:1415
-msgid "Erro retornado pelo qemu-img:"
-msgstr "Von qemu-img zurückgegebener Fehler:"
-
-#: usr/local/bin/chili-clonedisk:1448 usr/local/bin/chili-clonedisk:1735
-msgid "Clonagem concluída!"
-msgstr "Klonen abgeschlossen!"
-
-#: usr/local/bin/chili-clonedisk:1603 usr/local/bin/chili-clonedisk:1658
-msgid "O disco de DESTINO é menor que o disco de ORIGEM"
-msgstr "Die DESTINATION-Festplatte ist kleiner als die SOURCE-Festplatte"
-
-#: usr/local/bin/chili-clonedisk:1606 usr/local/bin/chili-clonedisk:1661
-msgid "Prosseguir?"
-msgstr "Fortfahren?"
-
-#: usr/local/bin/chili-clonedisk:1741
-msgid "Clonar Disco para Disco"
-msgstr "Festplatte auf Festplatte klonen"
-
-#: usr/local/bin/chili-clonedisk:1742
+#: usr/local/bin/chili-clonedisk:2392
 msgid "Clonar Disco para Imagem"
 msgstr "Klonen Sie die Festplatte auf das Image"
 
-#: usr/local/bin/chili-clonedisk:1743
+#: usr/local/bin/chili-clonedisk:2393
 msgid "Clonar Partição para Imagem"
 msgstr "Partition auf Image klonen"
 
-#: usr/local/bin/chili-clonedisk:1744
-msgid "Clonar Partição para Partição"
-msgstr "Partition für Partition klonen"
-
-#: usr/local/bin/chili-clonedisk:1745
-msgid "Clonar Imagem para Partição"
-msgstr "Bild auf Partition klonen"
-
-#: usr/local/bin/chili-clonedisk:1746
-msgid "Gravar ISO para Disco"
-msgstr "ISO auf Disc brennen"
-
-#: usr/local/bin/chili-clonedisk:1747
-msgid "Clonar Imagem para Disco"
-msgstr "Bild auf Festplatte klonen"
-
-#: usr/local/bin/chili-clonedisk:1748
+#: usr/local/bin/chili-clonedisk:2394
 msgid "Listar Discos"
 msgstr "Discs auflisten"
 
-#: usr/local/bin/chili-clonedisk:1749
-msgid "Clonar Disco para Imagem via Rede (SSH Criptografado)"
-msgstr "Festplatte über Netzwerk auf Image klonen (verschlüsseltes SSH)"
-
-#: usr/local/bin/chili-clonedisk:1751
-msgid "Escolha o formato e compressão da imagem"
-msgstr "Wählen Sie Bildformat und Komprimierung"
-
-#: usr/local/bin/chili-clonedisk:1752
-msgid "Imagem Bruta Padrão (.img)"
-msgstr "Standard-Rohbild (.img)"
-
-#: usr/local/bin/chili-clonedisk:1753
-msgid "Imagem Comprimida de Alta Performance (.img.zst)"
-msgstr "Hochleistungskomprimiertes Bild (.img.zst)"
-
-#: usr/local/bin/chili-clonedisk:1755
+#: usr/local/bin/chili-clonedisk:2397
 msgid "Escolha o tipo de clone"
 msgstr "Wählen Sie den Klontyp"
 
-#: usr/local/bin/chili-clonedisk:1756
-msgid "Necessário desmontar a partição antes de reparticionar"
-msgstr "Vor der Neupartitionierung muss die Bereitstellung der Partition aufgehoben werden"
-
-#: usr/local/bin/chili-clonedisk:1757
+#: usr/local/bin/chili-clonedisk:2398
 msgid "** AVISO **"
 msgstr "** BEACHTEN **"
 
-#: usr/local/bin/chili-clonedisk:1758
+#: usr/local/bin/chili-clonedisk:2399
 msgid "Necessário desmontar as partições abaixo antes de prosseguir"
 msgstr "Sie müssen die folgenden Partitionen aushängen, bevor Sie fortfahren"
 
-#: usr/local/bin/chili-clonedisk:1759
+#: usr/local/bin/chili-clonedisk:2400
 msgid "Desmontar ?"
 msgstr "Zerlegen?"
 
-#: usr/local/bin/chili-clonedisk:1760
+#: usr/local/bin/chili-clonedisk:2401
 msgid "ERRO"
 msgstr "FEHLER"
 
-#: usr/local/bin/chili-clonedisk:1761
+#: usr/local/bin/chili-clonedisk:2402
 msgid "Info disco"
-msgstr "Disc-Info"
+msgstr "Info-Disco"
 
-#: usr/local/bin/chili-clonedisk:1762
-msgid "Ok"
-msgstr "OK"
-
-#: usr/local/bin/chili-clonedisk:1763 usr/local/bin/chili-clonedisk:1793
+#: usr/local/bin/chili-clonedisk:2403
 msgid "DISCO DE DESTINO"
 msgstr "ZIELFESTPLATTE"
 
-#: usr/local/bin/chili-clonedisk:1764
+#: usr/local/bin/chili-clonedisk:2404
 msgid "Escolha o disco ORIGEM"
 msgstr "Wählen Sie die SOURCE-Festplatte"
 
-#: usr/local/bin/chili-clonedisk:1765
+#: usr/local/bin/chili-clonedisk:2405
 msgid "Escolha o disco DESTINO"
 msgstr "Wählen Sie die Zieldiskette"
 
-#: usr/local/bin/chili-clonedisk:1766
+#: usr/local/bin/chili-clonedisk:2406
 msgid "Escolha a partição ORIGEM"
 msgstr "Wählen Sie die ORIGIN-Partition"
 
-#: usr/local/bin/chili-clonedisk:1767
+#: usr/local/bin/chili-clonedisk:2407
 msgid "Escolha a partição DESTINO"
 msgstr "Wählen Sie die DESTINATION-Partition"
 
-#: usr/local/bin/chili-clonedisk:1768
+#: usr/local/bin/chili-clonedisk:2408
 msgid "Sim"
-msgstr "Ja"
+msgstr "Sim"
 
-#: usr/local/bin/chili-clonedisk:1769
+#: usr/local/bin/chili-clonedisk:2409
 msgid "Não"
 msgstr "NEIN"
 
-#: usr/local/bin/chili-clonedisk:1770
+#: usr/local/bin/chili-clonedisk:2410
 msgid "Seletor de temas da interface (dialog)"
 msgstr "Themenauswahl für die Benutzeroberfläche (Dialog)"
 
-#: usr/local/bin/chili-clonedisk:1772
+#: usr/local/bin/chili-clonedisk:2412
 msgid "Use as teclas"
-msgstr "Benutze die Schlüssel"
+msgstr "Verwendung als Teclas"
 
-#: usr/local/bin/chili-clonedisk:1773
+#: usr/local/bin/chili-clonedisk:2413
 msgid "PARA CIMA"
-msgstr "HOCH"
+msgstr "NACH OBEN"
 
-#: usr/local/bin/chili-clonedisk:1774
+#: usr/local/bin/chili-clonedisk:2414
 msgid "e"
-msgstr "Und"
+msgstr "e"
 
-#: usr/local/bin/chili-clonedisk:1775
+#: usr/local/bin/chili-clonedisk:2415
 msgid "PARA BAIXO"
 msgstr "RUNTER"
 
-#: usr/local/bin/chili-clonedisk:1776
+#: usr/local/bin/chili-clonedisk:2416
 msgid "para navegar"
 msgstr "navigieren"
 
-#: usr/local/bin/chili-clonedisk:1777
+#: usr/local/bin/chili-clonedisk:2417
 msgid "Use"
 msgstr "Verwenden"
 
-#: usr/local/bin/chili-clonedisk:1778
+#: usr/local/bin/chili-clonedisk:2418
 msgid "para alternar entre os botões"
 msgstr "um zwischen den Tasten zu wechseln"
 
-#: usr/local/bin/chili-clonedisk:1779
+#: usr/local/bin/chili-clonedisk:2419
 msgid "para selecionar|aceitar"
 msgstr "auswählen|annehmen"
 
-#: usr/local/bin/chili-clonedisk:1786
-msgid "Disco ORIGEM e DESTINO não podem ser o mesmo"
-msgstr "SOURCE- und DESTINATION-Datenträger dürfen nicht identisch sein"
+#: usr/local/bin/chili-clonedisk:2426
+msgid "ORIGEM e DESTINO não podem ser o mesmo dispositivo"
+msgstr "ORIGIN und DESTINATION dürfen nicht dasselbe Gerät sein"
 
-#: usr/local/bin/chili-clonedisk:1787
-msgid "Formatando partição"
-msgstr "Partition formatieren"
-
-#: usr/local/bin/chili-clonedisk:1788
+#: usr/local/bin/chili-clonedisk:2427
 msgid "Executando clonagem de disco"
 msgstr "Durchführen des Klonens von Datenträgern"
 
-#: usr/local/bin/chili-clonedisk:1789
+#: usr/local/bin/chili-clonedisk:2428
 msgid "Selecionar"
 msgstr "Wählen"
 
-#: usr/local/bin/chili-clonedisk:1790
+#: usr/local/bin/chili-clonedisk:2429
 msgid "Sair"
 msgstr "Ausgehen"
 
-#: usr/local/bin/chili-clonedisk:1791
+#: usr/local/bin/chili-clonedisk:2430
 msgid "Voltar"
 msgstr "Zurückgehen"
 
-#: usr/local/bin/chili-clonedisk:1792
+#: usr/local/bin/chili-clonedisk:2431
 msgid "DISCO DE ORIGEM"
 msgstr "QUELLENFESTPLATTE"
 
-#: usr/local/bin/chili-clonedisk:1794
+#: usr/local/bin/chili-clonedisk:2432
 msgid "PARTIÇÃO DE ORIGEM"
 msgstr "QUELLPARTITION"
 
-#: usr/local/bin/chili-clonedisk:1795
+#: usr/local/bin/chili-clonedisk:2433
 msgid "PARTIÇÃO DE DESTINO"
 msgstr "ZIELPARTITION"
 
-#: usr/local/bin/chili-clonedisk:1796
+#: usr/local/bin/chili-clonedisk:2434
 msgid "AVISO!"
 msgstr "BEACHTEN!"
 
-#: usr/local/bin/chili-clonedisk:1796
+#: usr/local/bin/chili-clonedisk:2434
 msgid "Todos os dados disco/partição de DESTINO abaixo serão perdidos!"
 msgstr "Alle unten aufgeführten DESTINATION-Festplatten-/Partitionsdaten gehen verloren!"
 
-#: usr/local/bin/chili-clonedisk:1797
+#: usr/local/bin/chili-clonedisk:2435
 msgid "Continuar com a clonagem"
 msgstr "Fahren Sie mit dem Klonen fort"
 
-#: usr/local/bin/chili-clonedisk:1809
+#: usr/local/bin/chili-clonedisk:2436
+msgid "IMAGEM ORIGEM"
+msgstr "QUELLBILD"
+
+#: usr/local/bin/chili-clonedisk:2437
+msgid "IMAGEM DESTINO"
+msgstr "ZIELBILD"
+
+#: usr/local/bin/chili-clonedisk:2438
+msgid "Clonagem concluída!"
+msgstr "Klonen abgeschlossen!"
+
+#: usr/local/bin/chili-clonedisk:2439
+msgid "para"
+msgstr "Zu"
+
+#: usr/local/bin/chili-clonedisk:2442
+msgid "S"
+msgstr "S"
+
+#: usr/local/bin/chili-clonedisk:2443
+msgid "n"
+msgstr "N"
+
+#: usr/local/bin/chili-clonedisk:2444
+msgid "Data/hora de início"
+msgstr "Startdatum/-uhrzeit"
+
+#: usr/local/bin/chili-clonedisk:2445
+msgid "Data/hora de término"
+msgstr "Enddatum/Uhrzeit"
+
+#: usr/local/bin/chili-clonedisk:2446
+msgid "Tempo decorrido"
+msgstr "Verstrichene Zeit"
+
+#: usr/local/bin/chili-clonedisk:2447
+msgid "Dispositivo"
+msgstr "Gerät"
+
+#: usr/local/bin/chili-clonedisk:2448
+msgid "Nome"
+msgstr "Name"
+
+#: usr/local/bin/chili-clonedisk:2449
+msgid "Transporte"
+msgstr "Transport"
+
+#: usr/local/bin/chili-clonedisk:2450
+msgid "Rótulo"
+msgstr "Etikett"
+
+#: usr/local/bin/chili-clonedisk:2451
+msgid "Modelo"
+msgstr "Modell"
+
+#: usr/local/bin/chili-clonedisk:2452
+msgid "Tamanho"
+msgstr "Größe"
+
+#: usr/local/bin/chili-clonedisk:2453
+msgid "Sistema de arquivos"
+msgstr "Dateisystem"
+
+#: usr/local/bin/chili-clonedisk:2454
+msgid "Entre com o nome da imagem"
+msgstr "Geben Sie den Namen des Bildes ein"
+
+#: usr/local/bin/chili-clonedisk:2455
+msgid "NOME DA IMAGEM"
+msgstr "BILDNAME"
+
+#: usr/local/bin/chili-clonedisk:2456
+msgid "Nome da imagem inválido! Tente novamente."
+msgstr "Ungültiger Bildname! Bitte versuchen Sie es erneut."
+
+#: usr/local/bin/chili-clonedisk:2457
+#, sh-printf-format
+msgid "Imagem '%s' já existe. Tentar outro nome?"
+msgstr "Bild „%s“ existiert bereits. Versuchen Sie es mit einem anderen Namen?"
+
+#: usr/local/bin/chili-clonedisk:2458
+msgid "FORMATO DA IMAGEM"
+msgstr "BILDFORMAT"
+
+#: usr/local/bin/chili-clonedisk:2459
+msgid "Escolha o formato e compressão da imagem de destino:"
+msgstr "Wählen Sie das Format und die Komprimierung des Zielbilds:"
+
+#: usr/local/bin/chili-clonedisk:2460
+msgid "Imagem Bruta"
+msgstr "Rohbild"
+
+#: usr/local/bin/chili-clonedisk:2461
+msgid "Imagem Comprimida"
+msgstr "Komprimiertes Bild"
+
+#: usr/local/bin/chili-clonedisk:2462
+#, sh-printf-format
+msgid "Erro: O utilitário '%s' não está instalado no sistema."
+msgstr "Fehler: Das Dienstprogramm „%s“ ist nicht auf dem System installiert."
+
+#: usr/local/bin/chili-clonedisk:2463
+msgid "Convertendo para QCOW2..."
+msgstr "Konvertierung in QCOW2..."
+
+#: usr/local/bin/chili-clonedisk:2464
+msgid "Origem"
+msgstr "Herkunft"
+
+#: usr/local/bin/chili-clonedisk:2465
+msgid "Destino"
+msgstr "Ziel"
+
+#: usr/local/bin/chili-clonedisk:2466
+msgid "Aguarde, esta operação pode levar alguns minutos..."
+msgstr "Bitte warten Sie, dieser Vorgang kann einige Minuten dauern..."
+
+#: usr/local/bin/chili-clonedisk:2467
+msgid "Aguarde, escaneando por imagens..."
+msgstr "Bitte warten, es wird nach Bildern gesucht..."
+
+#: usr/local/bin/chili-clonedisk:2468
+#, sh-printf-format
+msgid "Erro: nenhuma imagem encontrada em '%s'"
+msgstr "Fehler: Keine Bilder in „%s“ gefunden"
+
+#: usr/local/bin/chili-clonedisk:2469
+msgid "Info imagem"
+msgstr "Bildinfo"
+
+#: usr/local/bin/chili-clonedisk:2470
+msgid "Imagens encontradas"
+msgstr "Bilder gefunden"
+
+#: usr/local/bin/chili-clonedisk:2471
+msgid "SELECIONE A IMAGEM DE ORIGEM"
+msgstr "WÄHLEN SIE DAS QUELLBILD"
+
+#: usr/local/bin/chili-clonedisk:2472
+#, sh-printf-format
+msgid "IMAGENS em %s"
+msgstr "BILDER in %s"
+
+#: usr/local/bin/chili-clonedisk:2473
+msgid "O disco de DESTINO é menor que o disco de ORIGEM"
+msgstr "Die DESTINATION-Festplatte ist kleiner als die SOURCE-Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2474
+msgid "A partição de DESTINO é menor que a partição de ORIGEM"
+msgstr "Die DESTINATION-Partition ist kleiner als die SOURCE-Partition"
+
+#: usr/local/bin/chili-clonedisk:2475
+msgid "Prosseguir?"
+msgstr "Fortfahren?"
+
+#: usr/local/bin/chili-clonedisk:2476
+msgid "Informações do qemu-img indisponíveis"
+msgstr "qemu-img-Informationen nicht verfügbar"
+
+#: usr/local/bin/chili-clonedisk:2477
+msgid "Este programa pode ser redistribuído livremente"
+msgstr "Dieses Programm darf frei weitergegeben werden"
+
+#: usr/local/bin/chili-clonedisk:2478
+msgid "sob os termos da Licença Pública Geral GNU"
+msgstr "unter den Bedingungen der GNU General Public License"
+
+#: usr/local/bin/chili-clonedisk:2479
+msgid "Este script precisa ser executado como root. Elevando privilégios..."
+msgstr "Dieses Skript muss als Root ausgeführt werden. Privilegien erhöhen..."
+
+#: usr/local/bin/chili-clonedisk:2480
+msgid ""
+"Erro: não foi possível elevar os privilégios. Execute manualmente como root."
+msgstr "Fehler: Berechtigungen können nicht erhöht werden. Manuell als Root ausführen."
+
+#: usr/local/bin/chili-clonedisk:2481
+msgid "Instalando pacotes necessários"
+msgstr "Erforderliche Pakete installieren"
+
+#: usr/local/bin/chili-clonedisk:2482
+msgid "Instalando pacotes no"
+msgstr "Pakete installieren auf"
+
+#: usr/local/bin/chili-clonedisk:2483
+msgid "Falha ao instalar pacotes."
+msgstr "Pakete konnten nicht installiert werden."
+
+#: usr/local/bin/chili-clonedisk:2484
+msgid "Outra distro:"
+msgstr "Andere Distribution:"
+
+#: usr/local/bin/chili-clonedisk:2485
+msgid "Não foi possível encontrar o comando"
+msgstr "Befehl konnte nicht gefunden werden"
+
+#: usr/local/bin/chili-clonedisk:2486
+msgid "instalar pacote"
+msgstr "Paket installieren"
+
+#: usr/local/bin/chili-clonedisk:2487
+msgid "IMPOSSÍVEL CONTINUAR"
+msgstr "UNMÖGLICH, WEITERZUWEISEN"
+
+#: usr/local/bin/chili-clonedisk:2488
+msgid "Este script precisa dos comandos listados acima"
+msgstr "Dieses Skript benötigt die oben aufgeführten Befehle"
+
+#: usr/local/bin/chili-clonedisk:2489
+msgid "Instale-os e/ou verifique se eles estão em seu"
+msgstr "Installieren Sie sie und/oder stellen Sie sicher, dass sie auf Ihrem Computer vorhanden sind"
+
+#: usr/local/bin/chili-clonedisk:2490
+msgid "Deseja instalar os pacotes e suprir os aplicativos necessários?"
+msgstr "Möchten Sie die Pakete installieren und die notwendigen Anwendungen bereitstellen?"
+
+#: usr/local/bin/chili-clonedisk:2491
+msgid "TERMINAL MUITO PEQUENO"
+msgstr "SEHR KLEINES TERMINAL"
+
+#: usr/local/bin/chili-clonedisk:2492
+msgid ""
+"Antes de continuar, redimensione seu terminal\\npara que ele meça pelo menos "
+"80 x 24 caracteres"
+msgstr "Bevor Sie fortfahren, ändern Sie die Größe Ihres Terminals\\\nso dass es mindestens 80 x 24 Zeichen misst"
+
+#: usr/local/bin/chili-clonedisk:2493
+msgid ""
+"Caso contrário, você não poderá usar as ferramentas de partição de disco"
+msgstr "Andernfalls können Sie die Tools zur Festplattenpartitionierung nicht verwenden"
+
+#: usr/local/bin/chili-clonedisk:2494
+msgid "binário não foi localizado no"
+msgstr "Binärdatei wurde nicht gefunden in"
+
+#: usr/local/bin/chili-clonedisk:2495
+msgid "binário não foi localizado na pasta local:"
+msgstr "Binärdatei wurde im lokalen Ordner nicht gefunden:"
+
+#: usr/local/bin/chili-clonedisk:2496
+msgid "DICA: instale o pacote chili-utils"
+msgstr "TIPP: Installieren Sie das chili-utils-Paket"
+
+#: usr/local/bin/chili-clonedisk:2497
+msgid "Entre com as credenciais do servidor SSH de destino e caminho:"
+msgstr "Geben Sie die Anmeldeinformationen und den Pfad des Ziel-SSH-Servers ein:"
+
+#: usr/local/bin/chili-clonedisk:2498
+msgid "Usuário Remoto  :"
+msgstr "Remote-Benutzer:"
+
+#: usr/local/bin/chili-clonedisk:2499
+msgid "IP do Servidor  :"
+msgstr "IP des Servers:"
+
+#: usr/local/bin/chili-clonedisk:2500
+msgid "Porta SSH       :"
+msgstr "SSH-Port:"
+
+#: usr/local/bin/chili-clonedisk:2501
+msgid "Arquivo Destino :"
+msgstr "Zieldatei:"
+
+#: usr/local/bin/chili-clonedisk:2502
+msgid "CONFIGURAÇÃO SSH"
+msgstr "SSH-KONFIGURATION"
+
+#: usr/local/bin/chili-clonedisk:2503
+msgid "Todos os campos devem ser preenchidos! Tente novamente."
+msgstr "Alle Felder müssen ausgefüllt werden! Bitte versuchen Sie es erneut."
+
+#: usr/local/bin/chili-clonedisk:2504
+msgid "TESTANDO CONEXÃO"
+msgstr "VERBINDUNG TESTEN"
+
+#: usr/local/bin/chili-clonedisk:2505
+msgid "Tentando conexão via Chave Pública em"
+msgstr "Es wird versucht, eine Verbindung über den öffentlichen Schlüssel herzustellen"
+
+#: usr/local/bin/chili-clonedisk:2506
+msgid "ERRO DE REQUISITO"
+msgstr "ANFORDERUNGSFEHLER"
+
+#: usr/local/bin/chili-clonedisk:2507
+msgid "O utilitário 'sshpass' não foi encontrado no sistema!"
+msgstr "Das Dienstprogramm „sshpass“ wurde auf dem System nicht gefunden!"
+
+#: usr/local/bin/chili-clonedisk:2508
+msgid ""
+"Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a "
+"clonagem via rede."
+msgstr "Installieren Sie das Paket „sshpass“ oder konfigurieren Sie öffentliche Schlüssel, um das Klonen von Netzwerken zu ermöglichen."
+
+#: usr/local/bin/chili-clonedisk:2509
+msgid "AUTENTICAÇÃO REQUERIDA"
+msgstr "Authentifizierung erforderlich"
+
+#: usr/local/bin/chili-clonedisk:2510
+msgid "A conexão direta por chave falhou.\\nDigite a senha para"
+msgstr "Direkte Schlüsselverbindung fehlgeschlagen.\\\nGeben Sie das Passwort ein"
+
+#: usr/local/bin/chili-clonedisk:2511
+msgid "TESTANDO SENHA"
+msgstr "PASSWORT TESTEN"
+
+#: usr/local/bin/chili-clonedisk:2512
+msgid "Validando senha no servidor remoto..."
+msgstr "Passwort auf Remote-Server wird überprüft..."
+
+#: usr/local/bin/chili-clonedisk:2513
+msgid "ERRO DE AUTENTICAÇÃO"
+msgstr "AUTHENTIFIZIERUNGSFEHLER"
+
+#: usr/local/bin/chili-clonedisk:2514
+msgid "Senha incorreta ou acesso rejeitado pelo servidor remoto!"
+msgstr "Falsches Passwort oder Zugriff vom Remote-Server abgelehnt!"
+
+#: usr/local/bin/chili-clonedisk:2515
+msgid "Verifique suas credenciais e tente novamente."
+msgstr "Bitte überprüfen Sie Ihre Anmeldedaten und versuchen Sie es erneut."
+
+#: usr/local/bin/chili-clonedisk:2516
+msgid "FORMATO DE COMPRESSÃO"
+msgstr "KOMPRIMIERUNGSFORMAT"
+
+#: usr/local/bin/chili-clonedisk:2517
+msgid "Escolha o formato de saída para a imagem remota:"
+msgstr "Wählen Sie das Ausgabeformat für das Remote-Bild:"
+
+#: usr/local/bin/chili-clonedisk:2518
+msgid "Otimizado/Adaptativo"
+msgstr "Optimiert/Adaptiv"
+
+#: usr/local/bin/chili-clonedisk:2519
+msgid "Compatibilidade"
+msgstr "Kompatibilität"
+
+#: usr/local/bin/chili-clonedisk:2520
+msgid "Máxima Compressão"
+msgstr "Maximale Komprimierung"
+
+#: usr/local/bin/chili-clonedisk:2521
+msgid "Sem compressão (Imagem Raw / bruto)"
+msgstr "Keine Komprimierung (Rohbild)"
+
+#: usr/local/bin/chili-clonedisk:2522
+msgid "SERVIDOR DESTINO :"
+msgstr "ZIELSERVER:"
+
+#: usr/local/bin/chili-clonedisk:2523
+msgid "ARQUIVO REMOTO   :"
+msgstr "REMOTE-DATEI:"
+
+#: usr/local/bin/chili-clonedisk:2524
+msgid "Confirmar o início da clonagem criptografada via rede?"
+msgstr "Start des verschlüsselten Klonens über Netzwerk bestätigen?"
+
+#: usr/local/bin/chili-clonedisk:2525
+msgid "Iniciando transmissão de"
+msgstr "Übertragung starten"
+
+#: usr/local/bin/chili-clonedisk:2526
+msgid "PREPARANDO DESTINO"
+msgstr "ZIEL VORBEREITEN"
+
+#: usr/local/bin/chili-clonedisk:2527
+msgid "Garantindo que o diretório remoto existe..."
+msgstr "Sicherstellen, dass das Remote-Verzeichnis vorhanden ist..."
+
+#: usr/local/bin/chili-clonedisk:2528
+msgid "ERRO DE DIRETÓRIO"
+msgstr "VERZEICHNISFEHLER"
+
+#: usr/local/bin/chili-clonedisk:2529
+msgid "Falha ao criar o diretório remoto:"
+msgstr "Remote-Verzeichnis konnte nicht erstellt werden:"
+
+#: usr/local/bin/chili-clonedisk:2530
+msgid "Verifique as permissões de escrita do usuário no destino."
+msgstr "Überprüfen Sie die Schreibberechtigungen des Benutzers für das Ziel."
+
+#: usr/local/bin/chili-clonedisk:2531
+msgid "CLONAGEM REMOTA EM ANDAMENTO"
+msgstr "REMOTE-KLONEN LÄUFT"
+
+#: usr/local/bin/chili-clonedisk:2532
+msgid "Processando: pv -> conversor/compressor -> SSH -> Rede"
+msgstr "Verarbeitung: pv -> Konverter/Kompressor -> SSH -> Netzwerk"
+
+#: usr/local/bin/chili-clonedisk:2533
+msgid "DESTINO REMOTO :"
+msgstr "ENTFERNTES ZIEL:"
+
+#: usr/local/bin/chili-clonedisk:2534
+msgid "Resumo da Operação de Rede"
+msgstr "Zusammenfassung des Netzwerkbetriebs"
+
+#: usr/local/bin/chili-clonedisk:2535
+msgid "Clonagem Remota Concluída com Sucesso!"
+msgstr "Remote-Klonen erfolgreich abgeschlossen!"
+
+#: usr/local/bin/chili-clonedisk:2536
+msgid "Origem Local     :"
+msgstr "Lokaler Ursprung:"
+
+#: usr/local/bin/chili-clonedisk:2537
+msgid "Destino Remoto   :"
+msgstr "Remote-Ziel:"
+
+#: usr/local/bin/chili-clonedisk:2538
+msgid "Tamanho Remoto   :"
+msgstr "Fernbedienungsgröße:"
+
+#: usr/local/bin/chili-clonedisk:2539
+msgid "SELECIONE O DISCO DE ORIGEM PARA REDE"
+msgstr "WÄHLEN SIE DIE QUELLENFESTPLATTE FÜR DAS NETZWERK"
+
+#: usr/local/bin/chili-clonedisk:2540
+msgid "MENU PRINCIPAL"
+msgstr "Hauptmenü"
+
+#: usr/local/bin/chili-clonedisk:2541
+msgid "Partição local -> Imagem remota"
+msgstr "Lokale Partition -> Remote-Image"
+
+#: usr/local/bin/chili-clonedisk:2542
+msgid "clonar partição local para imagem remota"
+msgstr "Lokale Partition auf Remote-Image klonen"
+
+#: usr/local/bin/chili-clonedisk:2543
+msgid "Partição local -> Partição remota"
+msgstr "Lokale Partition -> Remote-Partition"
+
+#: usr/local/bin/chili-clonedisk:2544
+msgid "clonar partição local para partição remota"
+msgstr "Lokale Partition auf Remote-Partition klonen"
+
+#: usr/local/bin/chili-clonedisk:2545
+msgid "Partição remota -> Imagem local"
+msgstr "Remote-Partition -> Lokales Image"
+
+#: usr/local/bin/chili-clonedisk:2546
+msgid "clonar partição remota para imagem local"
+msgstr "Klonen Sie die Remote-Partition auf ein lokales Image"
+
+#: usr/local/bin/chili-clonedisk:2547
+msgid "Partição remota -> Partição local"
+msgstr "Remote-Partition -> Lokale Partition"
+
+#: usr/local/bin/chili-clonedisk:2548
+msgid "clonar partição remota para partição local"
+msgstr "Klonen Sie die Remote-Partition auf die lokale Partition"
+
+#: usr/local/bin/chili-clonedisk:2549
+msgid "Partição remota"
+msgstr "Remote-Partition"
+
+#: usr/local/bin/chili-clonedisk:2550
+msgid "Verificação de integridade"
+msgstr "Integritätsprüfung"
+
+#: usr/local/bin/chili-clonedisk:2551
+msgid "Calculando sha256..."
+msgstr "Berechnung von sha256..."
+
+#: usr/local/bin/chili-clonedisk:2552
+msgid "Testando o checksum embutido no formato..."
+msgstr "Testen der im Format integrierten Prüfsumme ..."
+
+#: usr/local/bin/chili-clonedisk:2553
+msgid "Relendo o destino para comparar..."
+msgstr "Das Schicksal noch einmal lesen, um es zu vergleichen ..."
+
+#: usr/local/bin/chili-clonedisk:2554
+#, sh-printf-format
+msgid "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la."
+msgstr "Das Bild %s ist beschädigt oder verändert. Es ist nicht sicher, es aufzuzeichnen."
+
+#: usr/local/bin/chili-clonedisk:2555
+msgid "esperado"
+msgstr "erwartet"
+
+#: usr/local/bin/chili-clonedisk:2556
+msgid "obtido"
+msgstr "erhalten"
+
+#: usr/local/bin/chili-clonedisk:2557
+#, sh-printf-format
+msgid "A imagem %s não tem hash guardado (.sha256/.info)."
+msgstr "Das %s-Bild verfügt über keinen gespeicherten Hash (.sha256/.info)."
+
+#: usr/local/bin/chili-clonedisk:2558
+msgid ""
+"Verificado só o checksum embutido no formato: detecta corrupção, mas não uma "
+"troca da imagem."
+msgstr "Geprüft wurde nur die im Format eingebettete Prüfsumme: Sie erkennt zwar eine Beschädigung, aber keine Bildveränderung."
+
+#: usr/local/bin/chili-clonedisk:2559
+msgid ""
+"Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam "
+"ser conferidos."
+msgstr "Es wurde nur die qcow2-Struktur überprüft (qemu-img-Prüfung); Die Daten konnten nicht überprüft werden."
+
+#: usr/local/bin/chili-clonedisk:2560
+msgid "Imagem raw sem hash: não há como verificar se ela está íntegra."
+msgstr "Rohbild ohne Hash: Es gibt keine Möglichkeit zu überprüfen, ob es intakt ist."
+
+#: usr/local/bin/chili-clonedisk:2561
+msgid ""
+"Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a "
+"criação, mas serve de referência daqui para frente."
+msgstr "Jetzt die .sha256 generieren? Es beweist nicht, dass das Bild seit seiner Erstellung intakt war, dient aber als Referenz für die Zukunft."
+
+#: usr/local/bin/chili-clonedisk:2562
+msgid ""
+"Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)"
+msgstr "Bildintegrität vor der Aufnahme prüfen? (Lesen Sie das gesamte Bild)"
+
+#: usr/local/bin/chili-clonedisk:2563
+#, sh-printf-format
+msgid "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado."
+msgstr "Überprüfen Sie die Aufnahme? Liest %s (%s) erneut und vergleicht es mit dem, was aufgezeichnet wurde."
+
+#: usr/local/bin/chili-clonedisk:2564
+#, sh-printf-format
+msgid "Gravação verificada: %s confere com o que foi gravado."
+msgstr "Verifizierte Aufnahme: %s stimmt mit der Aufnahme überein."
+
+#: usr/local/bin/chili-clonedisk:2565
+#, sh-printf-format
+msgid ""
+"O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar "
+"com defeito."
+msgstr "Der aus %s gelesene Inhalt unterscheidet sich vom Geschriebenen! Möglicherweise ist das Ziel fehlerhaft."
+
+#: usr/local/bin/chili-clonedisk:2566
+msgid "Sem ficha (.info) para esta imagem."
+msgstr "Kein Plug (.info) für dieses Bild."
+
+#: usr/local/bin/chili-clonedisk:2567
+#, sh-printf-format
+msgid ""
+"Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem "
+"permissão)."
+msgstr "Es kann nicht in „%s“ geschrieben werden (nicht vorhandenes Verzeichnis, schreibgeschützt oder ohne Berechtigung)."
+
+#: usr/local/bin/chili-clonedisk:2568
+#, sh-printf-format
+msgid ""
+"'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. "
+"Escolha outro local ou um formato comprimido."
+msgstr "„%s“ ist FAT32, das keine Dateien akzeptiert, die größer als 4 GiB sind, und das Bild wird %s haben. Wählen Sie einen anderen Speicherort oder ein komprimiertes Format."
+
+#: usr/local/bin/chili-clonedisk:2569
+#, sh-printf-format
+msgid ""
+"'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar "
+"disso e falhar no meio. Prosseguir?"
+msgstr "„%s“ ist FAT32 (4 GiB-Limit pro Datei). Das komprimierte Bild kann darüber hinausgehen und zwischendurch ausfallen. Fortfahren?"
+
+#: usr/local/bin/chili-clonedisk:2570
+#, sh-printf-format
+msgid ""
+"Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida "
+"pode não caber. Prosseguir?"
+msgstr "Der freie Speicherplatz in „%s“ (%s) ist kleiner als der Ursprung (%s). Das komprimierte Bild passt möglicherweise nicht. Fortfahren?"
+
+#: usr/local/bin/chili-clonedisk:2571
+msgid "Disco local -> Disco remoto"
+msgstr "Lokale Festplatte -> Remote-Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2572
+msgid "clonar disco local para disco remoto"
+msgstr "Klonen Sie die lokale Festplatte auf die Remote-Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2573
+#, sh-printf-format
+msgid "O destino %s está em uso e não pode ser sobrescrito:"
+msgstr "Das Ziel %s wird verwendet und kann nicht überschrieben werden:"
+
+#: usr/local/bin/chili-clonedisk:2574
+#, sh-printf-format
+msgid "A origem %s está em uso. A cópia pode ficar inconsistente:"
+msgstr "Die Quelle %s wird verwendet. Die Kopie ist möglicherweise inkonsistent:"
+
+#: usr/local/bin/chili-clonedisk:2575
+msgid "Libere o disco no computador remoto e tente de novo."
+msgstr "Geben Sie die Festplatte auf dem Remote-Computer frei und versuchen Sie es erneut."
+
+#: usr/local/bin/chili-clonedisk:2576
+#, sh-printf-format
+msgid "%s montado em %s (sistema)"
+msgstr "%s in %s (System) eingebaut"
+
+#: usr/local/bin/chili-clonedisk:2577
+#, sh-printf-format
+msgid "%s montado em %s"
+msgstr "%s in %s eingebaut"
+
+#: usr/local/bin/chili-clonedisk:2578
+#, sh-printf-format
+msgid "%s é swap ativa"
+msgstr "%s ist aktiver Swap"
+
+#: usr/local/bin/chili-clonedisk:2579
+#, sh-printf-format
+msgid "%s em uso por %s (LVM/LUKS/RAID)"
+msgstr "%s wird von %s (LVM/LUKS/RAID) verwendet."
+
+#: usr/local/bin/chili-clonedisk:2580
+#, sh-printf-format
+msgid "%s aberto pelo processo %s (%s)"
+msgstr "%s aberto pelo processing %s (%s)"
+
+#: usr/local/bin/chili-clonedisk:2581
+#, sh-printf-format
+msgid "%s pertence a um pool ZFS"
+msgstr "%s bezieht sich auf einen ZFS-Pool"
+
+#: usr/local/bin/chili-clonedisk:2582
+#, sh-printf-format
+msgid "O arquivo %s já existe. Sobrescrever?"
+msgstr "Die Datei %s existiert bereits. Überschreiben?"
+
+#: usr/local/bin/chili-clonedisk:2584
+msgid "Disco -> Disco"
+msgstr "Festplatte -> Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2585
+msgid "clonar disco para outro disco"
+msgstr "Festplatte auf eine andere Festplatte klonen"
+
+#: usr/local/bin/chili-clonedisk:2586
+msgid "Partição -> Partição"
+msgstr "Partition -> Partition"
+
+#: usr/local/bin/chili-clonedisk:2587
+msgid "clonar partição para outra partição"
+msgstr "Partition auf eine andere Partition klonen"
+
+#: usr/local/bin/chili-clonedisk:2588
+msgid "Disco -> Imagem"
+msgstr "Festplatte -> Bild"
+
+#: usr/local/bin/chili-clonedisk:2589
+msgid "clonar disco para arquivo de imagem"
+msgstr "Klonen Sie die Festplatte in eine Image-Datei"
+
+#: usr/local/bin/chili-clonedisk:2590
+msgid "Partição -> Imagem"
+msgstr "Partition -> Image"
+
+#: usr/local/bin/chili-clonedisk:2591
+msgid "clonar partição para arquivo de imagem"
+msgstr "Partition in Image-Datei klonen"
+
+#: usr/local/bin/chili-clonedisk:2592
+msgid "Imagem -> Disco"
+msgstr "Bild -> Disc"
+
+#: usr/local/bin/chili-clonedisk:2593
+msgid "clonar imagem para disco"
+msgstr "Bild auf Festplatte klonen"
+
+#: usr/local/bin/chili-clonedisk:2594
+msgid "Imagem -> Partição"
+msgstr "Bild -> Partition"
+
+#: usr/local/bin/chili-clonedisk:2595
+msgid "clonar imagem para partição"
+msgstr "Bild auf Partition klonen"
+
+#: usr/local/bin/chili-clonedisk:2596
+msgid "ISO -> Pendrive/Disco"
+msgstr "ISO -> Pendrive/Disk"
+
+#: usr/local/bin/chili-clonedisk:2597
+msgid "gravar ISO para dar boot"
+msgstr "ISO zum Booten brennen"
+
+#: usr/local/bin/chili-clonedisk:2598
+msgid "Disco local -> Imagem remota"
+msgstr "Lokale Festplatte -> Remote-Image"
+
+#: usr/local/bin/chili-clonedisk:2599
+msgid "clonar disco local para imagem remota"
+msgstr "Lokale Festplatte auf Remote-Image klonen"
+
+#: usr/local/bin/chili-clonedisk:2600
+msgid "Imagem remota -> Disco/Partição local"
+msgstr "Remote-Image -> Lokale Festplatte/Partition"
+
+#: usr/local/bin/chili-clonedisk:2601
+msgid "clonar imagem remota para disco/partição local"
+msgstr "Klonen Sie das Remote-Image auf die lokale Festplatte/Partition"
+
+#: usr/local/bin/chili-clonedisk:2602
+msgid "Disco remoto -> Imagem local"
+msgstr "Remote-Festplatte -> Lokales Image"
+
+#: usr/local/bin/chili-clonedisk:2603
+msgid "clonar disco remoto para imagem local"
+msgstr "Klonen Sie die Remote-Festplatte auf ein lokales Image"
+
+#: usr/local/bin/chili-clonedisk:2604
+msgid "Disco remoto -> Disco local"
+msgstr "Remote-Festplatte -> Lokale Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2605
+msgid "clonar disco remoto para disco local"
+msgstr "Klonen Sie die Remote-Festplatte auf die lokale Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2606
+msgid "Clonar (local)"
+msgstr "Klonen (lokal)"
+
+#: usr/local/bin/chili-clonedisk:2607
+msgid "Criar imagem"
+msgstr "Bild erstellen"
+
+#: usr/local/bin/chili-clonedisk:2608
+msgid "Restaurar imagem"
+msgstr "Bild wiederherstellen"
+
+#: usr/local/bin/chili-clonedisk:2609
+msgid "Rede (SSH)"
+msgstr "Einlösen (SSH)"
+
+#: usr/local/bin/chili-clonedisk:2610
+msgid "Escolha a operação"
+msgstr "Wählen Sie den Vorgang"
+
+#: usr/local/bin/chili-clonedisk:2611
+msgid "Entre com as credenciais do servidor SSH:"
+msgstr "Geben Sie Ihre SSH-Server-Anmeldeinformationen ein:"
+
+#: usr/local/bin/chili-clonedisk:2612
+msgid ""
+"Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha."
+msgstr "Um Festplatten lesen zu können, muss der Remote-Benutzer Root sein oder über sudo ohne Passwort verfügen."
+
+#: usr/local/bin/chili-clonedisk:2613
+msgid "Nenhum disco encontrado no servidor remoto."
+msgstr "Auf dem Remote-Server wurden keine Festplatten gefunden."
+
+#: usr/local/bin/chili-clonedisk:2614
+msgid "Disco remoto"
+msgstr "Remote-Festplatte"
+
+#: usr/local/bin/chili-clonedisk:2615
+msgid "em uso"
+msgstr "im Einsatz"
+
+#: usr/local/bin/chili-clonedisk:2616
+msgid "Novos UUIDs"
+msgstr "Neue UUIDs"
+
+#: usr/local/bin/chili-clonedisk:2617
+msgid ""
+"O destino ficou com os mesmos identificadores da origem (UUID do sistema de "
+"arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\\n\\nGere novos se "
+"origem e destino forem ficar ligados na MESMA máquina: senão o sistema pode "
+"montar o disco errado ou o LVM acusar PV duplicado.\\n\\nNÃO gere se o "
+"destino for substituir a origem ou precisar dar boot: o fstab e o GRUB do "
+"sistema clonado usam esses identificadores.\\n\\nGerar novos UUIDs no "
+"destino?"
+msgstr "Das Ziel hat die gleichen Kennungen wie die Quelle (Dateisystem-UUID, PARTUUID, Festplatten-ID und UUID/VG-Name in LVM).\\\n\\\nGenerieren Sie neue, wenn Quelle und Ziel mit derSELBEN Maschine verbunden werden sollen. Andernfalls mountet das System möglicherweise die falsche Festplatte oder LVM meldet ein doppeltes PV.\\\n\\\nNICHT generieren, wenn das Ziel die Quelle ersetzt oder gestartet werden muss: Die fstab und GRUB des geklonten Systems verwenden diese Kennungen.\\\n\\\nNeue UUIDs am Ziel generieren?"
+
+#: usr/local/bin/chili-clonedisk:2618
+msgid "Nenhum identificador encontrado para alterar."
+msgstr "Es wurden keine zu ändernden Bezeichner gefunden."
+
+#: usr/local/bin/chili-clonedisk:2619
+msgid "Entre com as credenciais do servidor SSH e o caminho da imagem:"
+msgstr "Geben Sie Ihre SSH-Server-Anmeldeinformationen und den Image-Pfad ein:"
+
+#: usr/local/bin/chili-clonedisk:2620
+msgid "Arquivo Remoto  :"
+msgstr "Remote-Datei:"
+
+#: usr/local/bin/chili-clonedisk:2621
+msgid ""
+"Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo "
+"para esta máquina e use Imagem para Disco/Partição."
+msgstr "QCOW2-Bilder können nicht direkt über das Netzwerk wiederhergestellt werden. Kopieren Sie die Datei auf diesen Computer und verwenden Sie „Image to Disk/Partition“."
+
+#: usr/local/bin/chili-clonedisk:2622
+#, sh-printf-format
+msgid "Arquivo remoto não encontrado ou sem permissão de leitura: %s"
+msgstr "Remote-Datei nicht gefunden oder ohne Leseberechtigung: %s"
+
+#: usr/local/bin/chili-clonedisk:2623
+msgid "Restaurar em"
+msgstr "Wiederherstellen auf"
+
+#: usr/local/bin/chili-clonedisk:2624
+msgid "Disco inteiro"
+msgstr "Ganze CD"
+
+#: usr/local/bin/chili-clonedisk:2625
+msgid "Partição"
+msgstr "Partition"
+
+#: usr/local/bin/chili-clonedisk:2626
+#, sh-printf-format
+msgid "A imagem (%s) é maior que o destino (%s). Prosseguir?"
+msgstr "Das Bild (%s) ist größer als das Ziel (%s). Fortfahren?"
+
+#: usr/local/bin/chili-clonedisk:2627
+msgid "Uso:"
+msgstr "verwenden:"
+
+#: usr/local/bin/chili-clonedisk:2628
+msgid "sem parâmetros, abre a interface (dialog)"
+msgstr "ohne Parameter, öffnet die Schnittstelle (Dialog)"
+
+#: usr/local/bin/chili-clonedisk:2629
+msgid "exibir esta ajuda e sair"
+msgstr "Zeigen Sie diese Hilfe an und beenden Sie den Vorgang"
+
+#: usr/local/bin/chili-clonedisk:2630
+msgid "mostrar versão"
+msgstr "Version anzeigen"
+
+#: usr/local/bin/chili-clonedisk:2631
+msgid "Idioma da interface"
+msgstr "Schnittstellensprache"
+
+#: usr/local/bin/chili-clonedisk:2632
 msgid "Escolha o idioma:"
 msgstr "Sprache wählen:"
 
-#: usr/local/bin/chili-clonedisk:1811
-msgid "Português"
-msgstr "Portugiesisch"
+#: usr/local/bin/chili-clonedisk:2633
+#, sh-printf-format
+msgid ""
+"O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro "
+"local."
+msgstr "Das Ziel „%s“ befindet sich auf dem Quellgerät selbst (%s). Wählen Sie einen anderen Standort."
 
-#: usr/local/bin/chili-clonedisk:1812
-msgid "Inglês"
-msgstr "Englisch"
+#: usr/local/bin/chili-clonedisk:2634
+#, sh-printf-format
+msgid ""
+"Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha "
+"outro local."
+msgstr "Nicht genügend freier Speicherplatz in „%s“: erforderlicher %s, verfügbarer %s. Wählen Sie einen anderen Standort."
 
-#: usr/local/bin/chili-clonedisk:1813
-msgid "Alemão"
-msgstr "Deutsch"
+#: usr/local/bin/chili-clonedisk:2635
+#, sh-printf-format
+msgid "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'."
+msgstr "Die Konvertierung zu QCOW2 ist fehlgeschlagen. Die RAW-Datei wurde unter „%s“ gespeichert."
 
-#: usr/local/bin/chili-clonedisk:1814
-msgid "Francês"
-msgstr "Französisch"
+#: usr/local/bin/chili-clonedisk:2636
+msgid "Falha na clonagem!"
+msgstr "Das Klonen ist fehlgeschlagen!"
 
-#: usr/local/bin/chili-clonedisk:1831
+#: usr/local/bin/chili-clonedisk:2637
+msgid "Falha na clonagem remota!"
+msgstr "Das Remote-Klonen ist fehlgeschlagen!"
+
+#: usr/local/bin/chili-clonedisk:2638
+msgid "instalação automática não suportada. Instale manualmente:"
+msgstr "Automatische Installation wird nicht unterstützt. Manuell installieren:"
+
+#: usr/local/bin/chili-clonedisk:2645
 msgid "_"
 msgstr "_"

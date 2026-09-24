@@ -4,36 +4,59 @@ pkgname=chili-clonedisk
 pkgdesc="Utility for clone disk"
 pkgver=$(date +%Y%m%d)
 pkgrel=$(date +%H%M)
+provides=()               # "eu SOU o $pkgname pkg1, pra quem depender deles"
+replaces=()               # "remove o pkg1 pkg2 antigo automaticamente quando eu instalar"
+conflicts=()              # "nunca me deixe coexistir com o pkg1 pkg2 original"
 arch=('any')
 license=('GPL3')
 url="https://github.com/chililinux/$pkgname"
-provides=()
-replaces=()
 source=("git+${url}.git")
 md5sums=('SKIP')
 depends=(sed dialog grep ncurses gawk coreutils util-linux pv which openssh sshpass qemu-img)
 
 package() {
-	local dirs=("usr" "etc" "opt")
-	#   echo "DESTDIR=$DESTDIR"
-	#   echo "pkgdir=$pkgdir"
-	#   echo "srcdir=$srcdir"
-	#   echo "_pkgsrc=$_pkgsrc"
+  # Verify default folder
+  if [ -d "${srcdir}/${pkgname}/${pkgname}" ]; then
+    InternalDir="${srcdir}/${pkgname}/${pkgname}"
+  elif [ -d "${srcdir}/${pkgname}" ]; then
+    InternalDir="${srcdir}/${pkgname}"
+  else
+    #local
+    InternalDir="${WORKDIR}"
+  fi
 
-	cd ${srcdir}/${pkgname}
-	for dir in "${dirs[@]}"; do
-		if [ -d "${_pkgsrc}/${dir}" ]; then
-			cp -a "${_pkgsrc}/${dir}" "$DESTDIR/"
-		fi
-	done
+  cd "${InternalDir}"
+  # Copiar a estrutura de /etc, /usr e /opt para /
+  local dirs=("boot" "etc" "opt" "usr" "var")
+  for dir in "${dirs[@]}"; do
+    if [ -d "${InternalDir}/${dir}" ]; then
+      cp -a "${InternalDir}/${dir}" "${pkgdir}/"
+    fi
+  done
 
-	# Install license file if present
-	if [ -f "LICENSE" ]; then
-		install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-	fi
+  # Install license file if present
+  if [ -f "LICENSE" ]; then
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  fi
 
-	# Install documentation if present
-	if [ -f "README.md" ]; then
-		install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-	fi
+  # Install documentation if present
+  if [ -f "README.md" ]; then
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  fi
+}
+
+pre_install() {
+  log "Iniciando instalação"
+}
+
+post_install() {
+  log "Finalizando instalação"
+}
+
+pre_upgrade() {
+  log "Iniciando upgrade"
+}
+
+post_upgrade() {
+  log "Finalizando upgrade"
 }

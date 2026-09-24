@@ -5,7 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Updated: ter 09 jun 2026 20:43:21 -04
+#  Updated: qua 23 set 2026 22:06:36 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -36,13 +36,28 @@ export LANGUAGE="${LANGUAGE:-pt_BR}"
 export TEXTDOMAINDIR=/usr/share/locale
 export TEXTDOMAIN=chili-clonedisk
 
+# debug
+export PS4=$'${red}${0##*/}${green}[$FUNCNAME]${pink}[$LINENO]${reset} '
+#set -x
+#set -e
+shopt -s extglob
+
+has_command() {
+	command -v "$1" >/dev/null && return 0 || return 1
+}
+
+# sem o binário gettext, mostra o texto original (pt_BR) em vez de mensagens vazias
+has_command gettext || gettext() { printf '%s' "$1"; }
+
 #declare -r APP="${0##*/}"
 declare -r _APP_="chili-clonedisk"
-declare -r _VERSION_="6.6.09.20260609"
-declare -gA Alanguage=([pt_BR]=0 [en_US]=1 [de_DE]=2 [fr_FR]=3 [es_ES]=4 [it_IT]=5)
-declare -gA Alocale=([0]=pt_BR [1]=en_US [2]=de_DE [3]=fr_FR [4]=es_ES [5]=it_IT)
+declare -r _VERSION_="6.9.23.20260923"
 declare dialogRcFile="$HOME/.dialogrc"
-readonly -a DEPENDENCIES=(dd awk ionice dialog pv tput find smartctl)
+# Log de operações: $LOGDIR/chili-clonedisk-AAAAMMDD-HHMM.log (pode ser trocado via ambiente)
+declare LOGDIR="${LOGDIR:-/tmp}"
+declare LOGFILE=""
+declare LOG_OP="" # operação do menu em andamento (aparece em cada linha do log)
+readonly -a DEPENDENCIES=(dd awk ionice dialog pv tput find smartctl fdisk sfdisk blockdev lsblk numfmt stdbuf gettext findmnt)
 readonly -A PACKAGEDEP=(
 	['dd']='coreutils'
 	['awk']='gawk'
@@ -52,21 +67,19 @@ readonly -A PACKAGEDEP=(
 	['tput']='ncurses'
 	['find']='findutils'
 	['smartctl']='smartmontools'
+	['fdisk']='util-linux'
+	['sfdisk']='util-linux'
+	['blockdev']='util-linux'
+	['lsblk']='util-linux'
+	['numfmt']='coreutils'
+	['stdbuf']='coreutils'
+	['gettext']='gettext'
+	['findmnt']='util-linux'
 )
 
 # Captura e exporta o caminho correto do vdisk do usuário comum antes de elevar
 export IMGDIR="/home/$SUDO_USER/.chili-fr/vdisk"
 
-# debug
-export PS4=$'${red}${0##*/}${green}[$FUNCNAME]${pink}[$LINENO]${reset} '
-#set -x
-#set -e
-shopt -s extglob
-
-cleanup() {
-	rm -f "$dialogRcFile"
-}
-#trap cleanup EXIT
 
 detect_distro() {
 	local id=""
@@ -145,16 +158,6 @@ sh_create_dialogrc() {
 sh_configure() {
 	[[ ! -e "$dialogRcFile" ]] && sh_create_dialogrc
 	sh_ascii-lines
-	true=0
-	#	false=1
-
-	# flag languages
-	: "${PT_BR=0}"
-	: "${EN_US=1}"
-	: "${DE_DE=2}"
-	: "${FR_FR=3}"
-	: "${LC_DEFAULT=$(sh_getLocale)}"
-
 	# flag dialog exit status codes
 	: "${D_OK=0}"
 	: "${D_CANCEL=1}"
@@ -217,11 +220,9 @@ sh_configure() {
 
 	# common vars
 	: "${DIALOG=${DIALOG:-"dialog"}}"
-	: "${grafico=$true}"
 	: "${xapp="$_APP_"}"
 	: "${ccabec="${BOLD}${WHITE}${REVERSE}${xapp} ${YELLOW}v$_VERSION_ ${BLUE}https://github.com/chililinux/chili-clonedisk"}"
 	: "${ctitle="$(detect_distro)"}"
-	: "${welcome="$(gettext "Bem vindo ao ")"}"
 
 }
 
@@ -247,16 +248,6 @@ sh_version() {
 	printf "$0 $_VERSION_\n"
 }
 
-sh_unsetvarcolors() {
-	unset bold reset cyan red blue white black green yellow orange pink cyan purple violet
-}
-
-sh_getLocale() {
-	LOCALE="${LANG%%.*}"
-	LC_DEFAULT="${Alanguage[$LOCALE]}"
-	echo "$LOCALE"
-}
-
 sh_splitarray() {
 	local str=("$1")
 	local pos="$2"
@@ -278,37 +269,12 @@ sh_splitarray() {
 	echo "${array[pos - 1]}"
 }
 
-sh_seekstrarray() {
-	local str=("$1")
-	local search="$2"
-	local result=
-
-	for i in "${!str[@]}"; do
-		if [[ "${str[$i]}" == "$search" ]]; then
-			result="$i"
-			break
-		fi
-	done
-	echo "$result"
-}
-
-confirma() {
-	[ "$1" -ne 0 ] && {
-		conf "INFO" "$2"
-		return $?
-	}
-}
-
 msg() {
-	if [ "$grafico" -eq $true ]; then
-		${DIALOG} \
-			--no-collapse \
-			--title "$1" \
-			--infobox "\n$2" \
-			6 60
-	else
-		log_info_msg "$2"
-	fi
+	${DIALOG} \
+		--no-collapse \
+		--title "$1" \
+		--infobox "\n$2" \
+		6 60
 }
 
 mensagem() {
@@ -384,16 +350,15 @@ readconf() {
 	local msg="$1"
 	local color="${2:-${red}}"
 
+	# TRADUTORES: tecla de confirmação (primeira letra de "Sim")
+	local yes_key
+	yes_key="${cmsg_tecla_sim}"
+
 	echo -n -e "$color"
-	if [[ $LC_DEFAULT -eq 0 ]]; then
-		read -r -p "$msg [S/n]"
-	else
-		read -r -p "$msg [Y/n]"
-	fi
+	read -r -p "$msg [${yes_key}/${cmsg_tecla_nao}] "
 	echo -n -e "$reset"
-	case "${REPLY^}" in
-	[SY]) return 0 ;;
-	"") return 0 ;;
+	case "${REPLY:0:1}" in
+	"${yes_key,,}" | "${yes_key^^}" | [SsYy] | "") return 0 ;;
 	*) return 1 ;;
 	esac
 }
@@ -416,63 +381,47 @@ conf() {
 	return "$nchoice"
 }
 
-confmulti() {
-	xtitle="$1"
-	shift
-	${DIALOG} \
-		--title "$xtitle" \
-		--backtitle "$ccabec" \
-		--yes-label "${cmsg_yeslabel}" \
-		--no-label "${cmsg_nolabel}" \
-		--yesno "$*" \
-		10 100 >/dev/tty
-	return $?
-}
-
-get() {
-	local row="$1"
-	local col="$2"
-	local prompt="$3"
-	local new_value="$4"
-	local old_value="$5"
-	local color="${Acores[box]}"
-
-	# setpos "$row" "$col"
-	printf "%s" "${reset}$color"
-	read -p "${prompt}${reverse}" -e -i "$old_value" "$new_value"
-	# tput sc # Salva a posição atual do cursor
-	echo -n -e "$reset"
-}
-
-row() { echo "$Prow"; }
-col() { echo "$Pcol"; }
-lastrow() { echo "$(tput lines)"; }
-lastcol() { echo "$(tput cols)"; }
 
 sh_checkdisk() {
 	local target="$1"
 	local nchoice=0
-	local dsk
-	local mnt
+	local -a devs=() mnts=()
+	local dev mnt list="" i
 
-	# Usa df com tabulação pra evitar bugs com espaços em nomes de caminhos
-	dsk=$(df -hT | grep -F "$target")
+	# lsblk lista só o dispositivo e seus filhos (evita /dev/loop1 casar com /dev/loop10)
+	while read -r dev mnt; do
+		[[ -z "$mnt" ]] && continue
+		devs+=("$dev")
+		mnts+=("$(printf '%b' "$mnt")") # -r escapa espaços como \x20
+	done < <(lsblk -nrpo NAME,MOUNTPOINT "$target" 2>/dev/null)
 
-	if [[ -n "$dsk" ]]; then
-		if conf "${cwarning}" \
-			"\n${BOLD}${RED}ERROR: ${cmsg_all_mounted_part}${RESET}\n\n \
-$dsk\n\n \
-${YELLOW}${cmsg_dismount}"; then
-			# desmontar qualquer ponto montado que contenha "$target"
-			mount | grep -F "$target" | awk '{print $3}' | while read -r mnt; do
-				if ! umount -f "$mnt" 2>/dev/null; then
+	((${#devs[@]})) || return 0
+
+	for i in "${!devs[@]}"; do
+		list+="${devs[i]}  ${mnts[i]}\n"
+	done
+
+	if conf "${cwarning}" \
+		"\n${BOLD}${RED}${cmsg_Error}: ${cmsg_all_mounted_part}${RESET}\n\n${list}\n${YELLOW}${cmsg_dismount}"; then
+		# while sem pipe: nchoice não se perde em subshell
+		for i in "${!devs[@]}"; do
+			if [[ "${mnts[i]}" == "[SWAP]" ]]; then
+				if swapoff "${devs[i]}" 2>/dev/null; then
+					sh_log "swapoff: ${devs[i]}"
+				else
 					nchoice=1
-					break
+					sh_log "falha no swapoff: ${devs[i]}"
 				fi
-			done
-		else
-			nchoice=1
-		fi
+			elif umount -f "${mnts[i]}" 2>/dev/null; then
+				sh_log "desmontado: ${devs[i]} (${mnts[i]})"
+			else
+				nchoice=1
+				sh_log "falha ao desmontar: ${devs[i]} (${mnts[i]})"
+			fi
+		done
+	else
+		nchoice=1
+		sh_log "usuário recusou desmontar: $target"
 	fi
 	return $nchoice
 }
@@ -485,6 +434,12 @@ sh_part_info() {
 
 	while read -r line; do
 		eval "${line//=/_=}"
+		# lsblk repete o mesmo dispositivo uma vez por "pai" (ex.: LVM thin: _tdata/_tmeta)
+		[[ -n "${AARRAY_DSK_DEVICES[$PATH_]+x}" ]] && continue
+		# pseudo-dispositivos: swap em RAM, ramdisk, tamanho zero
+		[[ "$NAME_" =~ ^(zram|ram)[0-9]+$ || "$SIZE_" == "0B" ]] && continue
+		# volumes internos do LVM (thin pool, raid, cache, mirror) não podem ser origem/destino
+		[[ "$TYPE_" == "lvm" && "$NAME_" =~ (_tdata|_tmeta|_tpool|-tpool|_rimage_[0-9]+|_rmeta_[0-9]+|_mimage_[0-9]+|_mlog|_cdata|_cmeta|_corig|_cvol|_vorigin|_pmspare)$ ]] && continue
 		ARRAY_DSK_DISKS+=("$NAME_")
 		ARRAY_DSK_DEVICES+=("$PATH_")
 		ARRAY_DSK_PARTITIONS+=("$PATH_")
@@ -511,6 +466,12 @@ sh_disk_info() {
 
 	while read -r line; do
 		eval "${line//=/_=}"
+		# lsblk repete o mesmo dispositivo uma vez por "pai" (ex.: LVM thin: _tdata/_tmeta)
+		[[ -n "${AARRAY_DSK_DEVICES[$PATH_]+x}" ]] && continue
+		# pseudo-dispositivos: swap em RAM, ramdisk, tamanho zero
+		[[ "$NAME_" =~ ^(zram|ram)[0-9]+$ || "$SIZE_" == "0B" ]] && continue
+		# volumes internos do LVM (thin pool, raid, cache, mirror) não podem ser origem/destino
+		[[ "$TYPE_" == "lvm" && "$NAME_" =~ (_tdata|_tmeta|_tpool|-tpool|_rimage_[0-9]+|_rmeta_[0-9]+|_mimage_[0-9]+|_mlog|_cdata|_cmeta|_corig|_cvol|_vorigin|_pmspare)$ ]] && continue
 		ARRAY_DSK_DISKS+=("$NAME_")
 		ARRAY_DSK_DEVICES+=("$PATH_")
 		ARRAY_DSK_PARTITIONS+=("$PATH_")
@@ -537,6 +498,16 @@ replicate() {
 }
 export -f replicate
 
+# Preenche o texto à direita até a largura informada.
+# Conta caracteres (não bytes), então funciona com traduções acentuadas.
+sh_pad() {
+	local str="$1"
+	local width="${2:-20}"
+	local n=$((width - ${#str}))
+	((n < 0)) && n=0
+	printf '%s%*s' "$str" "$n" ''
+}
+
 sh_time_elapsed() {
 	local end_time=$(date +%s)                # Obtém o tempo de término em segundos desde a época Unix
 	local duration=$((end_time - start_time)) # Calcula a duração em segundos
@@ -560,6 +531,15 @@ sh_end_time_elapsed() {
 	end_datetime=$(date)
 }
 
+# Bloco padrão de início/término/tempo decorrido para os resumos (display_result)
+sh_time_summary() {
+	local w=20
+	printf '%s' \
+		"$(sh_pad "${cmsg_Data_hora_de_inicio}" $w): ${BOLD}${BLUE}$start_datetime${RESET}\n" \
+		"$(sh_pad "${cmsg_Data_hora_de_termino}" $w): ${BOLD}${BLUE}$end_datetime${RESET}\n" \
+		"$(sh_pad "${cmsg_Tempo_decorrido}" $w): ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+}
+
 sh_conf_image_name() {
 	source="$1"
 	local txtDiskName
@@ -572,12 +552,16 @@ sh_conf_image_name() {
 	TRAN_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_TRAN")"
 	FSTYPE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_FSTYPE")"
 
+	local form_title="${cmsg_Clonar_Disco_para_Imagem}"
+	[[ "$(sh_kind "$source")" == "part" ]] && form_title="${cmsg_Clonar_Particao_para_Imagem}"
+
 	# Escolhe formato da imagem
 	image_format=$(sh_choose_image_format) || return 1
 
 	# Nome default da imagem base
 	cvdisk_name="${DEVICE_SOURCE//\//_}"
-	cvdisk_name="${PWD}/${cvdisk_name#_}_${FSTYPE_SOURCE}"
+	cvdisk_name="${PWD}/${cvdisk_name#_}"
+	[[ -n "$FSTYPE_SOURCE" && "$FSTYPE_SOURCE" != "none" ]] && cvdisk_name+="_${FSTYPE_SOURCE}"
 
 	# AJUSTE: Seta a extensão correta baseada no formato escolhido
 	case "$image_format" in
@@ -590,33 +574,34 @@ sh_conf_image_name() {
 
 	while true; do
 		# Debug: verifica se variáveis estão corretas
-		echo "DEBUG: DEVICE_SOURCE='$DEVICE_SOURCE' DEVICE_NAME='$DEVICE_NAME' MODEL_SOURCE='$MODEL_SOURCE' SIZE_SOURCE='$SIZE_SOURCE' LABEL_SOURCE='$LABEL_SOURCE' TRAN_SOURCE='$TRAN_SOURCE'"
-		echo "DEBUG: cvdisk_name='$cvdisk_name'"
+		sh_log "DEBUG: DEVICE_SOURCE='$DEVICE_SOURCE' DEVICE_NAME='$DEVICE_NAME' MODEL_SOURCE='$MODEL_SOURCE' SIZE_SOURCE='$SIZE_SOURCE' LABEL_SOURCE='$LABEL_SOURCE' TRAN_SOURCE='$TRAN_SOURCE'"
+		sh_log "DEBUG: cvdisk_name='$cvdisk_name'"
 		# Mostra o formulário
+		local w=27 c=31
 		exec 3>&1
 		txtDiskName=$(${DIALOG} \
 			--backtitle "$ccabec" \
-			--title "** $(gettext "CLONAR DISCO PARA IMAGEM") **" \
+			--title "** ${form_title^^} **" \
 			--ok-label "${cmsg_Select}" \
 			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--insecure \
 			--mixedform "${cmsg_LABEL}" \
 			16 100 0 \
-			"Device                    : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
-			"Name                      : " 2 1 "$DEVICE_NAME" 2 28 20 0 2 \
-			"Tran                      : " 3 1 "$TRAN_SOURCE" 3 28 20 0 2 \
-			"Label                     : " 4 1 "$LABEL_SOURCE" 4 28 20 0 2 \
-			"Modelo                    : " 5 1 "$MODEL_SOURCE" 5 28 20 0 2 \
-			"Tamanho                   : " 6 1 "$SIZE_SOURCE" 6 28 20 0 2 \
-			"File System                : " 7 1 "$FSTYPE_SOURCE" 7 28 20 0 2 \
-			"Entre com o nome da imagem : " 8 1 "$cvdisk_name" 8 28 60 0 0 \
+			"$(sh_pad "${cmsg_Dispositivo}" $w): " 1 1 "$DEVICE_SOURCE" 1 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Nome}" $w): " 2 1 "$DEVICE_NAME" 2 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Transporte}" $w): " 3 1 "$TRAN_SOURCE" 3 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Rotulo}" $w): " 4 1 "$LABEL_SOURCE" 4 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Modelo}" $w): " 5 1 "$MODEL_SOURCE" 5 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Tamanho}" $w): " 6 1 "$SIZE_SOURCE" 6 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Sistema_de_arquivos}" $w): " 7 1 "$FSTYPE_SOURCE" 7 $c 20 0 2 \
+			"$(sh_pad "${cmsg_Entre_com_o_nome_da_imagem}" $w): " 8 1 "$cvdisk_name" 8 $c 60 0 0 \
 			2>&1 1>&3)
 
 		local exit_status=$?
 		case $exit_status in
 		1 | 255) # Cancel ou ESC
-			echo "DEBUG: Usuário cancelou ou pressionou ESC"
+			sh_log "DEBUG: Usuário cancelou ou pressionou ESC"
 			return 1
 			;;
 		0) # OK
@@ -624,98 +609,25 @@ sh_conf_image_name() {
 			cvdisk_name="${aDiskName[7]}"
 
 			if [[ -z "$cvdisk_name" ]]; then
-				conf "*** IMAGE NAME ***" "\nNome da imagem inválido! Tente novamente.\n" || die "*** IMAGE NAME ***"
-				continue
-			fi
-
-			if [[ -e "$cvdisk_name" ]]; then
-				if conf "*** IMAGE NAME ***" "${RED}Imagem '$cvdisk_name' já existe. Tentar outro nome?"; then
+				if conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "\n${cmsg_Nome_da_imagem_invalido_Tente_novamente}\n"; then
 					continue
 				fi
 				return 1
 			fi
-			echo "DEBUG: Nome da imagem definido: $cvdisk_name"
-			return 0
-			;;
-		*)
-			echo "DEBUG: exit_status inesperado: $exit_status"
-			return 1
-			;;
-		esac
-		exec 3>&-
-	done
-}
-
-sh_conf_image_nameOLD() {
-	source="$1"
-	local txtDiskName
-
-	DEVICE_SOURCE="$source"
-	DEVICE_NAME="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_NAME")"
-	MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
-	SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
-	LABEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_LABEL")"
-	TRAN_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_TRAN")"
-	FSTYPE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_FSTYPE")"
-
-	# Escolhe formato da imagem
-	image_format=$(sh_choose_image_format) || return 1
-
-	# Nome default da imagem
-	cvdisk_name="${DEVICE_SOURCE//\//_}"
-	cvdisk_name="${PWD}/${cvdisk_name#_}_${FSTYPE_SOURCE}.${image_format}"
-
-	while true; do
-		# Debug: verifica se variáveis estão corretas
-		echo "DEBUG: DEVICE_SOURCE='$DEVICE_SOURCE' DEVICE_NAME='$DEVICE_NAME' MODEL_SOURCE='$MODEL_SOURCE' SIZE_SOURCE='$SIZE_SOURCE' LABEL_SOURCE='$LABEL_SOURCE' TRAN_SOURCE='$TRAN_SOURCE'"
-		echo "DEBUG: cvdisk_name='$cvdisk_name'"
-		# Mostra o formulário
-		exec 3>&1
-		txtDiskName=$(${DIALOG} \
-			--backtitle "$ccabec" \
-			--title "** $(gettext "CLONAR DISCO PARA IMAGEM") **" \
-			--ok-label "${cmsg_Select}" \
-			--cancel-label "${cmsg_button_voltar}" \
-			--colors \
-			--insecure \
-			--mixedform "${cmsg_LABEL}" \
-			16 100 0 \
-			"Device                     : " 1 1 "$DEVICE_SOURCE" 1 28 20 0 2 \
-			"Name                       : " 2 1 "$DEVICE_NAME" 2 28 20 0 2 \
-			"Tran                       : " 3 1 "$TRAN_SOURCE" 3 28 20 0 2 \
-			"Label                      : " 4 1 "$LABEL_SOURCE" 4 28 20 0 2 \
-			"Modelo                     : " 5 1 "$MODEL_SOURCE" 5 28 20 0 2 \
-			"Tamanho                    : " 6 1 "$SIZE_SOURCE" 6 28 20 0 2 \
-			"File System                : " 7 1 "$FSTYPE_SOURCE" 7 28 20 0 2 \
-			"Entre com o nome da imagem : " 8 1 "$cvdisk_name" 8 28 60 0 0 \
-			2>&1 1>&3)
-
-		local exit_status=$?
-		case $exit_status in
-		1 | 255) # Cancel ou ESC
-			echo "DEBUG: Usuário cancelou ou pressionou ESC"
-			return 1
-			;;
-		0) # OK
-			mapfile -t aDiskName <<<"$txtDiskName"
-			cvdisk_name="${aDiskName[7]}"
-
-			if [[ -z "$cvdisk_name" ]]; then
-				conf "*** IMAGE NAME ***" "\nNome da imagem inválido! Tente novamente.\n" || die "*** IMAGE NAME ***"
-				continue
-			fi
 
 			if [[ -e "$cvdisk_name" ]]; then
-				if conf "*** IMAGE NAME ***" "${RED}Imagem '$cvdisk_name' já existe. Tentar outro nome?"; then
+				if conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "${RED}$(printf "${cmsg_Imagem_s_ja_existe_Tentar_outro}" "$cvdisk_name")"; then
 					continue
 				fi
 				return 1
 			fi
-			echo "DEBUG: Nome da imagem definido: $cvdisk_name"
+			# destino no próprio dispositivo ou sem espaço: volta ao formulário
+			sh_check_image_target "$source" "$cvdisk_name" || continue
+			sh_log "DEBUG: Nome da imagem definido: $cvdisk_name"
 			return 0
 			;;
 		*)
-			echo "DEBUG: exit_status inesperado: $exit_status"
+			sh_log "DEBUG: exit_status inesperado: $exit_status"
 			return 1
 			;;
 		esac
@@ -729,19 +641,18 @@ sh_choose_image_format() {
 			${DIALOG} \
 				--clear \
 				--stdout \
-				--aspect 20 \
 				--backtitle "$ccabec" \
 				--colors \
-				--title "FORMATO DA IMAGEM" \
+				--title "${cmsg_FORMATO_DA_IMAGEM}" \
 				--ok-label "${cmsg_Select}" \
-				--cancel-label "${cmsg_Sair}" \
-				--menu "${cmsg_LABEL}\n\n${YELLOW}Escolha o formato e compressão da imagem de destino:${RESET}" \
-				13 80 0 \
-				"raw" "Imagem Bruta (.img)" \
+				--cancel-label "${cmsg_button_voltar}" \
+				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_formato_e_compressao_da}${RESET}" \
+				15 80 5 \
+				"raw" "${cmsg_Imagem_Bruta} (.img)" \
 				"qcow2" "Qemu Copy-On-Write (.qcow2)" \
-				"zstd" "Imagem Comprimida (.img.zst)" \
-				"xz" "Imagem Comprimida (.img.xz)" \
-				"gzip" "Imagem Comprimida (.img.gz)"
+				"zstd" "${cmsg_Imagem_Comprimida} (.img.zst)" \
+				"xz" "${cmsg_Imagem_Comprimida} (.img.xz)" \
+				"gzip" "${cmsg_Imagem_Comprimida} (.img.gz)"
 		)
 
 		exit_status=$?
@@ -752,21 +663,27 @@ sh_choose_image_format() {
 		esac
 
 		case "$image_format" in
+		qcow2)
+			if ! has_command qemu-img; then
+				info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" qemu-img)"
+				continue
+			fi
+			;;
 		zstd)
-			if ! command -v zstd >/dev/null 2>&1; then
-				info "Erro: O utilitário 'zstd' não está instalado no sistema."
+			if ! has_command zstd; then
+				info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" zstd)"
 				continue
 			fi
 			;;
 		xz)
-			if ! command -v xz >/dev/null 2>&1; then
-				info "Erro: O utilitário 'xz' não está instalado no sistema."
+			if ! has_command xz; then
+				info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" xz)"
 				continue
 			fi
 			;;
 		gzip)
-			if ! command -v gzip >/dev/null 2>&1; then
-				info "Erro: O utilitário 'gzip' não está instalado no sistema."
+			if ! has_command gzip; then
+				info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" gzip)"
 				continue
 			fi
 			;;
@@ -775,30 +692,6 @@ sh_choose_image_format() {
 		echo "$image_format"
 		return 0
 	done
-}
-
-# função para escolher o formato da imagem
-sh_choose_image_formatOLD() {
-	source="$1"
-	local choice
-	choice=$(${DIALOG} \
-		--backtitle "$ccabec" \
-		--title "** ESCOLHA O FORMATO DE SAIDA DA IMAGEM**" \
-		--clear \
-		--stdout \
-		--colors \
-		--menu "${cmsg_LABEL}\n\n\
-${BOLD}${REVERSE}${WHITE}$(gettext "Selecione o formato da imagem do device"):\
-${RESET}${BOLD}${YELLOW} ${source}|${SIZE_SOURCE}|${MODEL_SOURCE}${RESET}" \
-		10 100 0 \
-		1 "RAW (.img)" \
-		2 "QCOW2 (.qcow2)")
-
-	case $choice in
-	1) echo "raw" ;;
-	2) echo "qcow2" ;;
-	*) return 1 ;;
-	esac
 }
 
 sh_clone_disk_to_image() {
@@ -824,17 +717,22 @@ sh_make_clone_disk_to_image() {
 	if sh_conf_image_name "$source"; then
 		local outfile="$cvdisk_name"
 
+		sh_check_source_busy "$source" || return 1
+
 		if conf "${cwarning}" \
-			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile\n\n" \
+			"${cmsg_disco_origem}: ${GREEN}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile\n\n" \
 			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 			sh_start_time_elapsed
-			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
+			local chash="/tmp/${_APP_}.chash.$$"
+			rm -f "$chash"
+			sh_log "origem=$source ($SIZE_SOURCE $MODEL_SOURCE) | destino=$outfile | formato=$image_format"
+			mensagem "${cmsg_running_disk_cloning}: $source ${cmsg_para} $outfile"
 
 			local src_size
 			if [[ -b "$source" ]]; then
-				src_size=$(sudo blockdev --getsize64 "$source")
+				src_size=$(blockdev --getsize64 "$source")
 			else
 				src_size=$(stat -c%s "$source")
 			fi
@@ -848,22 +746,23 @@ IMAGEM DESTINO : ${RED}$outfile\n\n" \
 				rm -f "$fifo_tmp"
 				mkfifo "$fifo_tmp"
 
-				zstd --adapt=min=1,max=9 -T2 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				zstd --adapt=min=1,max=9 -T2 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
 				local compress_pid=$!
 
 				(
-					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
 				) 2>&1 |
 					${DIALOG} \
-						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--title "${cmsg_running_disk_cloning^^}" \
 						--colors \
 						--gauge \
-						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → zstd)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> zstd)${RESET}\n\n\
+${cmsg_disco_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
 						10 100 0
+				nchoice=$?
 
-				wait "$compress_pid"
+				wait "$compress_pid" || nchoice=1
 				rm -f "$fifo_tmp"
 				;;
 
@@ -872,22 +771,23 @@ IMAGEM DESTINO : ${RED}$outfile" \
 				rm -f "$fifo_tmp"
 				mkfifo "$fifo_tmp"
 
-				xz -1 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				xz -1 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
 				local compress_pid=$!
 
 				(
-					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
 				) 2>&1 |
 					${DIALOG} \
-						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--title "${cmsg_running_disk_cloning^^}" \
 						--colors \
 						--gauge \
-						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → xz)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> xz)${RESET}\n\n\
+${cmsg_disco_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
 						10 100 0
+				nchoice=$?
 
-				wait "$compress_pid"
+				wait "$compress_pid" || nchoice=1
 				rm -f "$fifo_tmp"
 				;;
 
@@ -896,160 +796,848 @@ IMAGEM DESTINO : ${RED}$outfile" \
 				rm -f "$fifo_tmp"
 				mkfifo "$fifo_tmp"
 
-				gzip -1 <"$fifo_tmp" >"$outfile" 2>/dev/null &
+				gzip -1 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
 				local compress_pid=$!
 
 				(
-					pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
 				) 2>&1 |
 					${DIALOG} \
-						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--title "${cmsg_running_disk_cloning^^}" \
 						--colors \
 						--gauge \
-						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → gzip)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> gzip)${RESET}\n\n\
+${cmsg_disco_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
 						10 100 0
+				nchoice=$?
 
-				wait "$compress_pid"
+				wait "$compress_pid" || nchoice=1
 				rm -f "$fifo_tmp"
 				;;
 
 			*)
 				(
-					pv --numeric --size "$src_size" "$source" >"$outfile"
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$outfile"
 				) 2>&1 |
 					${DIALOG} \
-						--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
+						--title "${cmsg_running_disk_cloning^^}" \
 						--colors \
 						--gauge \
-						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> raw)${RESET}\n\n\
+${cmsg_disco_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
 						10 100 0
+				nchoice=$?
 				;;
 			esac
+		else
+			return 1
 		fi
-		nchoice=$?
 
-		if [[ $image_format == "qcow2" ]]; then
+		if [[ $nchoice -eq 0 && $image_format == "qcow2" ]]; then
 			local tmp_raw="$outfile.tmp.raw"
 			mv "$outfile" "$tmp_raw"
 
-			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
+			${DIALOG} --title "${cmsg_running_disk_cloning^^}" --colors --infobox \
 				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
+      ${BOLD}${WHITE}${REVERSE}${cmsg_Convertendo_para_QCOW2}${RESET}\n\n\
+      ${BOLD}${cmsg_Origem} (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}${cmsg_Destino} (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
+      ${cmsg_Aguarde_esta_operacao_pode_levar_alguns}" 10 70
 
 			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
 				rm -f "$tmp_raw"
+			else
+				nchoice=1
+				sh_log "falha na conversão para qcow2, raw mantido em $tmp_raw"
+				info "$(printf "${cmsg_falha_conversao_qcow2}" "$tmp_raw")"
 			fi
 		fi
 
 		sh_end_time_elapsed
-		result="$(fdisk -b $SECTOR_SIZE -l $outfile)"
+		sh_log_result "$nchoice"
+		if [[ $nchoice -ne 0 ]]; then
+			if [[ -e "$outfile" ]]; then
+				rm -f "$outfile"
+				sh_log "arquivo incompleto removido: $outfile"
+			fi
+			info "${cmsg_falha_clonagem}"
+			return $nchoice
+		fi
+		# ficha da imagem (.info) e hash do arquivo (.sha256)
+		sh_meta_from_local_dev "$source"
+		META_FORMAT="$image_format"
+		META_CONTENT_BYTES="$src_size"
+		META_CONTENT_HASH=""
+		sh_wait_file "$chash" && META_CONTENT_HASH="$(<"$chash")"
+		rm -f "$chash"
+		sh_write_image_meta "$outfile"
+
+		result="$(sh_image_info "$outfile")"
 		message="$(printf "\n\n%s" "$result")"
 
 		[[ $nchoice -eq 0 ]] && display_result \
-			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"$outfile" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_Info_imagem} : $outfile${RESET}\n" \
 			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+			"$(sh_time_summary)"
 		return $nchoice
+	fi
+	return 1
+}
+
+# UUID aleatório (sem depender de uuidgen)
+sh_new_uuid() {
+	cat /proc/sys/kernel/random/uuid
+}
+
+# Gera novos identificadores no destino: tabela de partições (disk-id e PARTUUID),
+# sistemas de arquivos (UUID/volume id) e LVM (PV/VG UUID + VG renomeado).
+sh_regen_uuids() {
+	local target="$1"
+	local dev fstype pttype nr
+	local -a ok=() fail=()
+
+	# 1. tabela de partições (só disco inteiro)
+	if [[ "$(sh_kind "$target")" != "part" ]]; then
+		pttype="$(blkid -o value -s PTTYPE "$target" 2>/dev/null)"
+		case "$pttype" in
+		gpt)
+			if sfdisk -q --disk-id "$target" "$(sh_new_uuid)" >/dev/null 2>&1; then
+				ok+=("$target: disk GUID")
+			else
+				fail+=("$target: disk GUID")
+			fi
+			while read -r nr; do
+				[[ "$nr" =~ ^[0-9]+$ ]] || continue
+				if sfdisk -q --part-uuid "$target" "$nr" "$(sh_new_uuid)" >/dev/null 2>&1; then
+					ok+=("$target: PARTUUID $nr")
+				else
+					fail+=("$target: PARTUUID $nr")
+				fi
+			done < <(partx -g -o NR "$target" 2>/dev/null)
+			;;
+		dos)
+			if sfdisk -q --disk-id "$target" "0x$(od -An -N4 -tx4 /dev/urandom | tr -d ' ')" >/dev/null 2>&1; then
+				ok+=("$target: disk-id (MBR)")
+			else
+				fail+=("$target: disk-id (MBR)")
+			fi
+			;;
+		esac
+		blockdev --rereadpt "$target" 2>/dev/null
+		partx -u "$target" 2>/dev/null
+		has_command udevadm && udevadm settle 2>/dev/null # espera os nós das partições
+	fi
+
+	# 2. sistemas de arquivos, swap e LVM no destino e nas partições dele
+	while read -r dev; do
+		# o nó da partição pode demorar um pouco a aparecer depois de reler a tabela
+		local try
+		for try in 1 2 3 4 5 6 7 8 9 10; do
+			fstype="$(blkid -o value -s TYPE "$dev" 2>/dev/null)"
+			[[ -n "$fstype" || "$dev" == "$target" ]] && break
+			sleep 0.3
+		done
+		local -a cmd=()
+		case "$fstype" in
+		ext2 | ext3 | ext4)
+			e2fsck -fy "$dev" >/dev/null 2>&1 # tune2fs -U exige fsck recente
+			cmd=(tune2fs -U random "$dev")
+			;;
+		xfs) cmd=(xfs_admin -U generate "$dev") ;;
+		btrfs) cmd=(btrfstune -f -u "$dev") ;;
+		vfat) cmd=(fatlabel -i -r "$dev") ;;
+		ntfs) cmd=(ntfslabel --new-serial "$dev") ;;
+		swap) cmd=(swaplabel -U "$(sh_new_uuid)" "$dev") ;;
+		LVM2_member) cmd=(vgimportclone "$dev") ;; # renomeia o VG (ex.: pve -> pve1) e troca PV/VG UUID
+		*) continue ;;
+		esac
+
+		if ! has_command "${cmd[0]}"; then
+			fail+=("$dev ($fstype): $(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" "${cmd[0]}")")
+		elif "${cmd[@]}" >>"${LOGFILE:-/dev/null}" 2>&1; then
+			ok+=("$dev ($fstype)")
+		else
+			fail+=("$dev ($fstype)")
+		fi
+	done < <(lsblk -nrpo NAME "$target" 2>/dev/null)
+
+	local i msg=""
+	for i in "${ok[@]}"; do
+		sh_log "novo UUID: $i"
+		msg+="${GREEN}✓${RESET} $i\n"
+	done
+	for i in "${fail[@]}"; do
+		sh_log "falha ao gerar novo UUID: $i"
+		msg+="${RED}✗${RESET} $i\n"
+	done
+	[[ -z "$msg" ]] && msg="${cmsg_nenhum_identificador_encontrado}\n"
+	display_result "${cmsg_Novos_UUIDs^^}" "\n$msg"
+	((${#fail[@]} == 0))
+}
+
+# Pergunta (padrão: Não) se deve gerar novos UUIDs no destino recém-gravado
+sh_ask_regen_uuids() {
+	local target="$1"
+
+	${DIALOG} \
+		--colors \
+		--defaultno \
+		--title "${cmsg_Novos_UUIDs^^}" \
+		--backtitle "$ccabec" \
+		--yes-label "${cmsg_yeslabel}" \
+		--no-label "${cmsg_nolabel}" \
+		--yesno "\n${cmsg_uuid_pergunta}" \
+		18 90 >/dev/tty || return 0
+	sh_regen_uuids "$target"
+}
+
+# ===================== integridade: hash e ficha da imagem =====================
+# <imagem>.sha256 : hash do ARQUIVO no formato do "sha256sum -c"
+# <imagem>.info   : ficha com origem, formato, tamanhos, hash do CONTEÚDO (dados do disco,
+#                   já descomprimidos), hash do arquivo e tabela de partições da origem
+
+# Espera um arquivo ser preenchido por um processo em segundo plano (tee >(...))
+sh_wait_file() {
+	local f="$1" i
+	for ((i = 0; i < 300; i++)); do
+		[[ -s "$f" ]] && return 0
+		sleep 0.1
+	done
+	return 1
+}
+
+# sha256 de um arquivo local com barra de progresso; imprime só o hash
+sh_hash_file() {
+	local f="$1"
+	local out="/tmp/${_APP_}.hash.$$"
+
+	(
+		set -o pipefail
+		pv -n "$f" | sha256sum | cut -d' ' -f1 >"$out"
+	) 2>&1 |
+		${DIALOG} --title "${cmsg_Verificando_integridade^^}" --gauge "\n${cmsg_Calculando_hash}\n$f" 9 100 0 >/dev/tty
+	cat "$out" 2>/dev/null
+	rm -f "$out"
+}
+
+# Informações da origem para a ficha (disco local)
+sh_meta_from_local_dev() {
+	local dev="$1"
+	META_SOURCE="$dev"
+	META_HOST="$(cat /proc/sys/kernel/hostname 2>/dev/null)"
+	META_MODEL="$(lsblk -dno MODEL "$dev" 2>/dev/null | sed 's/ *$//')"
+	META_SERIAL="$(lsblk -dno SERIAL "$dev" 2>/dev/null | sed 's/ *$//')"
+	META_SIZE="$(blockdev --getsize64 "$dev" 2>/dev/null)"
+	META_PTABLE="$(sfdisk -d "$dev" 2>/dev/null)"
+}
+
+# Informações da origem para a ficha (disco remoto, via SSH_BASE/RSUDO)
+sh_meta_from_remote_dev() {
+	local dev="$1" q
+	local -a l=()
+	q="$(printf '%q' "$dev")"
+	mapfile -t l < <("${SSH_BASE[@]}" "cat /proc/sys/kernel/hostname; $RSUDO lsblk -dno MODEL $q; $RSUDO lsblk -dno SERIAL $q; $RSUDO blockdev --getsize64 $q; $RSUDO sfdisk -d $q 2>/dev/null" 2>/dev/null)
+	META_SOURCE="$REMOTE_HOST:$dev"
+	META_HOST="${l[0]}"
+	META_MODEL="${l[1]% }"
+	META_SERIAL="${l[2]% }"
+	META_SIZE="${l[3]}"
+	META_PTABLE="$(printf '%s\n' "${l[@]:4}")"
+}
+
+# Grava <imagem>.sha256 e <imagem>.info (local, ou remoto quando $2 não vazio)
+# Usa META_FORMAT, META_SOURCE, META_HOST, META_MODEL, META_SERIAL, META_SIZE,
+# META_PTABLE, META_CONTENT_BYTES e META_CONTENT_HASH
+sh_write_image_meta() {
+	local img="$1"
+	local remote="$2"
+	local fhash info name="${img##*/}"
+
+	# arquivo sem compressão: o hash do arquivo é o hash do conteúdo
+	case "$META_FORMAT" in
+	raw | img) fhash="$META_CONTENT_HASH" ;;
+	*)
+		if [[ -n "$remote" ]]; then
+			${DIALOG} --title "${cmsg_Verificando_integridade^^}" --infobox "\n${cmsg_Calculando_hash}\n$img" 7 100 >/dev/tty
+			fhash="$("${SSH_BASE[@]}" "sha256sum -- $(printf '%q' "$img")" 2>/dev/null | cut -d' ' -f1)"
+		else
+			fhash="$(sh_hash_file "$img")"
+		fi
+		;;
+	esac
+
+	info="# ${_APP_} - ficha da imagem
+arquivo=$name
+formato=$META_FORMAT
+criado=$(date '+%Y-%m-%d %H:%M:%S %z')
+programa=${_APP_} ${_VERSION_}
+origem=$META_SOURCE
+origem_host=$META_HOST
+origem_modelo=$META_MODEL
+origem_serial=$META_SERIAL
+origem_bytes=$META_SIZE
+conteudo_bytes=$META_CONTENT_BYTES
+conteudo_sha256=$META_CONTENT_HASH
+arquivo_sha256=$fhash
+# tabela de partições da origem (sfdisk -d)
+$(sed 's/^/#| /' <<<"$META_PTABLE")"
+
+	if [[ -n "$remote" ]]; then
+		[[ -n "$fhash" ]] && "${SSH_BASE[@]}" "cat > $(printf '%q' "$img.sha256")" <<<"$fhash  $name" 2>/dev/null
+		"${SSH_BASE[@]}" "cat > $(printf '%q' "$img.info")" <<<"$info" 2>/dev/null
+	else
+		[[ -n "$fhash" ]] && printf '%s  %s\n' "$fhash" "$name" >"$img.sha256"
+		printf '%s\n' "$info" >"$img.info"
+	fi
+	sh_log "ficha da imagem gravada: ${remote:+$REMOTE_HOST:}$img.info (conteúdo sha256=${META_CONTENT_HASH:-?})"
+}
+
+# Lê um campo da ficha (.info); "sha256" procura primeiro no .sha256
+sh_meta_get() {
+	local img="$1"
+	local key="$2"
+	local remote="$3"
+	local val=""
+
+	if [[ -n "$remote" ]]; then
+		if [[ "$key" == "sha256" ]]; then
+			val="$("${SSH_BASE[@]}" "head -n1 $(printf '%q' "$img.sha256")" 2>/dev/null | cut -d' ' -f1)"
+			key="arquivo_sha256"
+		fi
+		[[ -z "$val" ]] && val="$("${SSH_BASE[@]}" "grep -m1 '^$key=' $(printf '%q' "$img.info")" 2>/dev/null | cut -d= -f2-)"
+	else
+		if [[ "$key" == "sha256" ]]; then
+			[[ -r "$img.sha256" ]] && val="$(head -n1 "$img.sha256" | cut -d' ' -f1)"
+			key="arquivo_sha256"
+		fi
+		[[ -z "$val" && -r "$img.info" ]] && val="$(grep -m1 "^$key=" "$img.info" | cut -d= -f2-)"
+	fi
+	[[ "$val" =~ ^[0-9a-f]{64}$|^[0-9]+$ ]] && echo "$val"
+}
+
+# Verifica a imagem antes de gravar. Retorna 1 se estiver corrompida ou o usuário desistir.
+#   1) com hash (.sha256 ou .info): confere o arquivo inteiro
+#   2) sem hash: checksum embutido do formato (zstd/xz/gzip) ou estrutura (qcow2); raw não tem
+sh_verify_image() {
+	local img="$1"
+	local remote="$2"
+	local label="${remote:+$REMOTE_HOST:}$img"
+	local exp got level="" q
+
+	q="$(printf '%q' "$img")"
+	exp="$(sh_meta_get "$img" sha256 "$remote")"
+	if [[ "$exp" =~ ^[0-9a-f]{64}$ ]]; then
+		if [[ -n "$remote" ]]; then
+			${DIALOG} --title "${cmsg_Verificando_integridade^^}" --infobox "\n${cmsg_Calculando_hash}\n$label" 7 100 >/dev/tty
+			got="$("${SSH_BASE[@]}" "sha256sum -- $q" 2>/dev/null | cut -d' ' -f1)"
+		else
+			got="$(sh_hash_file "$img")"
+		fi
+		if [[ "$got" == "$exp" ]]; then
+			sh_log "imagem íntegra (sha256 confere): $label"
+			return 0
+		fi
+		sh_log "IMAGEM CORROMPIDA: $label (esperado $exp, obtido ${got:-?})"
+		alerta "${cwarning}" "\n$(printf "${cmsg_imagem_corrompida}" "$label")\n\n${cmsg_esperado}: $exp\n${cmsg_obtido}:   ${got:-?}"
+		return 1
+	fi
+
+	# sem hash guardado: o que o formato permite verificar
+	local -a test=()
+	case "${img,,}" in
+	*.zst) test=(zstd -tq) ;;
+	*.xz) test=(xz -t) ;;
+	*.gz) test=(gzip -t) ;;
+	*.qcow2) test=(qemu-img check) ;;
+	esac
+
+	if ((${#test[@]})); then
+		local -i rc
+		if [[ -n "$remote" ]]; then
+			${DIALOG} --title "${cmsg_Verificando_integridade^^}" --infobox "\n${cmsg_Testando_checksum}\n$label" 7 100 >/dev/tty
+			# roda no remoto; se lá não tiver a ferramenta, testa o fluxo aqui
+			if "${SSH_BASE[@]}" "command -v ${test[0]} >/dev/null" 2>/dev/null; then
+				"${SSH_BASE[@]}" "${test[*]} -- $q" >/dev/null 2>&1
+			else
+				"${SSH_BASE[@]}" "cat -- $q" 2>/dev/null | "${test[@]}" - >/dev/null 2>&1
+			fi
+			rc=$?
+		elif [[ "${test[0]}" == "qemu-img" ]]; then
+			${DIALOG} --title "${cmsg_Verificando_integridade^^}" --infobox "\n${cmsg_Testando_checksum}\n$label" 7 100 >/dev/tty
+			"${test[@]}" "$img" >/dev/null 2>&1
+			rc=$?
+		else
+			(pv -n "$img" | "${test[@]}" - >/dev/null) 2>&1 |
+				${DIALOG} --title "${cmsg_Verificando_integridade^^}" --gauge "\n${cmsg_Testando_checksum}\n$label" 9 100 0 >/dev/tty
+			rc=${PIPESTATUS[0]}
+		fi
+		if ((rc != 0)); then
+			sh_log "IMAGEM CORROMPIDA: $label (${test[0]} falhou)"
+			alerta "${cwarning}" "\n$(printf "${cmsg_imagem_corrompida}" "$label")\n\n(${test[*]})"
+			return 1
+		fi
+		level="${cmsg_verif_parcial}"
+		[[ "${test[0]}" != "qemu-img" ]] && level="${cmsg_verif_formato}"
+	else
+		level="${cmsg_verif_nenhuma}"
+	fi
+
+	sh_log "imagem sem hash guardado: $label | $level"
+	conf "${cwarning}" "\n${YELLOW}$(printf "${cmsg_sem_hash}" "$label")${RESET}\n\n$level\n\n${cmsg_Prosseguir}" || return 1
+
+	# oferece criar a referência a partir de agora (só o hash do arquivo)
+	if conf "${cmsg_Verificando_integridade^^}" "\n${cmsg_gerar_hash_agora}"; then
+		local name="${img##*/}"
+		if [[ -n "$remote" ]]; then
+			got="$("${SSH_BASE[@]}" "sha256sum -- $q" 2>/dev/null | cut -d' ' -f1)"
+			[[ -n "$got" ]] && "${SSH_BASE[@]}" "cat > $(printf '%q' "$img.sha256")" <<<"$got  $name" 2>/dev/null
+		else
+			got="$(sh_hash_file "$img")"
+			[[ -n "$got" ]] && printf '%s  %s\n' "$got" "$name" >"$img.sha256"
+		fi
+		[[ -n "$got" ]] && sh_log "hash gerado agora: $label.sha256"
+	fi
+	return 0
+}
+
+# Pergunta se deve verificar a imagem antes de gravar (padrão: Sim)
+sh_ask_verify_image() {
+	conf "${cmsg_Verificando_integridade^^}" "\n${cmsg_perguntar_verificar_imagem}" || return 0
+	sh_verify_image "$@"
+}
+
+# Relê o destino e compara com o hash do que foi gravado ($3 bytes, hash $4); $2 remoto
+sh_verify_written() {
+	local target="$1"
+	local remote="$2"
+	local bytes="$3"
+	local exp="$4"
+	local label="${remote:+$REMOTE_HOST:}$target"
+	local got q
+	local out="/tmp/${_APP_}.vhash.$$"
+
+	[[ "$exp" =~ ^[0-9a-f]{64}$ && "$bytes" =~ ^[0-9]+$ ]] || return 0
+	conf "${cmsg_Verificando_integridade^^}" "\n$(printf "${cmsg_perguntar_verificar_gravacao}" "$label" "$(numfmt --to=iec "$bytes")")" || return 0
+
+	q="$(printf '%q' "$target")"
+	if [[ -n "$remote" ]]; then
+		${DIALOG} --title "${cmsg_Verificando_integridade^^}" --infobox "\n${cmsg_Relendo_destino}\n$label" 7 100 >/dev/tty
+		got="$("${SSH_BASE[@]}" "$RSUDO sh -c 'blockdev --flushbufs $q 2>/dev/null; dd if=$q bs=4M iflag=count_bytes count=$bytes status=none | sha256sum'" 2>/dev/null | cut -d' ' -f1)"
+	else
+		blockdev --flushbufs "$target" 2>/dev/null # lê do disco, não do cache
+		(
+			set -o pipefail
+			dd if="$target" bs=4M iflag=count_bytes count="$bytes" status=none | pv -n -s "$bytes" | sha256sum | cut -d' ' -f1 >"$out"
+		) 2>&1 |
+			${DIALOG} --title "${cmsg_Verificando_integridade^^}" --gauge "\n${cmsg_Relendo_destino}\n$label" 9 100 0 >/dev/tty
+		got="$(cat "$out" 2>/dev/null)"
+		rm -f "$out"
+	fi
+
+	if [[ "$got" == "$exp" ]]; then
+		sh_log "gravação verificada (sha256 confere): $label"
+		info "${GREEN}$(printf "${cmsg_gravacao_ok}" "$label")${RESET}"
+		return 0
+	fi
+	sh_log "GRAVAÇÃO DIFERENTE DO ESPERADO: $label (esperado $exp, lido ${got:-?})"
+	alerta "${cwarning}" "\n$(printf "${cmsg_gravacao_diferente}" "$label")\n\n${cmsg_esperado}: $exp\n${cmsg_obtido}:   ${got:-?}"
+	return 1
+}
+
+# Tipo do dispositivo/arquivo: image | part | disk
+sh_kind() {
+	if [[ "$1" == *@*:/dev/* ]]; then # disco/partição remota (usuario@host:/dev/...)
+		echo "${REMOTE_KIND:-disk}"
+	elif [[ -f "$1" || "$1" == *@*:* ]]; then # arquivo local ou remoto (usuario@host:/caminho)
+		echo image
+	elif [[ "$(lsblk -ndo TYPE "$1" 2>/dev/null)" == "part" ]]; then
+		echo part
+	else
+		echo disk
 	fi
 }
 
-sh_make_clone_disk_to_imageOLD() {
-	source="$1"
-	local -i nchoice
-	set -o pipefail
+# Rótulos de origem/destino conforme o tipo (disco, partição ou imagem)
+sh_label_origem() {
+	case "$(sh_kind "$1")" in
+	image) echo "${cmsg_imagem_origem}" ;;
+	part) echo "${cmsg_part_origem}" ;;
+	*) echo "${cmsg_disco_origem}" ;;
+	esac
+}
 
-	if sh_conf_image_name "$source"; then
-		# escolher formato
-		#local image_format
-		#image_format=$(sh_choose_image_format) || return 1
+sh_label_destino() {
+	case "$(sh_kind "$1")" in
+	part) echo "${cmsg_part_destino}" ;;
+	*) echo "${cmsg_disco_destino}" ;;
+	esac
+}
 
-		local outfile="$cvdisk_name"
-
-		if conf "${cwarning}" \
-			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile\n\n" \
-			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
-
-			sh_start_time_elapsed
-			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
-
-			# RAW simples com pv
-			local src_size
-			if [[ -b "$source" ]]; then
-				src_size=$(sudo blockdev --getsize64 "$source")
-			else
-				src_size=$(stat -c%s "$source")
-			fi
-
-			SECTOR_SIZE=$(blockdev --getss $source)   # setor físico (4096)
-			DISK_SIZE=$(blockdev --getsize64 $source) # tamanho em bytes
-
-			(
-				#       dd if="$source" bs=32M          conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
-				#       dd if="$source" bs=$SECTOR_SIZE conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
-				#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror,sync status=none
-				#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror status=none
-				pv --numeric --size "$src_size" "$source" >"$outfile"
-			) 2>&1 |
-				${DIALOG} \
-					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-					--colors \
-					--gauge \
-					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
-					10 100 0
-		fi
-		nchoice=$?
-
-		if [[ $image_format == "qcow2" ]]; then
-			local tmp_raw="$outfile.tmp.raw"
-			mv "$outfile" "$tmp_raw"
-
-			# Infobox estilizado enquanto converte
-			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
-				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
-
-			# Conversão efetiva
-			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
-				rm -f "$tmp_raw"
-			fi
-		fi
-
-		sh_end_time_elapsed
-		result="$(fdisk -b $SECTOR_SIZE -l $outfile)"
-		message="$(printf "\n\n%s" "$result")"
-
-		[[ $nchoice -eq 0 ]] && display_result \
-			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
-			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
-		return $nchoice
+# Tamanho real (descomprimido/virtual) de uma imagem em bytes; vazio se não der para saber
+sh_image_size() {
+	local img="$1"
+	local fromfile
+	fromfile="$(sh_meta_get "$img" conteudo_bytes)"
+	if [[ "$fromfile" =~ ^[0-9]+$ ]]; then
+		echo "$fromfile"
+		return
 	fi
+	case "${img,,}" in
+	*.qcow2) qemu-img info "$img" 2>/dev/null | sed -n 's/^virtual size:.*(\([0-9]*\) bytes).*/\1/p' | head -n1 ;;
+	*.xz) xz --robot --list "$img" 2>/dev/null | awk '$1 == "totals" {print $5}' ;;
+	*.zst) zstd -lv "$img" 2>/dev/null | sed -n 's/.*Decompressed Size:.*(\([0-9]*\) B).*/\1/p' ;;
+	*.gz) : ;; # gzip não guarda o tamanho de forma confiável acima de 4 GiB
+	*) stat -c%s "$img" 2>/dev/null ;;
+	esac
+}
+
+# Mesmo tamanho em formato legível (128M, 1.5G); vazio se desconhecido
+sh_image_size_h() {
+	local size
+	size="$(sh_image_size "$1")"
+	[[ "$size" =~ ^[0-9]+$ ]] && numfmt --to=iec "$size"
+}
+
+# Avisa se a imagem é maior que o dispositivo de destino
+sh_check_image_fits() {
+	local img="$1"
+	local target="$2"
+	local isize tsize
+
+	isize="$(sh_image_size "$img")"
+	tsize="$(blockdev --getsize64 "$target" 2>/dev/null)"
+	[[ "$isize" =~ ^[0-9]+$ && "$tsize" =~ ^[0-9]+$ ]] || return 0
+	((isize > tsize)) || return 0
+	conf "${cwarning}" "\n${RED}$(printf "${cmsg_imagem_maior_que_destino}" "$(numfmt --to=iec "$isize")" "$(numfmt --to=iec "$tsize")")${RESET}\n"
+}
+
+# Informação da imagem gerada conforme o formato (fdisk só entende raw)
+sh_image_info() {
+	local img="$1"
+	case "$image_format" in
+	raw) fdisk -b "$SECTOR_SIZE" -l "$img" 2>&1 ;;
+	qcow2) qemu-img info "$img" 2>&1 ;;
+	*) ls -lh "$img" 2>&1 ;;
+	esac
+}
+
+# Avisa se a origem tem partições montadas (cópia pode ficar inconsistente)
+# Script POSIX sh que diz se um dispositivo (e tudo que há nele) está em uso.
+# Roda igual na máquina local e na remota (enviado pelo stdin do ssh).
+# Saída, uma linha por motivo: dispositivo|tipo|detalhe
+#   sys    - montado num ponto do sistema (/ /boot /boot/efi /usr /var /home)
+#   mount  - montado em outro lugar          swap - swap ativa
+#   holder - usado por LVM, LUKS ou RAID     proc - aberto por um processo
+#   zfs    - membro de pool ZFS
+read -r -d '' BUSY_SH <<'EOF_BUSY'
+busy() {
+	d="$1"
+	[ -b "$d" ] || return 0
+	lsblk -nrpo NAME,KNAME,MAJ:MIN "$d" 2>/dev/null | while read -r name kname mm; do
+		real=$(readlink -f "$name")
+		kname=$(basename "$kname") # com -p o lsblk devolve /dev/...; o sysfs usa só o nome
+		awk -v mm="$mm" -v n="$name" -v r="$real" '{
+			split($0, a, " - "); split(a[1], l, " "); split(a[2], s, " ")
+			if (l[3] == mm || s[2] == n || s[2] == r) print l[5]
+		}' /proc/self/mountinfo | sed 's/\\040/ /g' | sort -u | while read -r mp; do
+			case "$mp" in
+			/ | /boot | /boot/efi | /usr | /var | /home) echo "$d|sys|$name $mp" ;;
+			*) echo "$d|mount|$name $mp" ;;
+			esac
+		done
+		awk 'NR > 1 {print $1}' /proc/swaps 2>/dev/null | while read -r sw; do
+			[ "$(readlink -f "$sw")" = "$real" ] && echo "$d|swap|$name"
+		done
+		for h in /sys/class/block/"$kname"/holders/*; do
+			[ -e "$h" ] || continue
+			hn=$(basename "$h")
+			[ -r "/sys/class/block/$hn/dm/name" ] && hn=$(cat "/sys/class/block/$hn/dm/name")
+			echo "$d|holder|$name $hn"
+		done
+		if command -v fuser >/dev/null 2>&1; then
+			for p in $(fuser "$name" 2>/dev/null | tr -cs '0-9' ' '); do
+				echo "$d|proc|$name $p $(cat "/proc/$p/comm" 2>/dev/null)"
+			done
+		fi
+		if [ -d /sys/module/zfs ] && [ "$(blkid -o value -s TYPE "$name" 2>/dev/null)" = "zfs_member" ]; then
+			echo "$d|zfs|$name"
+		fi
+	done
+}
+for dev in "$@"; do busy "$dev"; done
+EOF_BUSY
+
+# Verifica se o dispositivo está em uso; $2 não vazio = na máquina remota (SSH_BASE/RSUDO).
+# Preenche BUSY_LINES ("tipo|detalhe") e retorna 0 se estiver em uso.
+sh_disk_busy() {
+	local dev="$1"
+	local remote="$2"
+	local line
+
+	BUSY_LINES=()
+	while IFS= read -r line; do
+		[[ -n "$line" ]] && BUSY_LINES+=("${line#*|}")
+	done < <(
+		if [[ -n "$remote" ]]; then
+			"${SSH_BASE[@]}" "$RSUDO sh -s -- $(printf '%q' "$dev")" <<<"$BUSY_SH" 2>/dev/null
+		else
+			sh -s -- "$dev" <<<"$BUSY_SH" 2>/dev/null
+		fi | sort -u
+	)
+	((${#BUSY_LINES[@]} > 0))
+}
+
+# Motivos de BUSY_LINES em texto para o usuário
+sh_busy_text() {
+	local l tipo a b c out=""
+	for l in "${BUSY_LINES[@]}"; do
+		tipo="${l%%|*}"
+		read -r a b c <<<"${l#*|}"
+		case "$tipo" in
+		sys) out+="  • $(printf "${cmsg_busy_sys}" "$a" "$b")\n" ;;
+		mount) out+="  • $(printf "${cmsg_busy_mount}" "$a" "$b")\n" ;;
+		swap) out+="  • $(printf "${cmsg_busy_swap}" "$a")\n" ;;
+		holder) out+="  • $(printf "${cmsg_busy_holder}" "$a" "$b")\n" ;;
+		proc) out+="  • $(printf "${cmsg_busy_proc}" "$a" "$b" "$c")\n" ;;
+		zfs) out+="  • $(printf "${cmsg_busy_zfs}" "$a")\n" ;;
+		esac
+	done
+	printf '%s' "$out"
+}
+
+# Só montagens comuns e swap: dá para liberar desmontando
+sh_busy_only_unmountable() {
+	local l
+	for l in "${BUSY_LINES[@]}"; do
+		case "${l%%|*}" in
+		mount | swap) ;;
+		*) return 1 ;;
+		esac
+	done
+	return 0
+}
+
+# Destino que vai ser sobrescrito: bloqueia se estiver em uso.
+# Local: oferece desmontar quando for só montagem comum/swap. Remoto: nunca mexe, só explica.
+sh_check_target_free() {
+	local target="$1"
+	local remote="$2"
+	local label="${remote:+$REMOTE_HOST:}$target"
+
+	sh_disk_busy "$target" "$remote" || return 0
+	if [[ -z "$remote" ]] && sh_busy_only_unmountable; then
+		if sh_checkdisk "$target" && ! sh_disk_busy "$target"; then
+			return 0
+		fi
+		((${#BUSY_LINES[@]})) || return 1 # recusou desmontar
+	fi
+	sh_log "destino em uso (bloqueado): $label | ${BUSY_LINES[*]}"
+	alerta "${cwarning}" "\n$(printf "${cmsg_destino_em_uso}" "$label")\n\n$(sh_busy_text)${remote:+\n${cmsg_libere_no_remoto}}"
+	return 1
+}
+
+# Origem que vai ser lida: avisa se estiver em uso (cópia pode ficar inconsistente)
+sh_check_source_busy() {
+	local src="$1"
+	local remote="$2"
+	local label="${remote:+$REMOTE_HOST:}$src"
+
+	[[ -z "$remote" && ! -b "$src" ]] && return 0
+	sh_disk_busy "$src" "$remote" || return 0
+	sh_log "origem em uso (aviso): $label | ${BUSY_LINES[*]}"
+	conf "${cwarning}" "\n${BOLD}${YELLOW}$(printf "${cmsg_origem_em_uso}" "$label")${RESET}\n\n$(sh_busy_text)\n${cmsg_Prosseguir}"
+}
+
+
+# Verifica se a imagem não cairia no próprio dispositivo de origem e se há espaço livre
+# Regras de espaço e de sistema de arquivos para gravar uma imagem (vale para destino local e remoto)
+#   $1 local mostrado ao usuário  $2 tipo do sistema de arquivos  $3 espaço livre (bytes)
+#   $4 tamanho da origem (bytes)  $5 formato (raw|img|qcow2|zstd|zst|xz|gzip|gz)
+# Retorna 1 quando não dá para gravar (ou o usuário desistiu).
+sh_check_image_space() {
+	local where="$1"
+	local fstype="$2"
+	local avail="$3"
+	local size="$4"
+	local format="$5"
+	local -i fat_max=4294967295 # FAT32: no máximo 4 GiB - 1 byte por arquivo
+	local compressed=1 need
+
+	case "$format" in
+	raw | img) need=$size compressed=0 ;;
+	qcow2) need=$((size * 2)) compressed=0 ;; # raw temporário + qcow2
+	esac
+	[[ "$size" =~ ^[0-9]+$ ]] || return 0
+
+	# FAT32 não aceita arquivo > 4 GiB
+	if [[ "$fstype" == "vfat" || "$fstype" == "msdos" || "$fstype" == "fat" ]] && ((size > fat_max)); then
+		if ((compressed == 0)); then
+			sh_log "bloqueado: $where é FAT32 e a imagem tem $(numfmt --to=iec "$size")"
+			info "$(printf "${cmsg_fat32_limite}" "$where" "$(numfmt --to=iec "$size")")"
+			return 1
+		fi
+		conf "${cwarning}" "\n${YELLOW}$(printf "${cmsg_fat32_aviso}" "$where")${RESET}\n" || return 1
+	fi
+
+	[[ "$avail" =~ ^[0-9]+$ ]] || return 0
+	if ((compressed == 0)); then
+		# sem compressão o tamanho final é conhecido: faltar espaço é falha certa
+		if ((need > avail)); then
+			sh_log "bloqueado: sem espaço em $where (necessário $need, disponível $avail)"
+			info "$(printf "${cmsg_espaco_insuficiente}" "$where" "$(numfmt --to=iec "$need")" "$(numfmt --to=iec "$avail")")"
+			return 1
+		fi
+	elif ((size > avail)); then
+		# comprimido: pode caber ou não
+		conf "${cwarning}" "\n${YELLOW}$(printf "${cmsg_espaco_comprimido}" "$where" "$(numfmt --to=iec "$avail")" "$(numfmt --to=iec "$size")")${RESET}\n" || return 1
+	fi
+	return 0
+}
+
+sh_check_image_target() {
+	local src="$1"
+	local outfile="$2"
+	local size="$3" # opcional: tamanho da origem em bytes (origem remota)
+	local outdir dev_out need avail
+
+	outdir="$(dirname "$outfile")"
+	dev_out="$(df --output=source "$outdir" 2>/dev/null | tail -n1)"
+	if [[ -b "$src" && -n "$dev_out" ]] && lsblk -nrpo NAME "$src" 2>/dev/null | grep -Fxq "$dev_out"; then
+		info "$(printf "${cmsg_imagem_no_disco_de_origem}" "$outdir" "$src")"
+		return 1
+	fi
+
+	if [[ -z "$size" ]]; then
+		if [[ -b "$src" ]]; then
+			size=$(blockdev --getsize64 "$src")
+		else
+			size=$(stat -c%s "$src")
+		fi
+	fi
+
+	# dá para criar arquivo no diretório? (inexistente, somente leitura, sem permissão)
+	local probe="$outdir/.${_APP_}.$$.probe"
+	if ! : >"$probe" 2>/dev/null; then
+		info "$(printf "${cmsg_sem_escrita}" "$outdir")"
+		return 1
+	fi
+	rm -f "$probe"
+
+	local fstype avail
+	read -r fstype avail < <(df --output=fstype,avail -B1 "$outdir" 2>/dev/null | tail -n1)
+	sh_check_image_space "$outdir" "$fstype" "$avail" "$size" "$image_format"
+}
+
+# Grava imagem (raw, qcow2, .zst, .xz, .gz) ou dispositivo em um dispositivo, com gauge.
+# Retorna 0 somente se toda a cadeia (leitura, descompressão e gravação) terminar sem erro.
+sh_write_image_to_device() {
+	local image="$1"
+	local target="$2"
+	local src_label="$3"
+	local dst_label="$4"
+	local -a decomp=(cat)
+	local via="raw"
+	local tool text
+	local -i status
+	local whash="/tmp/${_APP_}.whash.$$" wbytes="/tmp/${_APP_}.wbytes.$$"
+	rm -f "$whash" "$wbytes"
+
+	case "${image,,}" in
+	*.qcow2) via="qcow2" ;;
+	*.zst) decomp=(zstd -dc) via="zstd" ;;
+	*.xz) decomp=(xz -dc) via="xz" ;;
+	*.gz) decomp=(gzip -dc) via="gzip" ;;
+	esac
+
+	tool="${decomp[0]}"
+	[[ "$via" == "qcow2" ]] && tool="qemu-img"
+	if ! has_command "$tool"; then
+		info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" "$tool")"
+		return 1
+	fi
+
+	text="${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (${via} -> ${target})${RESET}\n\n\
+${cmsg_Origem^^} : ${YELLOW}${src_label}${RESET}\n\
+${cmsg_Destino^^}: ${RED}${dst_label}${RESET}"
+
+	if [[ "$via" == "qcow2" ]]; then
+		(
+			set -o pipefail
+			qemu-img convert -p -O raw "$image" "$target" |
+				stdbuf -oL tr '\r' '\n' |
+				awk -F'[(./]' '/\/100%\)/ {print $2; fflush()}'
+		) 2>&1 |
+			${DIALOG} --title "${cmsg_running_disk_cloning^^}" --colors --gauge "$text" 10 100 0
+		status=${PIPESTATUS[0]}
+	else
+		(
+			set -o pipefail
+			# origem remota (restauração via rede): comando em WRITE_SRC_CMD, tamanho em WRITE_SRC_SIZE
+			if ((${#WRITE_SRC_CMD[@]})); then
+				"${WRITE_SRC_CMD[@]}" 2>>"${LOGFILE:-/dev/null}" | pv -n -s "$WRITE_SRC_SIZE"
+			else
+				pv -n "$image"
+			fi | "${decomp[@]}" |
+				tee >(sha256sum | cut -d' ' -f1 >"$whash") >(wc -c >"$wbytes") |
+				dd of="$target" bs=4M iflag=fullblock conv=notrunc,noerror,fsync status=none
+		) 2>&1 |
+			${DIALOG} --title "${cmsg_running_disk_cloning^^}" --colors --gauge "$text" 10 100 0
+		status=${PIPESTATUS[0]}
+	fi
+	sync
+
+	# disco inteiro: kernel relê a tabela para as partições novas aparecerem
+	if ((status == 0)) && [[ -b "$target" && "$(lsblk -ndo TYPE "$target" 2>/dev/null)" != "part" ]]; then
+		blockdev --rereadpt "$target" 2>/dev/null # alguns ambientes aceitam mas não atualizam
+		if partx -u "$target" 2>/dev/null; then
+			has_command udevadm && udevadm settle 2>/dev/null
+			sh_log "tabela de partições relida: $target"
+		else
+			sh_log "não foi possível reler a tabela de partições de $target (reconecte o dispositivo)"
+		fi
+	fi
+
+	# verificação: relê o destino e compara com o hash do que foi enviado
+	if ((status == 0)); then
+		local h="" n=""
+		if [[ "$via" == "qcow2" ]]; then
+			# qemu-img grava direto: usa o hash do conteúdo guardado na ficha, se existir
+			h="$(sh_meta_get "$image" conteudo_sha256)"
+			n="$(sh_meta_get "$image" conteudo_bytes)"
+		else
+			sh_wait_file "$whash" && h="$(<"$whash")"
+			sh_wait_file "$wbytes" && n="$(tr -dc '0-9' <"$wbytes")"
+			# imagem com ficha: o que saiu dela tem que bater com o conteúdo original
+			local orig=""
+			if [[ -f "$image" ]]; then
+				orig="$(sh_meta_get "$image" conteudo_sha256)"
+			elif ((${#WRITE_SRC_CMD[@]})) && [[ "$image" != /dev/* ]]; then
+				orig="$(sh_meta_get "$image" conteudo_sha256 remote)" # imagem remota com ficha
+			fi
+			if [[ -n "$orig" && -n "$h" && "$orig" != "$h" ]]; then
+				sh_log "CONTEÚDO DA IMAGEM DIFERENTE DA FICHA: $image (ficha $orig, lido $h)"
+				alerta "${cwarning}" "\n$(printf "${cmsg_imagem_corrompida}" "$image")"
+				status=1
+			fi
+		fi
+		((status == 0)) && ! sh_verify_written "$target" "" "$n" "$h" && status=1
+	fi
+	rm -f "$whash" "$wbytes"
+	return $status
 }
 
 sh_list_disk() {
 	local localtitle="$1"
 	local diskselected="$2"
+	local mode="${3:-origem}" # origem | destino | lista
+
+	# como destino, o disco do sistema nunca aparece
+	local -a excl=("${LIST_EXCLUDE[@]}")
+	[[ "$mode" == "destino" ]] && mapfile -t -O "${#excl[@]}" excl < <(sh_system_disks)
 
 	while true; do
 		sh_disk_info
@@ -1059,10 +1647,9 @@ sh_list_disk() {
 		local nc=0
 		local result
 		local nlen=0
-		local csrc
 
 		for i in "${ARRAY_DSK_DEVICES[@]}"; do
-			if [[ "${i}" = "${diskselected}" ]]; then
+			if [[ "${i}" = "${diskselected}" || " ${excl[*]} " == *" ${i} "* ]]; then
 				((++nc))
 				continue
 			fi
@@ -1079,11 +1666,12 @@ sh_list_disk() {
 		done
 		((nlen += 6))
 
-		if [[ -z "$source" ]]; then
-			csrc="(${cmsg_choose_disk_origem[LC_DEFAULT]})"
-		else
-			csrc="$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE"
-		fi
+		local header=""
+		case "$mode" in
+		origem) header="${YELLOW}${cmsg_disco_origem} : ${REVERSE}(${cmsg_choose_disk_origem})${RESET}\n" ;;
+		destino) header="${YELLOW}$(sh_label_origem "$DEVICE_SOURCE") : ${REVERSE}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n
+${YELLOW}${cmsg_disco_destino}: ${REVERSE}(${cmsg_choose_disk_destino})${RESET}\n" ;;
+		esac
 
 		selected=$(${DIALOG} \
 			--default-item "$target" \
@@ -1095,8 +1683,7 @@ sh_list_disk() {
 			--extra-button \
 			--extra-label "${cmsg_info_disco}" \
 			--menu "\
-${YELLOW}${cmsg_disco_origem[LC_DEFAULT]} : ${REVERSE}$csrc${RESET}\n
-${YELLOW}${cmsg_disco_destino[LC_DEFAULT]}: ${REVERSE}(${cmsg_choose_disk_destino[LC_DEFAULT]})${RESET}\n
+${header}
 $(replicate '_' 90)\n
 $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "SIZE" "PTTYPE" "LABEL" "MODEL")" \
 			25 0 25 "${array[@]}" 2>&1 >/dev/tty)
@@ -1113,8 +1700,8 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 			result=$(fdisk -l "$selected")
 			result0=$(smartctl --all "$selected")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
-			display_result "$cmsg_disco_origem" \
-				"${BOLD}${GREEN}${REVERSE}Info disk : $selected${RESET}" \
+			display_result "${cmsg_info_disco}" \
+				"${BOLD}${GREEN}${REVERSE}${cmsg_info_disco} : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1131,6 +1718,7 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 sh_list_partition() {
 	local localtitle="$1"
 	local part_selected="$2"
+	local mode="${3:-origem}" # origem | destino | lista
 
 	while true; do
 		sh_part_info
@@ -1140,7 +1728,6 @@ sh_list_partition() {
 		local nc=0
 		local result
 		local nlen=0
-		local csrc
 
 		for i in "${ARRAY_DSK_DEVICES[@]}"; do
 			if [[ "${i}" = "${part_selected}" ]]; then
@@ -1160,11 +1747,12 @@ sh_list_partition() {
 		done
 		((nlen += 6))
 
-		if [[ -z "$part_source" ]]; then
-			csrc="(${cmsg_choose_part_origem[LC_DEFAULT]})"
-		else
-			csrc="$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE"
-		fi
+		local header=""
+		case "$mode" in
+		origem) header="${YELLOW}${cmsg_part_origem} : ${REVERSE}(${cmsg_choose_part_origem})${RESET}\n" ;;
+		destino) header="${YELLOW}$(sh_label_origem "$DEVICE_SOURCE") : ${REVERSE}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n
+${YELLOW}${cmsg_part_destino}: ${REVERSE}(${cmsg_choose_part_destino})${RESET}\n" ;;
+		esac
 
 		selected=$(${DIALOG} \
 			--default-item "$target" \
@@ -1176,8 +1764,7 @@ sh_list_partition() {
 			--extra-button \
 			--extra-label "${cmsg_info_disco}" \
 			--menu "\
-${YELLOW}${cmsg_part_origem[LC_DEFAULT]} : ${REVERSE}$csrc${RESET}\n
-${YELLOW}${cmsg_part_destino[LC_DEFAULT]}: ${REVERSE}(${cmsg_choose_part_destino[LC_DEFAULT]})${RESET}\n
+${header}
 $(replicate '_' 90)\n
 $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "SIZE" "PTTYPE" "LABEL" "MODEL")" \
 			25 0 25 "${array[@]}" 2>&1 >/dev/tty)
@@ -1196,8 +1783,8 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 			result=$(fdisk -l "$selected")
 			result0=$(smartctl --all "$selected")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
-			display_result "$cmsg_disco_origem" \
-				"${BOLD}${GREEN}${REVERSE}Info disk : $selected${RESET}" \
+			display_result "${cmsg_info_disco}" \
+				"${BOLD}${GREEN}${REVERSE}${cmsg_info_disco} : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1214,11 +1801,14 @@ $(printf "%${nlen}s$sep%-6s$sep%6s$sep%-6s$sep%-20s$sep%-30s" "DEVICE" "TRAN" "S
 sh_clone_part_to_part() {
 	if sh_choose_source_partition; then
 		if sh_choose_target_partition; then
+			sh_check_source_busy "$part_source" || return 1
 			sh_confclone "$part_source" "$part_target"
+			local rc=$?
 			sh_reset_conf
-			:
+			return $rc
 		fi
 	fi
+	return 1
 }
 
 get_fstype() {
@@ -1237,12 +1827,12 @@ sh_list_image() {
 	local imageselected="$2"
 	local psearch="."
 
-	info_nowait "Aguarde, Escaneando por imagens..."
+	info_nowait "${cmsg_Aguarde_escaneando_por_imagens}"
 
 	while true; do
 		sh_search_and_found_files() {
 			# Lista imagens no diretório atual (pode trocar o "." pelo diretório que quiser)
-			mapfile -t ARRAY_IMG_FILES < <(find $psearch -maxdepth 1 -type f \( -iname "*.raw" -o -iname "*.qcow2" -o -iname "*.img" \) | sort)
+			mapfile -t ARRAY_IMG_FILES < <(find $psearch -maxdepth 1 -type f \( -iname "*.raw" -o -iname "*.qcow2" -o -iname "*.img" -o -iname "*.img.zst" -o -iname "*.img.xz" -o -iname "*.img.gz" \) | sort)
 			if [[ "${#ARRAY_IMG_FILES[@]}" -eq 0 ]]; then
 				return 1
 			fi
@@ -1251,7 +1841,7 @@ sh_list_image() {
 
 		sh_search_and_found_files || psearch="$IMGDIR"
 		sh_search_and_found_files || {
-			info "erro: nenhuma imagem encontrada em '$PWD'"
+			info "$(printf "${cmsg_Erro_nenhuma_imagem_encontrada_em_s}" "$PWD")"
 			return 1
 		}
 
@@ -1300,9 +1890,9 @@ sh_list_image() {
 			--colors \
 			--stdout \
 			--extra-button \
-			--extra-label "Info image" \
+			--extra-label "${cmsg_Info_imagem}" \
 			--menu "\
-${YELLOW}Imagens encontradas (.img, .raw, .qcow2]:${RESET}\n
+${YELLOW}${cmsg_Imagens_encontradas} (.img, .raw, .qcow2, .img.zst, .img.xz, .img.gz):${RESET}\n
 $(replicate '─' $((maxcols - 4)))\n
 $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 			15 $maxcols 0 "${array[@]}")
@@ -1314,10 +1904,15 @@ $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 			;;
 		3)
 			result=$(file "$selected")
-			result0=$(qemu-img info "$selected" 2>/dev/null || echo "No qemu-img info available")
+			result0=$(qemu-img info "$selected" 2>/dev/null || echo "${cmsg_Informacoes_do_qemu_img_indisponiveis}")
 			message=$(printf "\n\n%s\n\n%s" "$result" "$result0")
-			display_result "Image info" \
-				"${BOLD}${GREEN}${REVERSE}Info image : $selected${RESET}" \
+			if [[ -r "$selected.info" ]]; then
+				message+=$(printf "\n\n%s" "$(grep -v '^#|' "$selected.info")")
+			else
+				message+=$(printf "\n\n%s" "${cmsg_sem_ficha}")
+			fi
+			display_result "${cmsg_Info_imagem}" \
+				"${BOLD}${GREEN}${REVERSE}${cmsg_Info_imagem} : $selected${RESET}" \
 				"${BOLD}${WHITE}$message"
 			continue
 			;;
@@ -1332,18 +1927,18 @@ $(printf "%-${nlen}s$sep%-8s$sep%-8s$sep%-30s" "PATH" "SIZE" "FS" "TYPE")" \
 	done
 }
 
-sh_clone_image_to_diskGEM() {
+sh_clone_image_to_disk() {
 	local -i nchoice
-	local tmp_error
-	local errmsg
-
 	set -o pipefail
 
-	image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
+	image=$(sh_list_image "** ${cmsg_SELECIONE_A_IMAGEM_DE_ORIGEM} **") || return 1
 
 	local localtitle="${cmsg_disco_destino}"
 	local disk_selected=""
-	target=$(sh_list_disk "${localtitle}" "${disk_selected}")
+	DEVICE_SOURCE="$image"
+	SIZE_SOURCE="$(sh_image_size_h "$image")"
+	MODEL_SOURCE=""
+	target=$(sh_list_disk "${localtitle}" "${disk_selected}" destino)
 	[[ -z "$target" ]] && return 1
 
 	sh_disk_info
@@ -1351,235 +1946,64 @@ sh_clone_image_to_diskGEM() {
 	MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
 	SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
 
+	sh_check_image_fits "$image" "$target" || return 1
+
 	if conf "${cwarning}" \
 		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
-${BLUE} IMAGEM ORIGEM:  $image \n" \
-		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
+${BLUE} ${cmsg_imagem_origem}:  $image \n" \
+		"${RED}${cmsg_disco_destino}: $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}\n\n" \
 		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
 
-		if ! sh_checkdisk "$target"; then
-			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
+		sh_ask_verify_image "$image" || return 1
+		sh_backup_partitions "$target" "${target##*/}"
+		if ! sh_check_target_free "$target"; then
+			return 1
 		fi
 
 		sh_start_time_elapsed
-		mensagem "${cmsg_formatando_particao}: $image TO $target"
+		sh_log "imagem=$image | destino=$DEVICE_TARGET ($SIZE_TARGET $MODEL_TARGET)"
+		mensagem "${cmsg_running_disk_cloning}: $image ${cmsg_para} $target"
 
 		SECTOR_SIZE=$(blockdev --getss "$target")
 
-		if [[ "$image" =~ \.qcow2$ ]]; then
-			if ! command -v qemu-img >/dev/null 2>&1; then
-				conf "*** ERRO DE REQUISITO ***" \
-					"${RED}$(gettext "O utilitário 'qemu-img' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote qemu-utils para restaurar arquivos .qcow2.")"
-				return 1
-			fi
-
-			tmp_error=$(mktemp)
-
-			# Redireciona stderr para o arquivo temporário e mantém o stdout (progresso) no pipe
-			qemu-img convert -p -O raw "$image" "$target" 2>"$tmp_error" |
-				tr '\r' '\n' |
-				stdbuf -oL sed -n -e 's/.*(\([0-9]*\)\..*/\1/p' |
-				${DIALOG} \
-					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-					--colors \
-					--gauge \
-					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM (QCOW2): ${YELLOW}$image${RESET}\n\
-DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
-					10 100 0
-
-			nchoice=${PIPESTATUS[0]}
-
-			if [[ $nchoice -ne 0 ]]; then
-				errmsg=$(<"$tmp_error")
-				[[ -z "$errmsg" ]] && errmsg="$(gettext "Erro desconhecido durante a conversão.")"
-
-				display_result \
-					"qemu-img convert" \
-					"${BOLD}${RED}${REVERSE}$(gettext "Falha ao clonar a imagem QCOW2")${RESET}\n\n" \
-					"${WHITE}Imagem : ${YELLOW}$image${RESET}\n" \
-					"${WHITE}Destino: ${YELLOW}$target${RESET}\n\n" \
-					"${BOLD}${RED}$(gettext "Erro retornado pelo qemu-img:")${RESET}\n\n" \
-					"$errmsg"
-
-				rm -f "$tmp_error"
-				sh_reset_conf
-				return "$nchoice"
-			fi
-
-			rm -f "$tmp_error"
-
-		else
-			(
-				pv -n "$image" | dd of="$target" bs=4M conv=notrunc,noerror status=none
-			) 2>&1 |
-				${DIALOG} \
-					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-					--colors \
-					--gauge \
-					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM : ${YELLOW}$image${RESET}\n\
-DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
-					10 100 0
-
-			nchoice=${PIPESTATUS[0]}
-		fi
+		sh_write_image_to_device "$image" "$target" "$image" "$DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}"
+		nchoice=$?
 
 		sh_end_time_elapsed
-
-		result=$(fdisk -l "$target" 2>/dev/null)
+		sh_log_result "$nchoice"
+		[[ $nchoice -ne 0 ]] && info "${cmsg_falha_clonagem}"
+		result=$(fdisk -l "$target")
 		message=$(printf "\n\n%s" "$result")
 
 		[[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
-			"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}\n\n" \
+			"$(sh_time_summary)\n" \
 			"${RESET}${BOLD}${WHITE}$message"
 
+		[[ $nchoice -eq 0 ]] && sh_ask_regen_uuids "$target"
 		sh_reset_conf
 		return $nchoice
 	fi
-
 	return 1
 }
 
-
-sh_clone_image_to_disk() {
-  local -i nchoice
-  local tmp_error
-  local errmsg
-
-  set -o pipefail
-
-  image=$(sh_list_image "** SELECIONE A IMAGEM DE ORIGEM **") || return 1
-
-  local localtitle="${cmsg_disco_destino}"
-  local disk_selected=""
-  target=$(sh_list_disk "${localtitle}" "${disk_selected}")
-  [[ -z "$target" ]] && return 1
-
-  sh_disk_info
-  DEVICE_TARGET="$target"
-  MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
-  SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
-
-  if conf "${cwarning}" \
-    "\n${cmsg_todos_os_dados_serao_perdidos}\n\n\
-${BLUE} IMAGEM ORIGEM:  $image \n\
-${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n\
-${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
-
-    if ! sh_checkdisk "$target"; then
-      alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-      die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
-    fi
-
-    sh_start_time_elapsed
-
-    mensagem "${cmsg_formatando_particao}: $image TO $target"
-
-    SECTOR_SIZE=$(blockdev --getss "$target")
-
-    if [[ "$image" =~ \.qcow2$ ]]; then
-      if ! command -v qemu-img >/dev/null 2>&1; then
-        conf "*** ERRO DE REQUISITO ***" \
-          "${RED}$(gettext "O utilitário 'qemu-img' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote qemu-utils para restaurar arquivos .qcow2.")"
-        return 1
-      fi
-
-      tmp_error=$(mktemp)
-
-      {
-        qemu-img convert \
-          -p \
-          -O raw \
-          "$image" \
-          "$target"
-      } 2>&1 |
-      tee "$tmp_error" |
-      tr '\r' '\n' |
-      while IFS= read -r line; do
-        line=${line#*\(}
-        pct=${line%%.*}
-
-        [[ "$pct" =~ ^[0-9]+$ ]] &&
-          printf '%s\n' "$pct"
-      done |
-      ${DIALOG} \
-        --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-        --colors \
-        --gauge \
-        "${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM (QCOW2): ${YELLOW}$image${RESET}\n\
-DESTINO       : ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
-        10 100 0
-
-      nchoice=${PIPESTATUS[0]}
-
-      if [[ $nchoice -ne 0 ]]; then
-        errmsg=$(<"$tmp_error")
-
-        display_result \
-          "qemu-img convert" \
-          "${BOLD}${RED}${REVERSE}$(gettext "Falha ao clonar a imagem QCOW2")${RESET}\n\n" \
-          "${WHITE}Imagem : ${YELLOW}$image${RESET}\n" \
-          "${WHITE}Destino: ${YELLOW}$target${RESET}\n\n" \
-          "${BOLD}${RED}$(gettext "Erro retornado pelo qemu-img:")${RESET}\n\n" \
-          "$errmsg"
-
-        rm -f "$tmp_error"
-        sh_reset_conf
-        return "$nchoice"
-      fi
-
-      rm -f "$tmp_error"
-
-    else
-      (
-        pv -n "$image" |
-        dd of="$target" bs=4M conv=notrunc,noerror status=none
-      ) 2>&1 |
-      ${DIALOG} \
-        --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-        --colors \
-        --gauge \
-        "${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]}${RESET}\n\n\
-ORIGEM : ${YELLOW}$image${RESET}\n\
-DESTINO: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
-        10 100 0
-
-      nchoice=${PIPESTATUS[1]}
-    fi
-
-    sh_end_time_elapsed
-
-    result=$(fdisk -l "$target" 2>/dev/null)
-    message=$(printf "\n\n%s" "$result")
-
-    [[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
-      "${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")${RESET}\n\n" \
-      "Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-      "Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-      "Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n\n" \
-      "${RESET}${BOLD}${WHITE}$message"
-
-    sh_reset_conf
-    return $nchoice
-  fi
-
-  return 1
-}
-
 sh_clone_image_to_part() {
-	image=$(sh_list_image "** IMAGENS em $PWD **") || return 1
+	image=$(sh_list_image "** $(printf "${cmsg_IMAGENS_em_s}" "$PWD") **") || return 1
+
+	DEVICE_SOURCE="$image"
+	SIZE_SOURCE="$(sh_image_size_h "$image")"
+	MODEL_SOURCE=""
+	part_source=""
 
 	if sh_choose_target_partition; then
-		sh_confclone "$part_source" "$target"
+		sh_check_image_fits "$image" "$part_target" || return 1
+		sh_ask_verify_image "$image" || return 1
+		sh_confclone "$image" "$part_target"
+		local rc=$?
 		sh_reset_conf
-		:
+		return $rc
 	fi
+	return 1
 }
 
 sh_clone_part_to_image() {
@@ -1593,6 +2017,7 @@ sh_make_clone_part_to_image() {
 	local -i nchoice
 	set -o pipefail
 
+	source="$part_source"
 	if sh_conf_image_name "$source"; then
 		# escolher formato
 		#local image_format
@@ -1600,18 +2025,23 @@ sh_make_clone_part_to_image() {
 
 		local outfile="$cvdisk_name"
 
+		sh_check_source_busy "$source" || return 1
+
 		if conf "${cwarning}" \
-			"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile\n\n" \
+			"${cmsg_part_origem}: ${GREEN}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile\n\n" \
 			"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
 
 			sh_start_time_elapsed
-			mensagem "${cmsg_formatando_particao}: $source TO $outfile"
+			local chash="/tmp/${_APP_}.chash.$$"
+			rm -f "$chash"
+			sh_log "origem=$source ($SIZE_SOURCE $MODEL_SOURCE) | destino=$outfile | formato=$image_format"
+			mensagem "${cmsg_running_disk_cloning}: $source ${cmsg_para} $outfile"
 
 			# RAW simples com pv
 			local src_size
 			if [[ -b "$source" ]]; then
-				src_size=$(sudo blockdev --getsize64 "$source")
+				src_size=$(blockdev --getsize64 "$source")
 			else
 				src_size=$(stat -c%s "$source")
 			fi
@@ -1619,64 +2049,163 @@ IMAGEM DESTINO : ${RED}$outfile\n\n" \
 			SECTOR_SIZE=$(blockdev --getss $source)   # setor físico (4096)
 			DISK_SIZE=$(blockdev --getsize64 $source) # tamanho em bytes
 
-			(
-				#       dd if="$source" bs=32M          conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
-				#       dd if="$source" bs=$SECTOR_SIZE conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
-				#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror,sync status=none
-				#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror status=none
-				pv --numeric --size "$src_size" "$source" >"$outfile"
-			) 2>&1 |
-				${DIALOG} \
-					--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-					--colors \
-					--gauge \
-					"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (pv → raw)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-IMAGEM DESTINO : ${RED}$outfile" \
-					10 100 0
-		fi
-		nchoice=$?
+			case "$image_format" in
+			zstd)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
 
-		if [[ $image_format == "qcow2" ]]; then
+				zstd --adapt=min=1,max=9 -T2 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> zstd)${RESET}\n\n\
+${cmsg_part_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
+						10 100 0
+				nchoice=$?
+
+				wait "$compress_pid" || nchoice=1
+				rm -f "$fifo_tmp"
+				;;
+
+			xz)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
+
+				xz -1 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> xz)${RESET}\n\n\
+${cmsg_part_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
+						10 100 0
+				nchoice=$?
+
+				wait "$compress_pid" || nchoice=1
+				rm -f "$fifo_tmp"
+				;;
+
+			gzip)
+				local fifo_tmp="/tmp/clonedisk_fifo_$$"
+				rm -f "$fifo_tmp"
+				mkfifo "$fifo_tmp"
+
+				gzip -1 <"$fifo_tmp" >"$outfile" 2>>"${LOGFILE:-/dev/null}" &
+				local compress_pid=$!
+
+				(
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> gzip)${RESET}\n\n\
+${cmsg_part_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
+						10 100 0
+				nchoice=$?
+
+				wait "$compress_pid" || nchoice=1
+				rm -f "$fifo_tmp"
+				;;
+
+			*)
+				(
+					#       dd if="$source" bs=32M          conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
+					#       dd if="$source" bs=$SECTOR_SIZE conv=notrunc,noerror,sync status=none | pv --numeric --size "$src_size" > "$outfile"
+					#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror,sync status=none
+					#       pv --numeric --size "$src_size" "$source" | dd of="$outfile" bs=32M conv=notrunc,noerror status=none
+					pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$outfile"
+				) 2>&1 |
+					${DIALOG} \
+						--title "${cmsg_running_disk_cloning^^}" \
+						--colors \
+						--gauge \
+						"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> raw)${RESET}\n\n\
+${cmsg_part_origem}: ${YELLOW}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
+						10 100 0
+				nchoice=$?
+				;;
+			esac
+		else
+			return 1
+		fi
+
+		if [[ $nchoice -eq 0 && $image_format == "qcow2" ]]; then
 			local tmp_raw="$outfile.tmp.raw"
 			mv "$outfile" "$tmp_raw"
 
 			# Infobox estilizado enquanto converte
-			${DIALOG} --title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" --colors --infobox \
+			${DIALOG} --title "${cmsg_running_disk_cloning^^}" --colors --infobox \
 				"\
-      ${BOLD}${WHITE}${REVERSE}Convertendo para QCOW2...${RESET}\n\n\
-      ${BOLD}Origem (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
-      ${BOLD}Destino (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
-      Aguarde, esta operação pode levar alguns minutos..." 10 70
+      ${BOLD}${WHITE}${REVERSE}${cmsg_Convertendo_para_QCOW2}${RESET}\n\n\
+      ${BOLD}${cmsg_Origem} (RAW):${RESET} ${YELLOW}$tmp_raw${RESET}\n\
+      ${BOLD}${cmsg_Destino} (QCOW2):${RESET} ${RED}$outfile${RESET}\n\n\
+      ${cmsg_Aguarde_esta_operacao_pode_levar_alguns}" 10 70
 
 			# Conversão efetiva
 			if qemu-img convert -p -O qcow2 "$tmp_raw" "$outfile" >/dev/null; then
 				rm -f "$tmp_raw"
+			else
+				nchoice=1
+				sh_log "falha na conversão para qcow2, raw mantido em $tmp_raw"
+				info "$(printf "${cmsg_falha_conversao_qcow2}" "$tmp_raw")"
 			fi
 		fi
 
 		sh_end_time_elapsed
-		result="$(fdisk -b $SECTOR_SIZE -l $outfile)"
+		sh_log_result "$nchoice"
+		if [[ $nchoice -ne 0 ]]; then
+			if [[ -e "$outfile" ]]; then
+				rm -f "$outfile"
+				sh_log "arquivo incompleto removido: $outfile"
+			fi
+			info "${cmsg_falha_clonagem}"
+			return $nchoice
+		fi
+		# ficha da imagem (.info) e hash do arquivo (.sha256)
+		sh_meta_from_local_dev "$source"
+		META_FORMAT="$image_format"
+		META_CONTENT_BYTES="$src_size"
+		META_CONTENT_HASH=""
+		sh_wait_file "$chash" && META_CONTENT_HASH="$(<"$chash")"
+		rm -f "$chash"
+		sh_write_image_meta "$outfile"
+
+		result="$(sh_image_info "$outfile")"
 		message="$(printf "\n\n%s" "$result")"
 
 		[[ $nchoice -eq 0 ]] && display_result \
-			"fdisk -b $SECTOR_SIZE -l $outfile" \
-			"${BOLD}${GREEN}${REVERSE}Clonagem concluída!${RESET}\n\n" \
-			"${BOLD}${GREEN}${REVERSE}Info disk : $outfile${RESET}\n" \
+			"$outfile" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_Info_imagem} : $outfile${RESET}\n" \
 			"${BOLD}${WHITE}$message\n\n" \
-			"Start Date time  : ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-			"Finish Date Time : ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-			"Time elapsed     : ${BOLD}${GREEN}$(sh_time_elapsed)${RESET}\n"
+			"$(sh_time_summary)"
 		return $nchoice
 	fi
+	return 1
 }
 
 sh_clone_disk_to_disk() {
-	if sh_choose_source_disk; then
-		if sh_choose_target_disk; then
-			:
-		fi
-	fi
+	sh_choose_source_disk || return 1
+	sh_choose_target_disk
 }
 
 sh_choose_source_disk() {
@@ -1688,7 +2217,7 @@ sh_choose_source_disk() {
 		sh_disk_info
 		DEVICE_SOURCE="$source"
 		MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
-		NAME_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_NAME")"
+		NAME_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_NAME")"
 		SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
 		return 0
 	fi
@@ -1699,10 +2228,11 @@ sh_choose_target_disk() {
 	local localtitle="${cmsg_disco_destino}"
 	local disk_selected="$source"
 
-	target=$(sh_list_disk "${localtitle}" "${disk_selected}")
-	if [ "$source" == "$target" ]; then
-		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
+	target=$(sh_list_disk "${localtitle}" "${disk_selected}" destino)
+	if [[ -n "$target" && "$source" == "$target" ]]; then
+		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4${cmsg_disco_origem} : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4${cmsg_disco_destino} : \Z1\Zr$MODEL_TARGET\ZR"
 		sh_choose_target_disk
+		return $?
 	fi
 
 	if [[ -n "$target" ]]; then
@@ -1714,23 +2244,23 @@ sh_choose_target_disk() {
 
 		if [[ "$(sh_toBytes "$SIZE_SOURCE")" -gt "$(sh_toBytes "$SIZE_TARGET")" ]]; then
 			if ! conf "${YELLOW}${cwarning}" \
-				"\n${BOLD}${RED}${REVERSE}$(gettext "O disco de DESTINO é menor que o disco de ORIGEM")${RESET}\n\n" \
-				"${BOLD}${WHITE}${cmsg_disco_origem[LC_DEFAULT]} : $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE\n" \
-				"${BOLD}${WHITE}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET${RESET}\n\n" \
-				"${YELLOW}$(gettext "Prosseguir?")"; then
+				"\n${BOLD}${RED}${REVERSE}${cmsg_O_disco_de_DESTINO_e_menor}${RESET}\n\n" \
+				"${BOLD}${WHITE}${cmsg_disco_origem} : $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}\n" \
+				"${BOLD}${WHITE}${cmsg_disco_destino}: $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}${RESET}\n\n" \
+				"${YELLOW}${cmsg_Prosseguir}"; then
 				#				init
 				return
 			fi
 		fi
 
 		sh_backup_partitions "$target" "$NAME_TARGET"
-		if ! sh_checkdisk "$target"; then
-			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
-		fi
+		sh_check_source_busy "$source" || return 1
 		sh_confclone "$source" "$target"
+		local rc=$?
 		sh_reset_conf
+		return $rc
 	fi
+	return 1
 }
 
 sh_choose_source_partition() {
@@ -1754,10 +2284,11 @@ sh_choose_target_partition() {
 	local localtitle="${cmsg_part_destino}"
 	local part_selected="$part_source"
 
-	part_target=$(sh_list_partition "${localtitle}" "${part_selected}")
-	if [ "$part_source" == "$part_target" ]; then
-		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4SOURCE DISK : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4DISK TARGET : \Z1\Zr$MODEL_TARGET\ZR"
+	part_target=$(sh_list_partition "${localtitle}" "${part_selected}" destino)
+	if [[ -n "$part_target" && "$part_source" == "$part_target" ]]; then
+		alerta "${cwarning}" "\n   \Z1${cmsg_disco_identico} \n\n      \Z4${cmsg_disco_origem} : \Z1\Zr$MODEL_SOURCE\ZR\n \Z4${cmsg_disco_destino} : \Z1\Zr$MODEL_TARGET\ZR"
 		sh_choose_target_partition
+		return $?
 	fi
 
 	if [[ -n "$part_target" ]]; then
@@ -1767,20 +2298,17 @@ sh_choose_target_partition() {
 		NAME_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$part_target]}" "$DSK_NAME")"
 		SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$part_target]}" "$DSK_SIZE")"
 
-		if [[ "$(sh_toBytes "$SIZE_SOURCE")" -gt "$(sh_toBytes "$SIZE_TARGET")" ]]; then
+		# imagem como origem: o tamanho é conferido depois, em bytes, pelo sh_check_image_fits
+		if [[ "$(sh_kind "$DEVICE_SOURCE")" != "image" ]] && [[ "$(sh_toBytes "$SIZE_SOURCE")" -gt "$(sh_toBytes "$SIZE_TARGET")" ]]; then
 			if ! conf "${YELLOW}${cwarning}" \
-				"\n${BOLD}${RED}${REVERSE}$(gettext "O disco de DESTINO é menor que o disco de ORIGEM")${RESET}\n\n" \
-				"${BOLD}${WHITE}${cmsg_part_origem[LC_DEFAULT]} : $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE ${RESET} \n" \
-				"${BOLD}${WHITE}${cmsg_part_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET ${RESET} \n\n" \
-				"${YELLOW}$(gettext "Prosseguir?")"; then
+				"\n${BOLD}${RED}${REVERSE}${cmsg_A_particao_de_DESTINO_e_menor}${RESET}\n\n" \
+				"${BOLD}${WHITE}${cmsg_part_origem} : $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE} ${RESET} \n" \
+				"${BOLD}${WHITE}${cmsg_part_destino}: $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET} ${RESET} \n\n" \
+				"${YELLOW}${cmsg_Prosseguir}"; then
 				return 1
 			fi
 		fi
 		sh_backup_partitions "$part_target" "$NAME_TARGET"
-		if ! sh_checkdisk "$part_target"; then
-			alerta "CHOOSEDISK" "${cmsg_nec_dismount[LC_DEFAULT]}"
-			die "ERRO: ${cmsg_nec_dismount[LC_DEFAULT]}"
-		fi
 		return 0
 	fi
 	return 1
@@ -1792,6 +2320,8 @@ sh_reset_conf() {
 }
 
 sh_backup_partitions() {
+	# só disco inteiro tem tabela de partições
+	[[ "$(sh_kind "$1")" == "part" ]] && return 0
 	if [ $# -ge 2 ]; then
 		local disk="${1}"
 		local device="${2}"
@@ -1802,7 +2332,12 @@ sh_backup_partitions() {
 		cdatetime=$(sh_diahora)
 		filetmp="$tmpdir/${device}.$cdatetime.dump"
 		log_exec mkdir -p "$tmpdir"
-		log_exec sfdisk -d "$disk" >"$filetmp"
+		if log_exec sfdisk -d "$disk" >"$filetmp"; then
+			sh_log "backup da tabela de partições: $disk -> $filetmp"
+		else
+			rm -f "$filetmp" # partição/sem tabela: não há o que salvar
+			sh_log "sem tabela de partições para backup: $disk"
+		fi
 		#  info "BACKUP DA TABELA DE PARTICOES"    \
 		#         "Dispositivo : $disk"              \
 		#         "  Backup on : ${filetmp}"         \
@@ -1817,9 +2352,13 @@ sh_confclone() {
 
 	if conf "${cwarning}" \
 		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
-${BLUE} ${cmsg_disco_origem[LC_DEFAULT]}:  $DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE \n" \
-		"${RED}${cmsg_disco_destino[LC_DEFAULT]}: $DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET\n\n" \
+${BLUE} $(sh_label_origem "$source"):  $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE} \n" \
+		"${RED}$(sh_label_destino "$target"): $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}\n\n" \
 		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+		# desmonta o destino só depois da confirmação
+		if ! sh_check_target_free "$target"; then
+			return 1
+		fi
 		sh_domakeclone "$source" "$target"
 		return "$?"
 	fi
@@ -1831,49 +2370,36 @@ sh_domakeclone() {
 	local target="$2"
 	local -i nchoice
 
-	mensagem "${cmsg_formatando_particao}: $source TO $target"
-	(pv -n "$source" |
-		dd of="$target" conv=notrunc,noerror) 2>&1 |
-		${DIALOG} \
-			--title "${cmsg_running_disk_cloning[LC_DEFAULT]^^}" \
-			--colors \
-			--gauge \
-			"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning[LC_DEFAULT]} (dd if=$source of=$target bs=4MB conv=notrunc,noerror,sync iflag=fullblock oflag=direct)${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}:  ${YELLOW}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-${cmsg_disco_destino[LC_DEFAULT]}: ${RED}$DEVICE_TARGET | $SIZE_TARGET | $MODEL_TARGET" \
-			10 100 0
+	sh_start_time_elapsed
+	sh_log "origem=$source ($SIZE_SOURCE $MODEL_SOURCE) | destino=$target ($SIZE_TARGET $MODEL_TARGET)"
+	mensagem "${cmsg_running_disk_cloning}: $source ${cmsg_para} $target"
+	sh_write_image_to_device "$source" "$target" \
+		"$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}" \
+		"$DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}"
 	nchoice=$?
+	sh_log_result "$nchoice"
+	[[ $nchoice -ne 0 ]] && info "${cmsg_falha_clonagem}"
 	result=$(fdisk -l "$target")
 	message=$(printf "\n\n%s" "$result")
 	[[ $nchoice -eq 0 ]] && display_result "fdisk -l $target" \
-		"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem concluída!")" \
+		"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}" \
 		"${RESET}${BOLD}${WHITE}$message"
+	[[ $nchoice -eq 0 ]] && sh_ask_regen_uuids "$target"
 	return $nchoice
 }
 
 sh_Language() {
-	cmsg_Clonar_Disco_para_Disco="$(gettext "Clonar Disco para Disco")"
 	cmsg_Clonar_Disco_para_Imagem="$(gettext "Clonar Disco para Imagem")"
 	cmsg_Clonar_Particao_para_Imagem="$(gettext "Clonar Partição para Imagem")"
-	cmsg_Clonar_Particao_para_Particao="$(gettext "Clonar Partição para Partição")"
-	cmsg_Clonar_Imagem_para_Particao="$(gettext "Clonar Imagem para Partição")"
-	cmsg_Gravar_ISO_para_Disco="$(gettext "Gravar ISO para Disco")"
-	cmsg_Clonar_Imagem_para_Disco="$(gettext "Clonar Imagem para Disco")"
 	cmsg_Listar_Discos="$(gettext "Listar Discos")"
-	cmsg_Clonar_via_Rede="$(gettext "Clonar Disco para Imagem via Rede (SSH Criptografado)")"
 
-	cmsg_Escolha_o_Formato_da_Imagem="$(gettext "Escolha o formato e compressão da imagem")"
-	cmsg_Imagem_Bruta_Padrao="$(gettext "Imagem Bruta Padrão (.img)")"
-	cmsg_Imagem_Comprimida_Zstd="$(gettext "Imagem Comprimida de Alta Performance (.img.zst)")"
 
 	cmsg_Escolha_o_tipo_de_clone="${YELLOW}$(gettext "Escolha o tipo de clone")"
-	cmsg_nec_dismount="$(gettext "Necessário desmontar a partição antes de reparticionar")"
 	cwarning="$(gettext "** AVISO **")"
 	cmsg_all_mounted_part="$(gettext "Necessário desmontar as partições abaixo antes de prosseguir")"
 	cmsg_dismount="$(gettext "Desmontar ?")"
 	cmsg_Error="$(gettext "ERRO")"
 	cmsg_info_disco="$(gettext "Info disco")"
-	cmsg_Ok="$(gettext "Ok")"
 	cmsg_disco_destino="$(gettext "DISCO DE DESTINO")"
 	cmsg_choose_disk_origem="$(gettext "Escolha o disco ORIGEM")"
 	cmsg_choose_disk_destino="$(gettext "Escolha o disco DESTINO")"
@@ -1897,45 +2423,219 @@ $cLB3 ${ccolor}↓ $cLB4$RESET \
 $cLB5\n$cLB6 ${ccolor}⇥ TAB${RESET} \
 $cLB7 ${ccolor}↵ ENTER${RESET} $cLB8"
 
-	cmsg_disco_identico="$(gettext "Disco ORIGEM e DESTINO não podem ser o mesmo")"
-	cmsg_formatando_particao="$(gettext "Formatando partição")"
+	cmsg_disco_identico="$(gettext "ORIGEM e DESTINO não podem ser o mesmo dispositivo")"
 	cmsg_running_disk_cloning="$(gettext "Executando clonagem de disco")"
 	cmsg_Select="$(gettext "Selecionar")"
 	cmsg_Sair="$(gettext "Sair")"
 	cmsg_button_voltar="$(gettext "Voltar")"
 	cmsg_disco_origem="$(gettext "DISCO DE ORIGEM")"
-	cmsg_disco_destino="$(gettext "DISCO DE DESTINO")"
 	cmsg_part_origem="$(gettext "PARTIÇÃO DE ORIGEM")"
 	cmsg_part_destino="$(gettext "PARTIÇÃO DE DESTINO")"
 	cmsg_todos_os_dados_serao_perdidos="  ${RED}$(gettext "AVISO!")${RESET}  $(gettext "Todos os dados disco/partição de DESTINO abaixo serão perdidos!")"
 	cmsg_continuar_com_a_clonagem="$(gettext "Continuar com a clonagem")"
-}
+	cmsg_imagem_origem="$(gettext "IMAGEM ORIGEM")"
+	cmsg_imagem_destino="$(gettext "IMAGEM DESTINO")"
+	cmsg_clonagem_concluida="$(gettext "Clonagem concluída!")"
+	cmsg_para="$(gettext "para")"
 
-init() {
-	while true; do
-		i18=$(${DIALOG} \
-			--stdout \
-			--clear \
-			--backtitle "$ccabec" \
-			--title "${welcome}${xapp}" \
-			--ok-label "${cmsg_Ok}" \
-			--cancel-label "${cmsg_Sair}" \
-			--menu "\n$(gettext "Escolha o idioma:")" \
-			0 80 0 \
-			0 "$(gettext "Português")" \
-			1 "$(gettext "Inglês")" \
-			2 "$(gettext "Alemão")" \
-			3 "$(gettext "Francês")")
-
-		exit_status=$?
-		case $exit_status in
-		"$D_ESC" | "$D_CANCEL")
-			exit 0
-			;;
-		esac
-		LC_DEFAULT=$i18
-		sh_choose_clone_type
-	done
+	# --- mensagens usadas diretamente nas funções ---
+	cmsg_tecla_sim="$(gettext "S")"
+	cmsg_tecla_nao="$(gettext "n")"
+	cmsg_Data_hora_de_inicio="$(gettext "Data/hora de início")"
+	cmsg_Data_hora_de_termino="$(gettext "Data/hora de término")"
+	cmsg_Tempo_decorrido="$(gettext "Tempo decorrido")"
+	cmsg_Dispositivo="$(gettext "Dispositivo")"
+	cmsg_Nome="$(gettext "Nome")"
+	cmsg_Transporte="$(gettext "Transporte")"
+	cmsg_Rotulo="$(gettext "Rótulo")"
+	cmsg_Modelo="$(gettext "Modelo")"
+	cmsg_Tamanho="$(gettext "Tamanho")"
+	cmsg_Sistema_de_arquivos="$(gettext "Sistema de arquivos")"
+	cmsg_Entre_com_o_nome_da_imagem="$(gettext "Entre com o nome da imagem")"
+	cmsg_NOME_DA_IMAGEM="$(gettext "NOME DA IMAGEM")"
+	cmsg_Nome_da_imagem_invalido_Tente_novamente="$(gettext "Nome da imagem inválido! Tente novamente.")"
+	cmsg_Imagem_s_ja_existe_Tentar_outro="$(gettext "Imagem '%s' já existe. Tentar outro nome?")"
+	cmsg_FORMATO_DA_IMAGEM="$(gettext "FORMATO DA IMAGEM")"
+	cmsg_Escolha_o_formato_e_compressao_da="$(gettext "Escolha o formato e compressão da imagem de destino:")"
+	cmsg_Imagem_Bruta="$(gettext "Imagem Bruta")"
+	cmsg_Imagem_Comprimida="$(gettext "Imagem Comprimida")"
+	cmsg_Erro_O_utilitario_s_nao_esta="$(gettext "Erro: O utilitário '%s' não está instalado no sistema.")"
+	cmsg_Convertendo_para_QCOW2="$(gettext "Convertendo para QCOW2...")"
+	cmsg_Origem="$(gettext "Origem")"
+	cmsg_Destino="$(gettext "Destino")"
+	cmsg_Aguarde_esta_operacao_pode_levar_alguns="$(gettext "Aguarde, esta operação pode levar alguns minutos...")"
+	cmsg_Aguarde_escaneando_por_imagens="$(gettext "Aguarde, escaneando por imagens...")"
+	cmsg_Erro_nenhuma_imagem_encontrada_em_s="$(gettext "Erro: nenhuma imagem encontrada em '%s'")"
+	cmsg_Info_imagem="$(gettext "Info imagem")"
+	cmsg_Imagens_encontradas="$(gettext "Imagens encontradas")"
+	cmsg_SELECIONE_A_IMAGEM_DE_ORIGEM="$(gettext "SELECIONE A IMAGEM DE ORIGEM")"
+	cmsg_IMAGENS_em_s="$(gettext "IMAGENS em %s")"
+	cmsg_O_disco_de_DESTINO_e_menor="$(gettext "O disco de DESTINO é menor que o disco de ORIGEM")"
+	cmsg_A_particao_de_DESTINO_e_menor="$(gettext "A partição de DESTINO é menor que a partição de ORIGEM")"
+	cmsg_Prosseguir="$(gettext "Prosseguir?")"
+	cmsg_Informacoes_do_qemu_img_indisponiveis="$(gettext "Informações do qemu-img indisponíveis")"
+	cmsg_Este_programa_pode_ser_redistribuido_livremente="$(gettext "Este programa pode ser redistribuído livremente")"
+	cmsg_sob_os_termos_da_Licenca_Publica="$(gettext "sob os termos da Licença Pública Geral GNU")"
+	cmsg_Este_script_precisa_ser_executado_como="$(gettext "Este script precisa ser executado como root. Elevando privilégios...")"
+	cmsg_Erro_nao_foi_possivel_elevar_os="$(gettext "Erro: não foi possível elevar os privilégios. Execute manualmente como root.")"
+	cmsg_Instalando_pacotes_necessarios="$(gettext "Instalando pacotes necessários")"
+	cmsg_Instalando_pacotes_no="$(gettext "Instalando pacotes no")"
+	cmsg_Falha_ao_instalar_pacotes="$(gettext "Falha ao instalar pacotes.")"
+	cmsg_Outra_distro="$(gettext "Outra distro:")"
+	cmsg_Nao_foi_possivel_encontrar_o_comando="$(gettext "Não foi possível encontrar o comando")"
+	cmsg_instalar_pacote="$(gettext "instalar pacote")"
+	cmsg_IMPOSSIVEL_CONTINUAR="$(gettext "IMPOSSÍVEL CONTINUAR")"
+	cmsg_Este_script_precisa_dos_comandos_listados="$(gettext "Este script precisa dos comandos listados acima")"
+	cmsg_Instale_os_e_ou_verifique_se="$(gettext "Instale-os e/ou verifique se eles estão em seu")"
+	cmsg_Deseja_instalar_os_pacotes_e_suprir="$(gettext "Deseja instalar os pacotes e suprir os aplicativos necessários?")"
+	cmsg_TERMINAL_MUITO_PEQUENO="$(gettext "TERMINAL MUITO PEQUENO")"
+	cmsg_Antes_de_continuar_redimensione_seu_terminal="$(gettext "Antes de continuar, redimensione seu terminal\npara que ele meça pelo menos 80 x 24 caracteres")"
+	cmsg_Caso_contrario_voce_nao_podera_usar="$(gettext "Caso contrário, você não poderá usar as ferramentas de partição de disco")"
+	cmsg_binario_nao_foi_localizado_no="$(gettext "binário não foi localizado no")"
+	cmsg_binario_nao_foi_localizado_na_pasta="$(gettext "binário não foi localizado na pasta local:")"
+	cmsg_DICA_instale_o_pacote_chili_utils="$(gettext "DICA: instale o pacote chili-utils")"
+	cmsg_Entre_com_as_credenciais_do_servidor="$(gettext "Entre com as credenciais do servidor SSH de destino e caminho:")"
+	cmsg_Usuario_Remoto="$(gettext "Usuário Remoto  :")"
+	cmsg_IP_do_Servidor="$(gettext "IP do Servidor  :")"
+	cmsg_Porta_SSH="$(gettext "Porta SSH       :")"
+	cmsg_Arquivo_Destino="$(gettext "Arquivo Destino :")"
+	cmsg_CONFIGURACAO_SSH="$(gettext "CONFIGURAÇÃO SSH")"
+	cmsg_Todos_os_campos_devem_ser_preenchidos="$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")"
+	cmsg_TESTANDO_CONEXAO="$(gettext "TESTANDO CONEXÃO")"
+	cmsg_Tentando_conexao_via_Chave_Publica_em="$(gettext "Tentando conexão via Chave Pública em")"
+	cmsg_ERRO_DE_REQUISITO="$(gettext "ERRO DE REQUISITO")"
+	cmsg_O_utilitario_sshpass_nao_foi_encontrado="$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")"
+	cmsg_Instale_o_pacote_sshpass_ou_configure="$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
+	cmsg_AUTENTICACAO_REQUERIDA="$(gettext "AUTENTICAÇÃO REQUERIDA")"
+	cmsg_A_conexao_direta_por_chave_falhou="$(gettext "A conexão direta por chave falhou.\nDigite a senha para")"
+	cmsg_TESTANDO_SENHA="$(gettext "TESTANDO SENHA")"
+	cmsg_Validando_senha_no_servidor_remoto="$(gettext "Validando senha no servidor remoto...")"
+	cmsg_ERRO_DE_AUTENTICACAO="$(gettext "ERRO DE AUTENTICAÇÃO")"
+	cmsg_Senha_incorreta_ou_acesso_rejeitado_pelo="$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")"
+	cmsg_Verifique_suas_credenciais_e_tente_novamente="$(gettext "Verifique suas credenciais e tente novamente.")"
+	cmsg_FORMATO_DE_COMPRESSAO="$(gettext "FORMATO DE COMPRESSÃO")"
+	cmsg_Escolha_o_formato_de_saida_para="$(gettext "Escolha o formato de saída para a imagem remota:")"
+	cmsg_Otimizado_Adaptativo="$(gettext "Otimizado/Adaptativo")"
+	cmsg_Compatibilidade="$(gettext "Compatibilidade")"
+	cmsg_Maxima_Compressao="$(gettext "Máxima Compressão")"
+	cmsg_Sem_compressao_Imagem_Raw_bruto="$(gettext "Sem compressão (Imagem Raw / bruto)")"
+	cmsg_SERVIDOR_DESTINO="$(gettext "SERVIDOR DESTINO :")"
+	cmsg_ARQUIVO_REMOTO="$(gettext "ARQUIVO REMOTO   :")"
+	cmsg_Confirmar_o_inicio_da_clonagem_criptografada="$(gettext "Confirmar o início da clonagem criptografada via rede?")"
+	cmsg_Iniciando_transmissao_de="$(gettext "Iniciando transmissão de")"
+	cmsg_PREPARANDO_DESTINO="$(gettext "PREPARANDO DESTINO")"
+	cmsg_Garantindo_que_o_diretorio_remoto_existe="$(gettext "Garantindo que o diretório remoto existe...")"
+	cmsg_ERRO_DE_DIRETORIO="$(gettext "ERRO DE DIRETÓRIO")"
+	cmsg_Falha_ao_criar_o_diretorio_remoto="$(gettext "Falha ao criar o diretório remoto:")"
+	cmsg_Verifique_as_permissoes_de_escrita_do="$(gettext "Verifique as permissões de escrita do usuário no destino.")"
+	cmsg_CLONAGEM_REMOTA_EM_ANDAMENTO="$(gettext "CLONAGEM REMOTA EM ANDAMENTO")"
+	cmsg_Processando_pv_conversor_compressor_SSH_Rede="$(gettext "Processando: pv -> conversor/compressor -> SSH -> Rede")"
+	cmsg_DESTINO_REMOTO="$(gettext "DESTINO REMOTO :")"
+	cmsg_Resumo_da_Operacao_de_Rede="$(gettext "Resumo da Operação de Rede")"
+	cmsg_Clonagem_Remota_Concluida_com_Sucesso="$(gettext "Clonagem Remota Concluída com Sucesso!")"
+	cmsg_Origem_Local="$(gettext "Origem Local     :")"
+	cmsg_Destino_Remoto="$(gettext "Destino Remoto   :")"
+	cmsg_Tamanho_Remoto="$(gettext "Tamanho Remoto   :")"
+	cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
+	cmsg_MENU_PRINCIPAL="$(gettext "MENU PRINCIPAL")"
+	cmsg_dir_rede_lpart_img="$(gettext "Partição local -> Imagem remota")"
+	cmsg_desc_rede_lpart_img="$(gettext "clonar partição local para imagem remota")"
+	cmsg_dir_rede_lpart_rpart="$(gettext "Partição local -> Partição remota")"
+	cmsg_desc_rede_lpart_rpart="$(gettext "clonar partição local para partição remota")"
+	cmsg_dir_rede_rpart_img="$(gettext "Partição remota -> Imagem local")"
+	cmsg_desc_rede_rpart_img="$(gettext "clonar partição remota para imagem local")"
+	cmsg_dir_rede_rpart_part="$(gettext "Partição remota -> Partição local")"
+	cmsg_desc_rede_rpart_part="$(gettext "clonar partição remota para partição local")"
+	cmsg_Particao_remota="$(gettext "Partição remota")"
+	cmsg_Verificando_integridade="$(gettext "Verificação de integridade")"
+	cmsg_Calculando_hash="$(gettext "Calculando sha256...")"
+	cmsg_Testando_checksum="$(gettext "Testando o checksum embutido no formato...")"
+	cmsg_Relendo_destino="$(gettext "Relendo o destino para comparar...")"
+	cmsg_imagem_corrompida="$(gettext "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la.")"
+	cmsg_esperado="$(gettext "esperado")"
+	cmsg_obtido="$(gettext "obtido")"
+	cmsg_sem_hash="$(gettext "A imagem %s não tem hash guardado (.sha256/.info).")"
+	cmsg_verif_formato="$(gettext "Verificado só o checksum embutido no formato: detecta corrupção, mas não uma troca da imagem.")"
+	cmsg_verif_parcial="$(gettext "Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam ser conferidos.")"
+	cmsg_verif_nenhuma="$(gettext "Imagem raw sem hash: não há como verificar se ela está íntegra.")"
+	cmsg_gerar_hash_agora="$(gettext "Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a criação, mas serve de referência daqui para frente.")"
+	cmsg_perguntar_verificar_imagem="$(gettext "Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)")"
+	cmsg_perguntar_verificar_gravacao="$(gettext "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado.")"
+	cmsg_gravacao_ok="$(gettext "Gravação verificada: %s confere com o que foi gravado.")"
+	cmsg_gravacao_diferente="$(gettext "O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar com defeito.")"
+	cmsg_sem_ficha="$(gettext "Sem ficha (.info) para esta imagem.")"
+	cmsg_sem_escrita="$(gettext "Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem permissão).")"
+	cmsg_fat32_limite="$(gettext "'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. Escolha outro local ou um formato comprimido.")"
+	cmsg_fat32_aviso="$(gettext "'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar disso e falhar no meio. Prosseguir?")"
+	cmsg_espaco_comprimido="$(gettext "Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida pode não caber. Prosseguir?")"
+	cmsg_dir_rede_disco_disco="$(gettext "Disco local -> Disco remoto")"
+	cmsg_desc_rede_disco_disco="$(gettext "clonar disco local para disco remoto")"
+	cmsg_destino_em_uso="$(gettext "O destino %s está em uso e não pode ser sobrescrito:")"
+	cmsg_origem_em_uso="$(gettext "A origem %s está em uso. A cópia pode ficar inconsistente:")"
+	cmsg_libere_no_remoto="$(gettext "Libere o disco no computador remoto e tente de novo.")"
+	cmsg_busy_sys="$(gettext "%s montado em %s (sistema)")"
+	cmsg_busy_mount="$(gettext "%s montado em %s")"
+	cmsg_busy_swap="$(gettext "%s é swap ativa")"
+	cmsg_busy_holder="$(gettext "%s em uso por %s (LVM/LUKS/RAID)")"
+	cmsg_busy_proc="$(gettext "%s aberto pelo processo %s (%s)")"
+	cmsg_busy_zfs="$(gettext "%s pertence a um pool ZFS")"
+	cmsg_arquivo_remoto_existe="$(gettext "O arquivo %s já existe. Sobrescrever?")"
+	# itens dos submenus: direção (origem -> destino) e descrição, traduzidas separadamente
+	cmsg_dir_disco_disco="$(gettext "Disco -> Disco")"
+	cmsg_desc_disco_disco="$(gettext "clonar disco para outro disco")"
+	cmsg_dir_part_part="$(gettext "Partição -> Partição")"
+	cmsg_desc_part_part="$(gettext "clonar partição para outra partição")"
+	cmsg_dir_disco_img="$(gettext "Disco -> Imagem")"
+	cmsg_desc_disco_img="$(gettext "clonar disco para arquivo de imagem")"
+	cmsg_dir_part_img="$(gettext "Partição -> Imagem")"
+	cmsg_desc_part_img="$(gettext "clonar partição para arquivo de imagem")"
+	cmsg_dir_img_disco="$(gettext "Imagem -> Disco")"
+	cmsg_desc_img_disco="$(gettext "clonar imagem para disco")"
+	cmsg_dir_img_part="$(gettext "Imagem -> Partição")"
+	cmsg_desc_img_part="$(gettext "clonar imagem para partição")"
+	cmsg_dir_iso="$(gettext "ISO -> Pendrive/Disco")"
+	cmsg_desc_iso="$(gettext "gravar ISO para dar boot")"
+	cmsg_dir_rede_envia="$(gettext "Disco local -> Imagem remota")"
+	cmsg_desc_rede_envia="$(gettext "clonar disco local para imagem remota")"
+	cmsg_dir_rede_restaura="$(gettext "Imagem remota -> Disco/Partição local")"
+	cmsg_desc_rede_restaura="$(gettext "clonar imagem remota para disco/partição local")"
+	cmsg_dir_rede_remoto_img="$(gettext "Disco remoto -> Imagem local")"
+	cmsg_desc_rede_remoto_img="$(gettext "clonar disco remoto para imagem local")"
+	cmsg_dir_rede_remoto_disco="$(gettext "Disco remoto -> Disco local")"
+	cmsg_desc_rede_remoto_disco="$(gettext "clonar disco remoto para disco local")"
+	cmsg_Grupo_Clonar="$(gettext "Clonar (local)")"
+	cmsg_Grupo_Criar_imagem="$(gettext "Criar imagem")"
+	cmsg_Grupo_Restaurar_imagem="$(gettext "Restaurar imagem")"
+	cmsg_Grupo_Rede="$(gettext "Rede (SSH)")"
+	cmsg_Escolha_a_operacao="$(gettext "Escolha a operação")"
+	cmsg_credenciais_servidor="$(gettext "Entre com as credenciais do servidor SSH:")"
+	cmsg_remoto_sem_root="$(gettext "Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha.")"
+	cmsg_nenhum_disco_remoto="$(gettext "Nenhum disco encontrado no servidor remoto.")"
+	cmsg_Disco_remoto="$(gettext "Disco remoto")"
+	cmsg_em_uso="$(gettext "em uso")"
+	cmsg_Novos_UUIDs="$(gettext "Novos UUIDs")"
+	cmsg_uuid_pergunta="$(gettext "O destino ficou com os mesmos identificadores da origem (UUID do sistema de arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\n\nGere novos se origem e destino forem ficar ligados na MESMA máquina: senão o sistema pode montar o disco errado ou o LVM acusar PV duplicado.\n\nNÃO gere se o destino for substituir a origem ou precisar dar boot: o fstab e o GRUB do sistema clonado usam esses identificadores.\n\nGerar novos UUIDs no destino?")"
+	cmsg_nenhum_identificador_encontrado="$(gettext "Nenhum identificador encontrado para alterar.")"
+	cmsg_credenciais_restauracao="$(gettext "Entre com as credenciais do servidor SSH e o caminho da imagem:")"
+	cmsg_Arquivo_Remoto="$(gettext "Arquivo Remoto  :")"
+	cmsg_qcow2_rede_nao_suportado="$(gettext "Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo para esta máquina e use Imagem para Disco/Partição.")"
+	cmsg_arquivo_remoto_nao_encontrado="$(gettext "Arquivo remoto não encontrado ou sem permissão de leitura: %s")"
+	cmsg_Restaurar_em="$(gettext "Restaurar em")"
+	cmsg_Disco_inteiro="$(gettext "Disco inteiro")"
+	cmsg_Particao="$(gettext "Partição")"
+	cmsg_imagem_maior_que_destino="$(gettext "A imagem (%s) é maior que o destino (%s). Prosseguir?")"
+	cmsg_Uso="$(gettext "Uso:")"
+	cmsg_sem_parametros_abre_a_interface="$(gettext "sem parâmetros, abre a interface (dialog)")"
+	cmsg_exibir_esta_ajuda_e_sair="$(gettext "exibir esta ajuda e sair")"
+	cmsg_mostrar_versao="$(gettext "mostrar versão")"
+	cmsg_Idioma="$(gettext "Idioma da interface")"
+	cmsg_Escolha_o_idioma="$(gettext "Escolha o idioma:")"
+	cmsg_imagem_no_disco_de_origem="$(gettext "O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro local.")"
+	cmsg_espaco_insuficiente="$(gettext "Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha outro local.")"
+	cmsg_falha_conversao_qcow2="$(gettext "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'.")"
+	cmsg_falha_clonagem="$(gettext "Falha na clonagem!")"
+	cmsg_Falha_clonagem_remota="$(gettext "Falha na clonagem remota!")"
+	cmsg_distro_nao_suportada="$(gettext "instalação automática não suportada. Instale manualmente:")"
 }
 
 #figlet
@@ -1943,34 +2643,36 @@ sh_logo() {
 	printf '%s' "$green"
 	cat <<'EOF'
       _                      _ _     _
-  ___| | ___  _ __   ___  __| (_)___| | __   Copyright (c) 2019-2025 Vilmar Catafesta <vcatafesta@gmail.com>
- / __| |/ _ \| '_ \ / _ \/ _` | / __| |/ /   Copyright (c) 2019-2025 ChiliLinux Development Team
+  ___| | ___  _ __   ___  __| (_)___| | __   Copyright (c) 2019-2026 Vilmar Catafesta <vcatafesta@gmail.com>
+ / __| |/ _ \| '_ \ / _ \/ _` | / __| |/ /   Copyright (c) 2019-2026 ChiliLinux Development Team
 | (__| | (_) | | | |  __/ (_| | \__ \   <
- \___|_|\___/|_| |_|\___|\__,_|_|___/_|\_\   $(gettext "Este programa pode ser redistribuído livremente")
-                                             $(gettext "sob os termos da Licença Pública Geral GNU")
+ \___|_|\___/|_| |_|\___|\__,_|_|___/_|\_\
 EOF
+	printf '%45s%s\n' '' "${cmsg_Este_programa_pode_ser_redistribuido_livremente}"
+	printf '%45s%s\n' '' "${cmsg_sob_os_termos_da_Licenca_Publica}"
 	sh_version
 }
 
 sh_usage() {
-	printf '%s\n' "${cyan}$(gettext "Comandos mais usados:")"
-	printf '%s\n' "${red}	-h  ${reset}- $(gettext "exibir esta ajuda e sair")"
-	printf '%s\n' "${red}	-v  ${reset}- $(gettext "mostrar versão")"
-	printf '%s\n' "${red}	-c  ${reset}- $(gettext "suprime colorização da saída")"
+	printf '%s\n' "${cyan}${cmsg_Uso}${reset}"
+	printf '%s\n' "${red}	${_APP_}                ${reset}- ${cmsg_sem_parametros_abre_a_interface}"
+	printf '%s\n' "${red}	${_APP_} -h, --help     ${reset}- ${cmsg_exibir_esta_ajuda_e_sair}"
+	printf '%s\n' "${red}	${_APP_} -V, --version  ${reset}- ${cmsg_mostrar_versao}"
 }
 
-if [[ $1 = "-v" || $1 = "--version" || $1 = "-V" ]]; then
+# -h/--help e -V/--version: mostram e saem (sem dialog e sem elevar privilégios)
+case "$1" in
+-h | --help)
+	sh_Language
+	sh_usage
+	exit 0
+	;;
+-V | --version)
+	sh_Language
 	sh_logo
 	exit 0
-fi
-
-sh_checkrootOLD() {
-	[[ $1 = "-Qq" ]] && return
-	if [ "$(id -u)" != "0" ]; then
-		printf "${red}%s\n" "$(gettext "erro: Você não pode executar esta operação a menos que seja root!")"
-		exit 1
-	fi
-}
+	;;
+esac
 
 sh_checkroot() {
 	if [[ "$(id -u)" != "0" ]]; then
@@ -1979,23 +2681,71 @@ sh_checkroot() {
 	ccabec+=' [root]'
 }
 
+# Cria o arquivo de log da execução (chamado já como root)
+sh_log_init() {
+	mkdir -p "$LOGDIR" 2>/dev/null
+	LOGFILE="$LOGDIR/${_APP_}-$(date '+%Y%m%d-%H%M').log"
+	if ! : >>"$LOGFILE" 2>/dev/null; then
+		LOGFILE=""
+		return 1
+	fi
+	sh_log "início: $_APP_ v$_VERSION_ | usuário=${SUDO_USER:-$USER} | distro=$(detect_distro) | LANG=$LANG"
+	trap 'LOG_OP="" LOG_FN=main sh_log "fim"' EXIT
+}
+
+# Grava uma linha no log: data hora [função] mensagem
+sh_log() {
+	local fn="${LOG_FN:-${FUNCNAME[1]:-main}}"
+
+	[[ -n "$LOGFILE" ]] || return 0
+	[[ "$fn" == "sh_log_result" ]] && fn="${FUNCNAME[2]:-main}"
+	if [[ -n "$LOG_OP" ]]; then
+		printf '%s [%s] [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_OP" "$fn" "$*" >>"$LOGFILE"
+	else
+		printf '%s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$fn" "$*" >>"$LOGFILE"
+	fi
+}
+
+# Registra o resultado de uma operação com o tempo decorrido
+sh_log_result() {
+	local status="$1"
+
+	if ((status == 0)); then
+		sh_log "resultado: sucesso | tempo=$(sh_time_elapsed)"
+	else
+		sh_log "resultado: FALHA (status=$status) | tempo=$(sh_time_elapsed)"
+	fi
+}
+
+sh_diahora() {
+	date '+%Y%m%d_%H%M%S'
+}
+
+log_exec() {
+	"$@" 2>/dev/null
+}
+
 log_err() {
 	printf " %b %s\\n" "${CROSS}" "${*}"
 }
 
+log_info_msg() {
+	printf " %b %s\\n" "${INFO}" "${*}"
+}
+
 elevate_to_root() {
-	log_err "This script must be run as root. Elevating privileges..."
+	log_err "${cmsg_Este_script_precisa_ser_executado_como}"
 
 	# Tenta usar sudo primeiro (caso esteja configurado)
-	if command -v sudo >/dev/null 2>&1; then
+	if has_command sudo; then
 		exec sudo bash "$0" "$@"
 	fi
 
 	# Se sudo falhar, tenta su
-	if command -v su >/dev/null 2>&1; then
-		exec su -c "$0 $*"
+	if has_command su; then
+		exec su -c "$(printf '%q ' bash "$0" "$@")"
 	fi
-	die "Error: Unable to elevate privileges. Run manually as root."
+	die "${cmsg_Erro_nao_foi_possivel_elevar_os}"
 }
 
 DOT() {
@@ -2005,25 +2755,21 @@ DOT() {
 die() {
 	local msg=$1
 	shift
+	sh_log "ERRO: $msg"
 	printf "%-75s\n" "$(DOT)${bold}${red}$msg${reset}" >&2
 	exit 1
-}
-
-log_msg() {
-	local retval="${PIPESTATUS[0]}"
-
-	if [[ $retval -eq 0 ]]; then
-		printf " %b %s\\n" "${TICK}" "${*}"
-	else
-		printf " %b %s\\n" "${CROSS}" "${*}"
-	fi
 }
 
 run_dialog_stream() {
 	local title="$1"
 	shift
+	# sem dialog instalado (ele mesmo pode ser uma das dependências), roda direto
+	if ! has_command "${DIALOG}"; then
+		"$@"
+		return $?
+	fi
 	stdbuf -oL -eL "$@" 2>&1 |
-		dialog \
+		${DIALOG} \
 			--backtitle "$ccabec" \
 			--progressbox "$title" 20 70
 	local status=${PIPESTATUS[0]}
@@ -2031,30 +2777,42 @@ run_dialog_stream() {
 }
 
 sh_setup() {
-	local DISTRO=$(detect_distro)
-	msg "$_APP_" "Instalando necessários pacotes"
+	local DISTRO
+	local -a cmds=("$@")
+	local -a pkgs=()
+	local -A seen=()
+	local d
+
+	DISTRO=$(detect_distro)
+	((${#cmds[@]})) || cmds=("${DEPENDENCIES[@]}")
+	for d in "${cmds[@]}"; do
+		[[ -n "${PACKAGEDEP[$d]}" && -z "${seen[${PACKAGEDEP[$d]}]}" ]] || continue
+		seen[${PACKAGEDEP[$d]}]=1
+		pkgs+=("${PACKAGEDEP[$d]}")
+	done
+
+	sh_log "instalando dependências em $DISTRO: ${pkgs[*]}"
+	if has_command "${DIALOG}"; then
+		msg "$_APP_" "${cmsg_Instalando_pacotes_necessarios}"
+	else
+		log_info_msg "${cmsg_Instalando_pacotes_necessarios}: ${pkgs[*]}"
+	fi
 
 	case "$DISTRO" in
-	void | voidlinux | void-live)
-		if ! run_dialog_stream "Instalando pacoates no ${DISTRO^^}" \
-			xbps-install -Sy "${PACKAGEDEP[@]}"; then
-			die "[ERRO] Falha ao instalar pacotes."
+	void | voidlinux | void-live | voidbr)
+		if ! run_dialog_stream "${cmsg_Instalando_pacotes_no} ${DISTRO^^}" \
+			xbps-install -Sy "${pkgs[@]}"; then
+			die "[${cmsg_Error}] ${cmsg_Falha_ao_instalar_pacotes}"
 		fi
 		;;
-	chili | chililinux | arch | manjaro | biglinux)
-		if ! run_dialog_stream "Instalando pacoates no ${DISTRO^^}" \
-			pacman -S --neeeded --quiet --noconfirm "${PACKAGEDEP[@]}"; then
-			die "[ERRO] Falha ao instalar pacotes."
+	chili | chililinux | arch | manjaro | biglinux | endeavouros)
+		if ! run_dialog_stream "${cmsg_Instalando_pacotes_no} ${DISTRO^^}" \
+			pacman -S --needed --quiet --noconfirm "${pkgs[@]}"; then
+			die "[${cmsg_Error}] ${cmsg_Falha_ao_instalar_pacotes}"
 		fi
 		;;
-	manjaro) : ;;
-	debian) : ;;
-	ubuntu) : ;;
-	ubuntu) : ;;
-	fedora) : ;;
-	endeavouros) : ;;
 	*)
-		echo "Outra distro: $DISTRO"
+		die "${cmsg_Outra_distro} $DISTRO - ${cmsg_distro_nao_suportada} ${pkgs[*]}"
 		;;
 	esac
 }
@@ -2066,8 +2824,8 @@ sh_checkDependencies() {
 	declare -a missing
 
 	for d in "${DEPENDENCIES[@]}"; do
-		if ! command -v "$d" &>/dev/null; then
-			log_err "Check: ${red}ERROR${reset}: $(gettext "Não foi possível encontrar o comando") ${cyan}'$d'${reset} -> $(gettext "instalar pacote") ${cyan}"${PACKAGEDEP[$d]}"${reset}"
+		if ! has_command "$d"; then
+			log_err "${red}${cmsg_Error}${reset}: ${cmsg_Nao_foi_possivel_encontrar_o_comando} ${cyan}'$d'${reset} -> ${cmsg_instalar_pacote} ${cyan}${PACKAGEDEP[$d]}${reset}"
 			missing+=("$d")
 			errorFound=true
 		else
@@ -2078,13 +2836,13 @@ sh_checkDependencies() {
 
 	if $errorFound; then
 		replicate '='
-		echo "${yellow}             $(gettext "IMPOSSÍVEL CONTINUAR")"
-		echo "${black}$(gettext "Este script precisa dos comandos listados acima")"
-		echo "${black}$(gettext "Instale-os e/ou verifique se eles estão em seu") ${red}\$PATH${reset}"
+		echo "${yellow}             ${cmsg_IMPOSSIVEL_CONTINUAR}"
+		echo "${black}${cmsg_Este_script_precisa_dos_comandos_listados}"
+		echo "${black}${cmsg_Instale_os_e_ou_verifique_se} ${red}\$PATH${reset}"
 		replicate '='
 		#die $(gettext "Abortando...")
-		if readconf "Deseja instalar os pacotes e suprir os aplicativos necessários ?"; then
-			sh_setup
+		if readconf "${cmsg_Deseja_instalar_os_pacotes_e_suprir}"; then
+			sh_setup "${missing[@]}"
 		else
 			exit 1
 		fi
@@ -2095,56 +2853,20 @@ export -f sh_checkDependencies
 sh_display() {
 	if [[ "$(tput cols)" -lt 80 ]] || [[ "$(tput lines)" -lt 24 ]]; then
 		dialog --backtitle "$ccabec" \
-			--title "$(gettext "TERMINAL MUITO PEQUENO")" \
+			--title "${cmsg_TERMINAL_MUITO_PEQUENO}" \
 			--msgbox "\n\
-$(gettext "Antes de continuar, redimensione seu terminal\npara que ele meça pelo menos 80 x 24 caracteres")\n\
-$(gettext "Caso contrário, você não poderá usar as ferramentas de partição de disco")" 11 68
+${cmsg_Antes_de_continuar_redimensione_seu_terminal}\n\
+${cmsg_Caso_contrario_voce_nao_podera_usar}" 11 68
 	fi
 }
 
 sh_execute_iso2usb() {
-	if command -v chili-iso2usb >/dev/null; then
+	if has_command chili-iso2usb; then
 		bash chili-iso2usb
 	else
-		info "Erro: O utilitário 'chili-iso2usb' não está instalado no sistema."
+		info "$(printf "${cmsg_Erro_O_utilitario_s_nao_esta}" chili-iso2usb)"
 	fi
 	return
-}
-
-sh_choose_compression_type() {
-	while true; do
-		compress_type=$(
-			${DIALOG} \
-				--clear \
-				--stdout \
-				--aspect 20 \
-				--backtitle "$ccabec" \
-				--colors \
-				--title "FORMATO DA IMAGEM" \
-				--ok-label "${cmsg_Select}" \
-				--cancel-label "${cmsg_Sair}" \
-				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_Formato_da_Imagem}:${RESET}" \
-				10 80 0 \
-				0 "${cmsg_Imagem_Bruta_Padrao}" \
-				1 "${cmsg_Imagem_Comprimida_Zstd}"
-		)
-
-		exit_status=$?
-		case $exit_status in
-		"$D_ESC" | "$D_CANCEL")
-			return 255
-			;;
-		esac
-
-		# Se o usuário escolheu Zstd, mas não tem o binário instalado no sistema
-		if [[ "$compress_type" -eq 1 ]] && ! command -v zstd >/dev/null 2>&1; then
-			info "Erro: O utilitário 'zstd' não está instalado no sistema para compressão."
-			continue
-		fi
-
-		echo "$compress_type"
-		return 0
-	done
 }
 
 sh_run_binary() {
@@ -2152,17 +2874,15 @@ sh_run_binary() {
 	local lang="${2}"
 	local grafic="${3}"
 
-	if [[ -n $(command -v "${binary}") || -n $(command -v ./"${binary}") ]]; then
+	if has_command "${binary}" || has_command ./"${binary}"; then
 		bash "${binary}" "$lang" "${grafic}"
 		return 0
 	fi
 
-	msg "INFO" "$(log_info_msg "$(gettext "Aguarde...") ${cmsg_Gerando} test with "${binary}" ${xurl}")"
-	evaluate_retval 1 "$err_not_fatal"
 	info "${WHITE}${REVERSE}${binary}${RESET}" \
-		"\n\n${RED}✗ $(gettext "binário não foi localizado no") ${YELLOW}\$PATH" \
-		"\n${RED}✗ $(gettext "binário não foi localizado na pasta local:") ${YELLOW}$PWD${RESET}" \
-		"${YELLOW}\n➡ $(gettext "DICA: instale o pacote chili-utils")"
+		"\n\n${RED}✗ ${cmsg_binario_nao_foi_localizado_no} ${YELLOW}\$PATH" \
+		"\n${RED}✗ ${cmsg_binario_nao_foi_localizado_na_pasta} ${YELLOW}$PWD${RESET}" \
+		"${YELLOW}\n➡ ${cmsg_DICA_instale_o_pacote_chili_utils}"
 	return 1
 }
 
@@ -2177,6 +2897,7 @@ sh_get_local_ip() {
 }
 
 sh_menu_network_ssh() {
+	: "${NET_TITLE:=${cmsg_dir_rede_envia}}"
 	local source="$1"
 	local txtNetworkData
 
@@ -2201,26 +2922,28 @@ sh_menu_network_ssh() {
 		fi
 
 		# 2. Define dinamicamente o arquivo padrão com base no formato retornado
-		local ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img.${format_type}"
+		local base_name="${DEVICE_SOURCE//\//_}"
+		base_name="${base_name#_}"
+		local ssh_outfile="/mnt/backup/${base_name}_remote.img.${format_type}"
 		if [[ "$format_type" == "img" ]]; then
-			ssh_outfile="/mnt/backup/${DEVICE_SOURCE//\//_}_remote.img"
+			ssh_outfile="/mnt/backup/${base_name}_remote.img"
 		fi
 
 		# 3. Abre o formulário com o nome do arquivo já preenchido com a extensão correta
 		exec 3>&1
 		txtNetworkData=$(${DIALOG} \
 			--backtitle "$ccabec" \
-			--title "** $(gettext "CLONAGEM REMOTA VIA SSH") **" \
+			--title "** ${NET_TITLE^^} **" \
 			--ok-label "${cmsg_Select}" \
 			--cancel-label "${cmsg_button_voltar}" \
 			--colors \
 			--insecure \
-			--mixedform "$(gettext "Entre com as credenciais do servidor SSH de destino e caminho:")" \
+			--mixedform "${cmsg_Entre_com_as_credenciais_do_servidor}" \
 			14 90 0 \
-			"$(gettext "Usuário Remoto  :")" 1 1 "$ssh_user" 1 20 20 0 0 \
-			"$(gettext "IP do Servidor  :")" 2 1 "$ssh_ip" 2 20 30 0 0 \
-			"$(gettext "Porta SSH       :")" 3 1 "$ssh_porta" 3 20 10 0 0 \
-			"$(gettext "Arquivo Destino :")" 4 1 "$ssh_outfile" 4 20 60 0 0 \
+			"${cmsg_Usuario_Remoto}" 1 1 "$ssh_user" 1 20 20 0 0 \
+			"${cmsg_IP_do_Servidor}" 2 1 "$ssh_ip" 2 20 30 0 0 \
+			"${cmsg_Porta_SSH}" 3 1 "$ssh_porta" 3 20 10 0 0 \
+			"${cmsg_Arquivo_Destino}" 4 1 "$ssh_outfile" 4 20 60 0 0 \
 			2>&1 1>&3)
 
 		local exit_status=$?
@@ -2239,37 +2962,63 @@ sh_menu_network_ssh() {
 			ssh_outfile="${aNetData[3]}"
 
 			if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_outfile" ]]; then
-				conf "*** SSH CONFIG ***" "\n$(gettext "Todos os campos devem ser preenchidos! Tente novamente.")\n"
+				conf "*** ${cmsg_CONFIGURACAO_SSH} ***" "\n${cmsg_Todos_os_campos_devem_ser_preenchidos}\n"
 				continue
 			fi
 
-			${DIALOG} --title "$(gettext "TESTANDO CONEXÃO")" --infobox "\n$(gettext "Tentando conexão via Chave Pública em") $ssh_ip..." 5 60
-			if ssh -p "$ssh_porta" -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
-				use_sshpass=0
-			else
-				if ! command -v sshpass >/dev/null 2>&1; then
-					conf "*** ERRO DE REQUISITO ***" "${RED}$(gettext "O utilitário 'sshpass' não foi encontrado no sistema!")${RESET}\n\n$(gettext "Instale o pacote 'sshpass' ou configure chaves públicas para habilitar a clonagem via rede.")"
-					continue
-				fi
-
-				ssh_password=$(${DIALOG} --backtitle "$ccabec" --title "$(gettext "AUTENTICAÇÃO REQUERIDA")" --clear --insecure --passwordbox "$(gettext "A conexão direta por chave falhou.\nDigite a senha para") $ssh_user@$ssh_ip:" 10 60 2>&1 >/dev/tty)
-				if [[ $? -ne 0 || -z "$ssh_password" ]]; then
-					continue
-				fi
-
-				${DIALOG} --title "$(gettext "TESTANDO SENHA")" --infobox "\n$(gettext "Validando senha no servidor remoto...")" 5 60
-				if ! sshpass -p "$ssh_password" ssh -p "$ssh_porta" -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip" "true" >/dev/null 2>&1; then
-					conf "*** ERRO DE AUTENTICAÇÃO ***" "${RED}$(gettext "Senha incorreta ou acesso rejeitado pelo servidor remoto!")${RESET}\n$(gettext "Verifique suas credenciais e tente novamente.")"
-					continue
-				fi
-				use_sshpass=1
-			fi
+			sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
+			use_sshpass=$SSH_USE_PASS
+			ssh_password=$SSH_PASSWORD
 
 			sh_make_clone_network_ssh "$source" "$ssh_user" "$ssh_ip" "$ssh_porta" "$ssh_outfile" "$use_sshpass" "$ssh_password" "$format_type"
-			return $?
+			local rc=$?
+			((rc == 2)) && continue # destino recusado (sem escrita, sem espaço, FAT32...): corrige no formulário
+			return $rc
 			;;
 		esac
 	done
+}
+
+# Testa acesso SSH: chave pública primeiro; se falhar, pede senha (sshpass).
+# Define SSH_USE_PASS (0/1) e SSH_PASSWORD. Retorna 1 se não conseguir acesso.
+sh_ssh_login() {
+	local user="$1"
+	local ip="$2"
+	local port="$3"
+
+	SSH_USE_PASS=0
+	SSH_PASSWORD=""
+
+	${DIALOG} --title "${cmsg_TESTANDO_CONEXAO}" --infobox "\n${cmsg_Tentando_conexao_via_Chave_Publica_em} $ip..." 5 60
+	if ssh -p "$port" -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "$user@$ip" "true" >/dev/null 2>&1; then
+		return 0
+	fi
+
+	if ! has_command sshpass; then
+		conf "*** ${cmsg_ERRO_DE_REQUISITO} ***" "${RED}${cmsg_O_utilitario_sshpass_nao_foi_encontrado}${RESET}\n\n${cmsg_Instale_o_pacote_sshpass_ou_configure}"
+		return 1
+	fi
+
+	SSH_PASSWORD=$(${DIALOG} --backtitle "$ccabec" --title "${cmsg_AUTENTICACAO_REQUERIDA}" --clear --insecure --passwordbox "${cmsg_A_conexao_direta_por_chave_falhou} $user@$ip:" 10 60 2>&1 >/dev/tty)
+	if [[ $? -ne 0 || -z "$SSH_PASSWORD" ]]; then
+		return 1
+	fi
+
+	${DIALOG} --title "${cmsg_TESTANDO_SENHA}" --infobox "\n${cmsg_Validando_senha_no_servidor_remoto}" 5 60
+	if ! SSHPASS="$SSH_PASSWORD" sshpass -e ssh -p "$port" -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$user@$ip" "true" >/dev/null 2>&1; then
+		conf "*** ${cmsg_ERRO_DE_AUTENTICACAO} ***" "${RED}${cmsg_Senha_incorreta_ou_acesso_rejeitado_pelo}${RESET}\n${cmsg_Verifique_suas_credenciais_e_tente_novamente}"
+		return 1
+	fi
+	SSH_USE_PASS=1
+}
+
+# Monta o comando ssh em SSH_BASE (array), com sshpass -e quando a senha for usada
+sh_ssh_base() {
+	SSH_BASE=(ssh -p "$3" -o StrictHostKeyChecking=no "$1@$2")
+	if ((SSH_USE_PASS)); then
+		export SSHPASS="$SSH_PASSWORD"
+		SSH_BASE=(sshpass -e "${SSH_BASE[@]}")
+	fi
 }
 
 sh_get_network_format() {
@@ -2278,15 +3027,15 @@ sh_get_network_format() {
 		--clear \
 		--stdout \
 		--backtitle "$ccabec" \
-		--title "$(gettext "FORMATO DE COMPRESSÃO")" \
+		--title "${cmsg_FORMATO_DE_COMPRESSAO}" \
 		--ok-label "${cmsg_Select}" \
 		--cancel-label "${cmsg_button_voltar}" \
-		--menu "$(gettext "Escolha o formato de saída para a imagem remota:")" \
+		--menu "${cmsg_Escolha_o_formato_de_saida_para}" \
 		12 60 0 \
-		"zst" "Zstandard (Otimizado/Adaptativo)" \
-		"gz" "Gzip (Compatibilidade)" \
-		"xz" "XZ / LZMA (Máxima Compressão)" \
-		"img" "Sem compressão (Imagem Raw / bruto)" \
+		"zst" "Zstandard (${cmsg_Otimizado_Adaptativo})" \
+		"gz" "Gzip (${cmsg_Compatibilidade})" \
+		"xz" "XZ / LZMA (${cmsg_Maxima_Compressao})" \
+		"img" "${cmsg_Sem_compressao_Imagem_Raw_bruto}" \
 		2>&1)
 
 	if [[ $? -eq 0 && -n "$format_type" ]]; then
@@ -2309,17 +3058,18 @@ sh_make_clone_network_ssh() {
 	set -o pipefail
 
 	if conf "${cwarning}" \
-		"${cmsg_disco_origem[LC_DEFAULT]}: ${GREEN}$DEVICE_SOURCE | $SIZE_SOURCE | $MODEL_SOURCE${RESET}\n\
-$(gettext "SERVIDOR DESTINO :") ${YELLOW}$ssh_user@$ssh_ip:$ssh_porta${RESET}\n\
-$(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
-		"${BOLD}${YELLOW}$(gettext "Confirmar o início da clonagem criptografada via rede?")${RESET}\n"; then
+		"$(sh_label_origem "$source"): ${GREEN}$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_SERVIDOR_DESTINO} ${YELLOW}$ssh_user@$ssh_ip:$ssh_porta${RESET}\n\
+${cmsg_ARQUIVO_REMOTO} ${RED}$ssh_outfile\n\n" \
+		"${BOLD}${YELLOW}${cmsg_Confirmar_o_inicio_da_clonagem_criptografada}${RESET}\n"; then
 
 		sh_start_time_elapsed
-		mensagem "$(gettext "Iniciando transmissão de") $source $(gettext "para") $ssh_ip:$ssh_outfile"
+		sh_log "origem=$source ($SIZE_SOURCE $MODEL_SOURCE) | destino=$ssh_user@$ssh_ip:$ssh_porta:$ssh_outfile | formato=$format_type | auth=$([[ $use_sshpass -eq 1 ]] && echo senha || echo chave)"
+		mensagem "${cmsg_Iniciando_transmissao_de} $source ${cmsg_para} $ssh_ip:$ssh_outfile"
 
 		local src_size
 		if [[ -b "$source" ]]; then
-			src_size=$(sudo blockdev --getsize64 "$source")
+			src_size=$(blockdev --getsize64 "$source")
 		else
 			src_size=$(stat -c%s "$source")
 		fi
@@ -2327,134 +3077,1087 @@ $(gettext "ARQUIVO REMOTO   :") ${RED}$ssh_outfile\n\n" \
 		SECTOR_SIZE=$(blockdev --getss "$source")
 
 		# Mapeamento limpo sem o bzip2
-		local compress_cmd="cat"
+		local -a compress_cmd=(cat)
 		local use_custom_pipeline=0
 
 		case "$format_type" in
-		zst) compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
-		gz) compress_cmd="gzip -c" ;;
-		xz) compress_cmd="xz -c -T2" ;;
-		img) compress_cmd="cat" ;;
+		zst) compress_cmd=(zstd --adapt=min=1,max=9 -T2) ;;
+		gz) compress_cmd=(gzip -c) ;;
+		xz) compress_cmd=(xz -c -T2) ;;
+		img) compress_cmd=(cat) ;;
 		qcow2) use_custom_pipeline=1 ;;
-		*) compress_cmd="zstd --adapt=min=1,max=9 -T2" ;;
+		*) compress_cmd=(zstd --adapt=min=1,max=9 -T2) ;;
 		esac
+
+		# ssh montado em array (sem eval); senha via ambiente, não aparece no ps
+		local -a ssh_base=(ssh -p "$ssh_porta" -o StrictHostKeyChecking=no "$ssh_user@$ssh_ip")
+		if [[ "$use_sshpass" -eq 1 ]]; then
+			export SSHPASS="$ssh_password"
+			ssh_base=(sshpass -e "${ssh_base[@]}")
+		fi
 
 		local remote_dir
 		remote_dir=$(dirname "$ssh_outfile")
 
-		${DIALOG} --title "$(gettext "PREPARANDO DESTINO")" --infobox "\n$(gettext "Garantindo que o diretório remoto existe...")" 5 60
-		local mkdir_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'mkdir -p \"$remote_dir\"'"
-		if [[ "$use_sshpass" -eq 1 ]]; then
-			mkdir_cmd="sshpass -p '$ssh_password' $mkdir_cmd"
+		${DIALOG} --title "${cmsg_PREPARANDO_DESTINO}" --infobox "\n${cmsg_Garantindo_que_o_diretorio_remoto_existe}" 5 60
+		if ! "${ssh_base[@]}" "mkdir -p $(printf '%q' "$remote_dir")" >/dev/null 2>&1; then
+			sh_log "falha ao criar diretório remoto: $ssh_user@$ssh_ip:$remote_dir"
+			conf "*** ${cmsg_ERRO_DE_DIRETORIO} ***" "${RED}${cmsg_Falha_ao_criar_o_diretorio_remoto}${RESET} $remote_dir\n${cmsg_Verifique_as_permissoes_de_escrita_do}"
+			unset SSHPASS
+			return 2 # volta ao formulário
 		fi
 
-		if ! eval "$mkdir_cmd" >/dev/null 2>&1; then
-			conf "*** ERRO DE DIRETÓRIO ***" "${RED}$(gettext "Falha ao criar o diretório remoto:")${RESET} $remote_dir\n$(gettext "Verifique as permissões de escrita do usuário no destino.")"
-			return 1
+		# arquivo remoto já existe: pergunta antes de sobrescrever
+		if "${ssh_base[@]}" "test -e $(printf '%q' "$ssh_outfile")" >/dev/null 2>&1; then
+			if ! conf "${cwarning}" "\n$(printf "${cmsg_arquivo_remoto_existe}" "$ssh_user@$ssh_ip:$ssh_outfile")"; then
+				sh_log "cancelado: arquivo remoto já existe ($ssh_outfile)"
+				unset SSHPASS
+				return 2 # volta ao formulário
+			fi
 		fi
 
+		# onde o arquivo vai ficar e quanto espaço há no remoto
+		# dá para criar arquivo no diretório remoto?
+		if ! "${ssh_base[@]}" "p=$(printf '%q' "$remote_dir")/.${_APP_}.\$\$.probe; : > \"\$p\" && rm -f \"\$p\"" >/dev/null 2>&1; then
+			info "$(printf "${cmsg_sem_escrita}" "$ssh_user@$ssh_ip:$remote_dir")"
+			unset SSHPASS
+			return 2 # volta ao formulário
+		fi
+
+		# onde o arquivo vai ficar, tipo do sistema de arquivos e espaço livre no remoto
+		local r_src r_fstype r_avail
+		read -r r_src r_fstype r_avail < <("${ssh_base[@]}" "df --output=source,fstype,avail -B1 $(printf '%q' "$remote_dir") | tail -n1" 2>/dev/null)
+
+		# remoto = esta máquina e o arquivo cairia no próprio disco de origem
+		if [[ "$("${ssh_base[@]}" "cat /proc/sys/kernel/random/boot_id" 2>/dev/null)" == "$(cat /proc/sys/kernel/random/boot_id)" ]] &&
+			[[ -n "$r_src" ]] && lsblk -nrpo NAME "$source" 2>/dev/null | grep -Fxq "$r_src"; then
+			info "$(printf "${cmsg_imagem_no_disco_de_origem}" "$remote_dir" "$source")"
+			unset SSHPASS
+			return 2 # volta ao formulário
+		fi
+
+		# FAT32 e espaço livre (mesmas regras do destino local)
+		if ! sh_check_image_space "$ssh_user@$ssh_ip:$remote_dir" "$r_fstype" "$r_avail" "$src_size" "$format_type"; then
+			unset SSHPASS
+			return 2 # volta ao formulário
+		fi
+
+		local chash="/tmp/${_APP_}.chash.$$"
+		rm -f "$chash"
 		local fifo_tmp="/tmp/clonereder_fifo_$$"
 		rm -f "$fifo_tmp"
 		mkfifo "$fifo_tmp"
 
-		local ssh_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'cat > \"$ssh_outfile\"'"
+		local remote_cat
+		remote_cat="cat > $(printf '%q' "$ssh_outfile")"
 
-		if [[ "$use_sshpass" -eq 1 ]]; then
-			ssh_cmd="sshpass -p '$ssh_password' $ssh_cmd"
-		fi
-
+		# subshell com pipefail: o wait devolve a falha de qualquer etapa (compressor ou ssh)
 		if [[ "$use_custom_pipeline" -eq 1 ]]; then
-			qemu-img convert -O qcow2 "$fifo_tmp" /dev/stdout | eval "$ssh_cmd" 2>/dev/null &
+			(
+				set -o pipefail
+				qemu-img convert -O qcow2 "$fifo_tmp" /dev/stdout | "${ssh_base[@]}" "$remote_cat" 2>/dev/null
+			) &
 		else
-			(cat "$fifo_tmp" | $compress_cmd) | eval "$ssh_cmd" 2>/dev/null &
+			(
+				set -o pipefail
+				"${compress_cmd[@]}" <"$fifo_tmp" | "${ssh_base[@]}" "$remote_cat" 2>/dev/null
+			) &
 		fi
 		local network_pid=$!
 
 		(
-			pv --numeric --size "$src_size" "$source" >"$fifo_tmp"
+			pv --numeric --size "$src_size" "$source" | tee >(sha256sum | cut -d' ' -f1 >"$chash") >"$fifo_tmp"
 		) 2>&1 |
 			${DIALOG} \
-				--title "$(gettext "CLONAGEM REMOTA EM ANDAMENTO")" \
+				--title "${cmsg_CLONAGEM_REMOTA_EM_ANDAMENTO}" \
 				--colors \
 				--gauge \
-				"${BOLD}${WHITE}${REVERSE}$(gettext "Processando: pv → conversor/compressor → SSH → Rede")${RESET}\n\n\
-${cmsg_disco_origem[LC_DEFAULT]}: ${YELLOW}$DEVICE_SOURCE ($SIZE_SOURCE)${RESET}\n\
-$(gettext "DESTINO REMOTO :") ${RED}$ssh_ip:$ssh_outfile${RESET}" \
+				"${BOLD}${WHITE}${REVERSE}${cmsg_Processando_pv_conversor_compressor_SSH_Rede}${RESET}\n\n\
+$(sh_label_origem "$source"): ${YELLOW}$DEVICE_SOURCE ($SIZE_SOURCE)${RESET}\n\
+${cmsg_DESTINO_REMOTO} ${RED}$ssh_ip:$ssh_outfile${RESET}" \
 				11 100 0
 
-		nchoice=${PIPESTATUS[1]}
+		nchoice=${PIPESTATUS[0]} # status do pv (o [1] era o do dialog)
 
-		wait "$network_pid"
+		wait "$network_pid" || nchoice=1
+		if ((nchoice != 0)); then
+			"${ssh_base[@]}" "rm -f $(printf '%q' "$ssh_outfile")" >/dev/null 2>&1 &&
+				sh_log "arquivo incompleto removido: $ssh_user@$ssh_ip:$ssh_outfile"
+		fi
 		rm -f "$fifo_tmp"
 
 		sh_end_time_elapsed
+		sh_log_result "$nchoice"
+
+		if [[ $nchoice -eq 0 ]]; then
+			# ficha e hash gravados ao lado da imagem, no remoto
+			SSH_BASE=("${ssh_base[@]}")
+			RSUDO=""
+			REMOTE_HOST="$ssh_user@$ssh_ip"
+			sh_meta_from_local_dev "$source"
+			META_FORMAT="$format_type"
+			META_CONTENT_BYTES="$src_size"
+			META_CONTENT_HASH=""
+			sh_wait_file "$chash" && META_CONTENT_HASH="$(<"$chash")"
+			sh_write_image_meta "$ssh_outfile" remote
+		fi
+		rm -f "$chash"
 
 		if [[ $nchoice -eq 0 ]]; then
 			local remote_size="N/A"
-			local size_cmd="ssh -p '$ssh_porta' -o StrictHostKeyChecking=no '$ssh_user@$ssh_ip' 'du -sh \"$ssh_outfile\" 2>/dev/null | awk \"{print \\\$1}\"'"
-			if [[ "$use_sshpass" -eq 1 ]]; then
-				size_cmd="sshpass -p '$ssh_password' $size_cmd"
-			fi
-			remote_size=$(eval "$size_cmd")
+			remote_size=$("${ssh_base[@]}" "du -sh $(printf '%q' "$ssh_outfile")" 2>/dev/null | awk '{print $1}')
 			[[ -z "$remote_size" ]] && remote_size="Unknown"
 
 			display_result \
-				"$(gettext "Resumo da Operação de Rede")" \
-				"${BOLD}${GREEN}${REVERSE}$(gettext "Clonagem Remota Concluída com Sucesso!")${RESET}\n\n" \
-				"$(gettext "Origem Local     :") ${BOLD}${WHITE}$source${RESET}\n" \
-				"$(gettext "Destino Remoto   :") ${BOLD}${WHITE}$ssh_user@$ssh_ip:$ssh_outfile${RESET}\n" \
-				"$(gettext "Tamanho Remoto   :") ${BOLD}${YELLOW}$remote_size${RESET}\n\n" \
-				"$(gettext "Start Date time  :") ${BOLD}${BLUE}$start_datetime${RESET}\n" \
-				"$(gettext "Finish Date Time :") ${BOLD}${BLUE}$end_datetime${RESET}\n" \
-				"$(gettext "Time elapsed     :") ${BOLD}${GREEN}($(sh_time_elapsed))${RESET}\n"
+				"${cmsg_Resumo_da_Operacao_de_Rede}" \
+				"${BOLD}${GREEN}${REVERSE}${cmsg_Clonagem_Remota_Concluida_com_Sucesso}${RESET}\n\n" \
+				"${cmsg_Origem_Local} ${BOLD}${WHITE}$source${RESET}\n" \
+				"${cmsg_Destino_Remoto} ${BOLD}${WHITE}$ssh_user@$ssh_ip:$ssh_outfile${RESET}\n" \
+				"${cmsg_Tamanho_Remoto} ${BOLD}${YELLOW}$remote_size${RESET}\n\n" \
+				"$(sh_time_summary)"
+		else
+			info "${cmsg_Falha_clonagem_remota}"
 		fi
 
+		unset SSHPASS
 		return $nchoice
 	fi
 	return 1
 }
 
 sh_clone_network_ssh() {
-	local localtitle="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
-	local diskselected=""
+	local kind="${1:-disk}" # disk | part
+	local title="${cmsg_dir_rede_envia}"
 
-	source=$(sh_list_disk "${localtitle}" "${diskselected}")
-
-	if [[ -n "$source" ]]; then
+	if [[ "$kind" == "part" ]]; then
+		title="${cmsg_dir_rede_lpart_img}"
+		source=$(sh_list_partition "${cmsg_part_origem}" "" origem)
+		[[ -n "$source" ]] || return 1
+		sh_part_info
+	else
+		source=$(sh_list_disk "${cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA}" "" origem)
+		[[ -n "$source" ]] || return 1
 		sh_disk_info
-		DEVICE_SOURCE="$source"
-		MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
-		SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
-
-		sh_menu_network_ssh "$source"
 	fi
+	DEVICE_SOURCE="$source"
+	MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_MODEL")"
+	SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$source]}" "$DSK_SIZE")"
+
+	sh_check_source_busy "$source" || return 1
+	NET_TITLE="$title"
+	sh_menu_network_ssh "$source"
+}
+
+# --keep-tite \
+# Discos locais em uso pelo sistema: os que contêm /, /boot, /boot/efi, /usr, /var, /home ou swap ativa
+declare -a SYSTEM_MOUNTS=(/ /boot /boot/efi /usr /var /home)
+sh_system_disks() {
+	local mp src
+	{
+		for mp in "${SYSTEM_MOUNTS[@]}"; do
+			src="$(findmnt -n -o SOURCE "$mp" 2>/dev/null)"
+			src="${src%%\[*}" # btrfs: /dev/sda2[/@] -> /dev/sda2
+			[[ -b "$src" ]] && echo "$src"
+		done
+		swapon --show=NAME --noheadings 2>/dev/null
+	} | while read -r src; do
+		[[ -b "$src" ]] || continue
+		lsblk -nrspo NAME,TYPE "$src" 2>/dev/null | awk '$2 == "disk" || $2 == "loop" {print $1}'
+	done | sort -u
+}
+
+# Conecta num servidor SSH e escolhe um disco remoto.
+# Define: REMOTE_HOST (usuario@ip), REMOTE_DEV, REMOTE_SIZE (bytes), REMOTE_DESC, REMOTE_SECTOR, RSUDO e SSH_BASE.
+sh_remote_pick_disk() {
+	local title="$1"
+	local mode="${2:-origem}" # origem (vai ser lido) | destino (vai ser sobrescrito)
+	local kind="${3:-disk}"   # disk (disco/loop/LVM) | part (partição)
+	REMOTE_KIND="$kind"
+	local ssh_user="root" ssh_porta="22" ssh_ip txt local_ip line key val
+	local -a fields=() items=()
+	local -A seen=()
+
+	local_ip=$(sh_get_local_ip)
+	ssh_ip="${local_ip%.*}.100"
+
+	while true; do
+		exec 3>&1
+		txt=$(${DIALOG} \
+			--backtitle "$ccabec" \
+			--title "** ${title^^} **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--colors \
+			--mixedform "${cmsg_credenciais_servidor}" \
+			12 90 0 \
+			"${cmsg_Usuario_Remoto}" 1 1 "$ssh_user" 1 20 20 0 0 \
+			"${cmsg_IP_do_Servidor}" 2 1 "$ssh_ip" 2 20 30 0 0 \
+			"${cmsg_Porta_SSH}" 3 1 "$ssh_porta" 3 20 10 0 0 \
+			2>&1 1>&3)
+		local st=$?
+		exec 3>&-
+		((st == 0)) || return 1
+
+		mapfile -t fields <<<"$txt"
+		ssh_user="${fields[0]}"
+		ssh_ip="${fields[1]}"
+		ssh_porta="${fields[2]}"
+		if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_porta" ]]; then
+			conf "*** ${cmsg_CONFIGURACAO_SSH} ***" "\n${cmsg_Todos_os_campos_devem_ser_preenchidos}\n"
+			continue
+		fi
+
+		sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
+		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
+
+		# ler disco cru exige root: sudo sem senha quando o usuário não é root
+		RSUDO=""
+		[[ "$ssh_user" != "root" ]] && RSUDO="sudo -n"
+		if ! "${SSH_BASE[@]}" "$RSUDO true" >/dev/null 2>&1; then
+			info "${cmsg_remoto_sem_root}"
+			unset SSHPASS
+			continue
+		fi
+		break
+	done
+
+	# o "remoto" pode ser esta mesma máquina (ex.: 127.0.0.1): compara o boot_id
+	SAME_MACHINE=0
+	if [[ "$("${SSH_BASE[@]}" "cat /proc/sys/kernel/random/boot_id" 2>/dev/null)" == "$(cat /proc/sys/kernel/random/boot_id)" ]]; then
+		SAME_MACHINE=1
+		sh_log "remoto $ssh_user@$ssh_ip é esta mesma máquina"
+	fi
+
+	# discos remotos (disco, loop e LVM), sem repetidos e sem volumes internos do LVM
+	local -A r_type=() r_size=() r_tran=() r_model=() r_busy=() r_fs=() r_label=()
+	local -a r_order=()
+	while IFS= read -r line; do
+		local -A f=()
+		# lê KEY="valor" sem eval (a saída vem de outra máquina)
+		while [[ "$line" =~ ^[[:space:]]*([A-Z:-]+)=\"([^\"]*)\"(.*)$ ]]; do
+			key="${BASH_REMATCH[1]}"
+			val="$(printf '%b' "${BASH_REMATCH[2]}")"
+			f[$key]="$val"
+			line="${BASH_REMATCH[3]}"
+		done
+		local path="${f[PATH]}"
+		[[ -z "$path" ]] && continue
+		if [[ "$kind" == "part" ]]; then
+			[[ "${f[TYPE]}" == "part" ]] || continue
+		else
+			case "${f[TYPE]}" in
+			disk | loop | lvm) ;;
+			*) continue ;;
+			esac
+		fi
+		[[ "${f[NAME]}" =~ ^(zram|ram)[0-9]+$ || "${f[SIZE]}" == "0" ]] && continue
+		[[ "${f[TYPE]}" == "lvm" && "${f[NAME]}" =~ (_tdata|_tmeta|_tpool|-tpool|_rimage_[0-9]+|_rmeta_[0-9]+|_mimage_[0-9]+|_mlog|_cdata|_cmeta|_corig|_cvol|_vorigin|_pmspare)$ ]] && continue
+		[[ -n "${seen[$path]}" ]] && continue
+		seen[$path]=1
+		r_order+=("$path")
+		r_type[$path]="${f[TYPE]}"
+		r_size[$path]="${f[SIZE]}"
+		r_tran[$path]="${f[TRAN]:-${f[TYPE]}}"
+		r_model[$path]="${f[MODEL]:-${f[TYPE]} device}"
+		r_fs[$path]="${f[FSTYPE]}"
+		r_label[$path]="${f[LABEL]}"
+	done < <("${SSH_BASE[@]}" "$RSUDO lsblk -PAbo NAME,PATH,TYPE,SIZE,TRAN,MODEL,FSTYPE,LABEL" 2>/dev/null)
+
+	# sem udev o lsblk remoto pode não trazer tipo/rótulo: completa com blkid
+	if [[ "$kind" == "part" ]] && ((${#r_order[@]})); then
+		local dn="" bt="" bl=""
+		while IFS= read -r line; do
+			case "$line" in
+			DEVNAME=*) dn="${line#DEVNAME=}" bt="" bl="" ;;
+			TYPE=*) bt="${line#TYPE=}" ;;
+			LABEL=*) bl="${line#LABEL=}" ;;
+			"")
+				[[ -n "$dn" && -z "${r_fs[$dn]}" ]] && r_fs[$dn]="$bt"
+				[[ -n "$dn" && -z "${r_label[$dn]}" ]] && r_label[$dn]="$bl"
+				dn=""
+				;;
+			esac
+		done < <("${SSH_BASE[@]}" "$RSUDO blkid -o export $(printf '%q ' "${r_order[@]}"); echo" 2>/dev/null)
+	fi
+
+	# em uso (montado, swap, LVM/LUKS/RAID, processo, ZFS): uma só consulta para todos
+	if ((${#r_order[@]})); then
+		while IFS= read -r line; do
+			[[ -n "$line" ]] && r_busy[${line%%|*}]=1
+		done < <("${SSH_BASE[@]}" "$RSUDO sh -s -- $(printf '%q ' "${r_order[@]}")" <<<"$BUSY_SH" 2>/dev/null)
+	fi
+
+	if ((${#r_order[@]} == 0)); then
+		info "${cmsg_nenhum_disco_remoto}"
+		unset SSHPASS
+		return 1
+	fi
+
+	local d desc
+	for d in "${r_order[@]}"; do
+		if [[ "$kind" == "part" ]]; then
+			desc="$(printf "$sep%-8s$sep%7s$sep%-20s" "${r_fs[$d]:-?}" "$(numfmt --to=iec "${r_size[$d]}")" "${r_label[$d]}")"
+		else
+			desc="$(printf "$sep%-6s$sep%7s$sep%-30s" "${r_tran[$d]}" "$(numfmt --to=iec "${r_size[$d]}")" "${r_model[$d]}")"
+		fi
+		[[ -n "${r_busy[$d]}" ]] && desc+=" ${RED}[${cmsg_em_uso}]${RESET}"
+		items+=("$d" "$desc")
+	done
+
+	local prompt="${YELLOW}${cmsg_disco_origem} : ${REVERSE}(${cmsg_choose_disk_origem})${RESET}"
+	[[ "$mode" == "destino" ]] && prompt="${YELLOW}${cmsg_disco_destino} : ${REVERSE}(${cmsg_choose_disk_destino})${RESET}"
+	local rtitle="${cmsg_Disco_remoto}"
+	if [[ "$kind" == "part" ]]; then
+		prompt="${YELLOW}${cmsg_part_origem} : ${REVERSE}(${cmsg_choose_part_origem})${RESET}"
+		[[ "$mode" == "destino" ]] && prompt="${YELLOW}${cmsg_part_destino} : ${REVERSE}(${cmsg_choose_part_destino})${RESET}"
+		rtitle="${cmsg_Particao_remota}"
+	fi
+	REMOTE_HOST="$ssh_user@$ssh_ip"
+
+	while true; do
+		REMOTE_DEV=$(${DIALOG} \
+			--stdout \
+			--colors \
+			--backtitle "$ccabec" \
+			--title "${rtitle^^}: $ssh_user@$ssh_ip" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--default-item "$REMOTE_DEV" \
+			--menu "$prompt" \
+			20 100 12 "${items[@]}") || {
+			unset SSHPASS
+			return 1
+		}
+		[[ "$mode" != "destino" ]] && break
+		# destino: nunca sobrescrever disco remoto em uso
+		sh_check_target_free "$REMOTE_DEV" remote && break
+	done
+
+	REMOTE_SIZE="${r_size[$REMOTE_DEV]}"
+	REMOTE_DESC="$(numfmt --to=iec "$REMOTE_SIZE") | ${r_model[$REMOTE_DEV]}"
+	[[ "$kind" == "part" ]] && REMOTE_DESC="$(numfmt --to=iec "$REMOTE_SIZE") | ${r_fs[$REMOTE_DEV]:-?} ${r_label[$REMOTE_DEV]}"
+	REMOTE_SECTOR="$("${SSH_BASE[@]}" "$RSUDO blockdev --getss $(printf '%q' "$REMOTE_DEV")" 2>/dev/null)"
+	[[ "$REMOTE_SECTOR" =~ ^[0-9]+$ ]] || REMOTE_SECTOR=512
+
+	# origem remota em uso: avisa (cópia pode ficar inconsistente)
+	if [[ "$mode" != "destino" ]] && ! sh_check_source_busy "$REMOTE_DEV" remote; then
+		unset SSHPASS
+		return 1
+	fi
+	return 0
+}
+
+# Remoto é esta máquina e os dois caminhos apontam para o mesmo dispositivo?
+sh_same_device() {
+	((SAME_MACHINE)) || return 1
+	[[ "$(lsblk -ndo MAJ:MIN "$1" 2>/dev/null)" == "$(lsblk -ndo MAJ:MIN "$2" 2>/dev/null)" ]]
+}
+
+# Disco deste computador -> disco de um servidor SSH (nunca um disco remoto em uso)
+sh_local_disk_to_remote_disk() {
+	local -i nchoice
+	local src lsize dumpfile
+	local kind="${1:-disk}" # disk | part
+	local title="${cmsg_dir_rede_disco_disco}" lbl_src="${cmsg_disco_origem}" lbl_dst="${cmsg_disco_destino}"
+	local msg_menor="${cmsg_O_disco_de_DESTINO_e_menor}"
+
+	if [[ "$kind" == "part" ]]; then
+		title="${cmsg_dir_rede_lpart_rpart}"
+		lbl_src="${cmsg_part_origem}"
+		lbl_dst="${cmsg_part_destino}"
+		msg_menor="${cmsg_A_particao_de_DESTINO_e_menor}"
+		src=$(sh_list_partition "${cmsg_part_origem}" "" origem)
+		[[ -z "$src" ]] && return 1
+		sh_part_info
+	else
+		src=$(sh_list_disk "${cmsg_disco_origem}" "" origem)
+		[[ -z "$src" ]] && return 1
+		sh_disk_info
+	fi
+	DEVICE_SOURCE="$src"
+	MODEL_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$src]}" "$DSK_MODEL")"
+	SIZE_SOURCE="$(sh_splitarray "${AARRAY_DSK_DEVICES[$src]}" "$DSK_SIZE")"
+	sh_check_source_busy "$src" || return 1
+	lsize=$(blockdev --getsize64 "$src")
+
+	# destino remoto: em uso é recusado dentro do sh_remote_pick_disk
+	sh_remote_pick_disk "$title" destino "$kind" || return 1
+
+	if sh_same_device "$src" "$REMOTE_DEV"; then
+		alerta "${cwarning}" "\n${cmsg_disco_identico}\n\n$src = $REMOTE_HOST:$REMOTE_DEV"
+		unset SSHPASS
+		return 1
+	fi
+
+	if ((lsize > REMOTE_SIZE)); then
+		conf "${YELLOW}${cwarning}" \
+			"\n${BOLD}${RED}${REVERSE}${msg_menor}${RESET}\n\n" \
+			"${BOLD}${WHITE}${lbl_src} : $src${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}\n" \
+			"${BOLD}${WHITE}${lbl_dst}: $REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}\n\n" \
+			"${YELLOW}${cmsg_Prosseguir}" || {
+			unset SSHPASS
+			return 1
+		}
+	fi
+
+	if ! conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
+${BLUE} ${lbl_src}:  $src${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE} \n" \
+		"${RED}${lbl_dst}: $REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC\n\n" \
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+		unset SSHPASS
+		return 1
+	fi
+
+	# confere de novo logo antes de gravar (algo pode ter montado o disco nesse meio tempo)
+	if ! sh_check_target_free "$REMOTE_DEV" remote; then
+		unset SSHPASS
+		return 1
+	fi
+
+	# backup da tabela de partições do disco remoto, guardado aqui (partição não tem tabela)
+	[[ "$kind" == "part" ]] || {
+	mkdir -p "/tmp/$_APP_"
+	dumpfile="/tmp/$_APP_/${REMOTE_HOST#*@}_${REMOTE_DEV##*/}.$(sh_diahora).dump"
+	if "${SSH_BASE[@]}" "$RSUDO sfdisk -d $(printf '%q' "$REMOTE_DEV")" >"$dumpfile" 2>/dev/null; then
+		sh_log "backup da tabela de partições: $REMOTE_HOST:$REMOTE_DEV -> $dumpfile"
+	else
+		rm -f "$dumpfile"
+		sh_log "sem tabela de partições para backup: $REMOTE_HOST:$REMOTE_DEV"
+	fi
+	}
+
+	sh_start_time_elapsed
+	local chash="/tmp/${_APP_}.chash.$$"
+	rm -f "$chash"
+	sh_log "origem=$src ($SIZE_SOURCE $MODEL_SOURCE) | destino=$REMOTE_HOST:$REMOTE_DEV ($REMOTE_DESC) | auth=$( ((SSH_USE_PASS)) && echo senha || echo chave)"
+	(
+		set -o pipefail
+		pv -n "$src" |
+			tee >(sha256sum | cut -d' ' -f1 >"$chash") |
+			"${SSH_BASE[@]}" "$RSUDO dd of=$(printf '%q' "$REMOTE_DEV") bs=4M iflag=fullblock conv=notrunc,fsync status=none" 2>>"${LOGFILE:-/dev/null}"
+	) 2>&1 |
+		${DIALOG} \
+			--title "${cmsg_running_disk_cloning^^}" \
+			--colors \
+			--gauge \
+			"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (pv -> ssh -> dd)${RESET}\n\n\
+${cmsg_Origem^^} : ${YELLOW}$src${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}${RESET}\n\
+${cmsg_Destino^^}: ${RED}$REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}" \
+			10 100 0
+	nchoice=${PIPESTATUS[0]}
+
+	# o kernel remoto relê a tabela para as partições novas aparecerem lá
+	if ((nchoice == 0)) && [[ "$kind" != "part" ]]; then
+		"${SSH_BASE[@]}" "$RSUDO sh -c 'blockdev --rereadpt $(printf '%q' "$REMOTE_DEV") 2>/dev/null; partx -u $(printf '%q' "$REMOTE_DEV") 2>/dev/null; true'" >/dev/null 2>&1
+	fi
+	# verificação: relê o disco remoto e compara com o hash do que foi enviado
+	if ((nchoice == 0)); then
+		local h=""
+		sh_wait_file "$chash" && h="$(<"$chash")"
+		sh_verify_written "$REMOTE_DEV" remote "$lsize" "$h" || nchoice=1
+	fi
+	rm -f "$chash"
+	local rinfo
+	rinfo="$("${SSH_BASE[@]}" "$RSUDO fdisk -l $(printf '%q' "$REMOTE_DEV")" 2>&1)"
+	unset SSHPASS
+	sh_end_time_elapsed
+	sh_log_result "$nchoice"
+
+	if ((nchoice != 0)); then
+		info "${cmsg_falha_clonagem}"
+	else
+		display_result "$REMOTE_HOST:$REMOTE_DEV" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+			"$(sh_time_summary)\n" \
+			"${BOLD}${WHITE}$rinfo"
+	fi
+	sh_reset_conf
+	return $nchoice
+}
+
+# Disco de um servidor SSH -> imagem neste computador
+sh_remote_disk_to_image() {
+	local -i nchoice
+	local outfile base
+	local kind="${1:-disk}" # disk | part
+	local title="${cmsg_dir_rede_remoto_img}" lbl="${cmsg_disco_origem}"
+	if [[ "$kind" == "part" ]]; then
+		title="${cmsg_dir_rede_rpart_img}"
+		lbl="${cmsg_part_origem}"
+	fi
+
+	sh_remote_pick_disk "$title" origem "$kind" || return 1
+
+	image_format=$(sh_choose_image_format) || {
+		unset SSHPASS
+		return 1
+	}
+
+	base="${REMOTE_HOST#*@}_${REMOTE_DEV//\//_}"
+	base="${base//__/_}"
+	outfile="${PWD}/${base}"
+	case "$image_format" in
+	raw) outfile+=".img" ;;
+	qcow2) outfile+=".qcow2" ;;
+	zstd) outfile+=".img.zst" ;;
+	xz) outfile+=".img.xz" ;;
+	gzip) outfile+=".img.gz" ;;
+	esac
+
+	# nome do arquivo local
+	while true; do
+		outfile=$(${DIALOG} \
+			--stdout \
+			--backtitle "$ccabec" \
+			--title "** ${cmsg_NOME_DA_IMAGEM} **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--inputbox "$REMOTE_HOST:$REMOTE_DEV ($REMOTE_DESC)\n\n${cmsg_Entre_com_o_nome_da_imagem}:" \
+			12 100 "$outfile") || {
+			unset SSHPASS
+			return 1
+		}
+		if [[ -z "$outfile" ]]; then
+			conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "\n${cmsg_Nome_da_imagem_invalido_Tente_novamente}\n" && continue
+			unset SSHPASS
+			return 1
+		fi
+		if [[ -e "$outfile" ]]; then
+			conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "${RED}$(printf "${cmsg_Imagem_s_ja_existe_Tentar_outro}" "$outfile")" && continue
+			unset SSHPASS
+			return 1
+		fi
+		# o caminho do disco remoto só vale aqui se o remoto for esta mesma máquina
+		if ((SAME_MACHINE)); then
+			sh_check_image_target "$REMOTE_DEV" "$outfile" "$REMOTE_SIZE" || continue
+		else
+			sh_check_image_target "" "$outfile" "$REMOTE_SIZE" || continue
+		fi
+		break
+	done
+
+	if ! conf "${cwarning}" \
+		"${lbl}: ${GREEN}$REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile\n\n" \
+		"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
+		unset SSHPASS
+		return 1
+	fi
+
+	local -a compress=(cat) decomp=()
+	local rcompress="" where="local"
+	case "$image_format" in
+	zstd) compress=(zstd --adapt=min=1,max=9 -T2 -c) decomp=(zstd -dc) rcompress="zstd --adapt=min=1,max=9 -T2 -c" ;;
+	xz) compress=(xz -1 -c) decomp=(xz -dc) rcompress="xz -1 -T2 -c" ;;
+	gzip) compress=(gzip -1 -c) decomp=(gzip -dc) rcompress="gzip -1 -c" ;;
+	esac
+
+	# comprime no remoto quando ele tiver a ferramenta: só o fluxo comprimido atravessa a rede.
+	# Aqui o fluxo é descomprimido em paralelo só para o progresso e o hash do conteúdo
+	# (isso também confirma que o arquivo recebido descomprime sem erro).
+	if ((${#decomp[@]})) && "${SSH_BASE[@]}" "command -v ${rcompress%% *} >/dev/null" 2>/dev/null; then
+		where="remoto"
+	fi
+
+	sh_start_time_elapsed
+	local chash="/tmp/${_APP_}.chash.$$"
+	rm -f "$chash"
+	sh_log "origem=$REMOTE_HOST:$REMOTE_DEV ($REMOTE_DESC) | destino=$outfile | formato=$image_format (compressão: $where) | auth=$( ((SSH_USE_PASS)) && echo senha || echo chave)"
+	(
+		set -o pipefail
+		if [[ "$where" == "remoto" ]]; then
+			"${SSH_BASE[@]}" "$RSUDO cat -- $(printf '%q' "$REMOTE_DEV") | $rcompress" 2>>"${LOGFILE:-/dev/null}" |
+				tee "$outfile" |
+				"${decomp[@]}" 2>>"${LOGFILE:-/dev/null}" |
+				tee >(sha256sum | cut -d' ' -f1 >"$chash") |
+				pv -n -s "$REMOTE_SIZE" >/dev/null
+		else
+			"${SSH_BASE[@]}" "$RSUDO cat -- $(printf '%q' "$REMOTE_DEV")" 2>>"${LOGFILE:-/dev/null}" |
+				pv -n -s "$REMOTE_SIZE" |
+				tee >(sha256sum | cut -d' ' -f1 >"$chash") |
+				"${compress[@]}" 2>>"${LOGFILE:-/dev/null}" >"$outfile"
+		fi
+	) 2>&1 |
+		${DIALOG} \
+			--title "${cmsg_running_disk_cloning^^}" \
+			--colors \
+			--gauge \
+			"${BOLD}${WHITE}${REVERSE}${cmsg_running_disk_cloning} (ssh -> ${image_format} [${where}])${RESET}\n\n\
+${lbl}: ${YELLOW}$REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}\n\
+${cmsg_imagem_destino} : ${RED}$outfile" \
+			10 100 0
+	nchoice=${PIPESTATUS[0]}
+	if ((nchoice == 0)); then
+		sh_meta_from_remote_dev "$REMOTE_DEV" # ainda com acesso ao remoto
+	fi
+	unset SSHPASS
+
+	if ((nchoice == 0)) && [[ "$image_format" == "qcow2" ]]; then
+		local tmp_raw="$outfile.tmp.raw"
+		mv "$outfile" "$tmp_raw"
+		${DIALOG} --title "${cmsg_running_disk_cloning^^}" --colors --infobox "\n${BOLD}${cmsg_Convertendo_para_QCOW2}${RESET}\n\n${cmsg_Aguarde_esta_operacao_pode_levar_alguns}" 8 70
+		if qemu-img convert -O qcow2 "$tmp_raw" "$outfile" >/dev/null 2>&1; then
+			rm -f "$tmp_raw"
+		else
+			nchoice=1
+			sh_log "falha na conversão para qcow2, raw mantido em $tmp_raw"
+			info "$(printf "${cmsg_falha_conversao_qcow2}" "$tmp_raw")"
+		fi
+	fi
+
+	sh_end_time_elapsed
+	sh_log_result "$nchoice"
+	if ((nchoice != 0)); then
+		if [[ -e "$outfile" ]]; then
+			rm -f "$outfile"
+			sh_log "arquivo incompleto removido: $outfile"
+		fi
+		info "${cmsg_falha_clonagem}"
+		return $nchoice
+	fi
+
+	# ficha da imagem (.info) e hash do arquivo (.sha256)
+	META_FORMAT="$image_format"
+	META_CONTENT_BYTES="$REMOTE_SIZE"
+	META_CONTENT_HASH=""
+	sh_wait_file "$chash" && META_CONTENT_HASH="$(<"$chash")"
+	rm -f "$chash"
+	sh_write_image_meta "$outfile"
+
+	SECTOR_SIZE="$REMOTE_SECTOR"
+	display_result "$outfile" \
+		"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+		"${BOLD}${GREEN}${REVERSE}${cmsg_Info_imagem} : $outfile${RESET}\n" \
+		"${BOLD}${WHITE}\n$(sh_image_info "$outfile")\n\n" \
+		"$(sh_time_summary)"
+	return 0
+}
+
+# Disco de um servidor SSH -> disco deste computador (nunca o disco em uso pelo sistema)
+sh_remote_disk_to_disk() {
+	local -i nchoice
+	local kind="${1:-disk}" # disk | part
+	local title="${cmsg_dir_rede_remoto_disco}" lbl_src="${cmsg_disco_origem}" lbl_dst="${cmsg_disco_destino}"
+	if [[ "$kind" == "part" ]]; then
+		title="${cmsg_dir_rede_rpart_part}"
+		lbl_src="${cmsg_part_origem}"
+		lbl_dst="${cmsg_part_destino}"
+	fi
+
+	sh_remote_pick_disk "$title" origem "$kind" || return 1
+
+	DEVICE_SOURCE="$REMOTE_HOST:$REMOTE_DEV"
+	SIZE_SOURCE="$(numfmt --to=iec "$REMOTE_SIZE")"
+	MODEL_SOURCE="${REMOTE_DESC#* | }"
+
+	if [[ "$kind" == "part" ]]; then
+		# escolhe a partição local (avisa se for menor; backup não se aplica a partição)
+		part_source=""
+		if ! sh_choose_target_partition; then
+			unset SSHPASS
+			return 1
+		fi
+		target="$part_target"
+	else
+		target=$(sh_list_disk "${cmsg_disco_destino}" "" destino)
+	fi
+	if [[ -z "$target" ]]; then
+		unset SSHPASS
+		return 1
+	fi
+
+	if sh_same_device "$REMOTE_DEV" "$target"; then
+		alerta "${cwarning}" "\n${cmsg_disco_identico}\n\n$REMOTE_HOST:$REMOTE_DEV = $target"
+		unset SSHPASS
+		return 1
+	fi
+
+	if [[ "$kind" != "part" ]]; then
+		sh_disk_info
+		DEVICE_TARGET="$target"
+		MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
+		SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
+	fi
+
+	# partição já teve o aviso de tamanho no sh_choose_target_partition
+	if [[ "$kind" != "part" ]] && ((REMOTE_SIZE > $(blockdev --getsize64 "$target"))); then
+		conf "${YELLOW}${cwarning}" \
+			"\n${BOLD}${RED}${REVERSE}${cmsg_O_disco_de_DESTINO_e_menor}${RESET}\n\n" \
+			"${BOLD}${WHITE}${cmsg_disco_origem} : $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}\n" \
+			"${BOLD}${WHITE}${cmsg_disco_destino}: $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}${RESET}\n\n" \
+			"${YELLOW}${cmsg_Prosseguir}" || {
+			unset SSHPASS
+			return 1
+		}
+	fi
+
+	if ! conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
+${BLUE} ${lbl_src}:  $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE} \n" \
+		"${RED}${lbl_dst}: $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}\n\n" \
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+		unset SSHPASS
+		return 1
+	fi
+	sh_backup_partitions "$target" "${target##*/}"
+	if ! sh_check_target_free "$target"; then
+		unset SSHPASS
+		return 1
+	fi
+
+	sh_start_time_elapsed
+	sh_log "origem=$DEVICE_SOURCE ($REMOTE_DESC) | destino=$target ($SIZE_TARGET $MODEL_TARGET) | auth=$( ((SSH_USE_PASS)) && echo senha || echo chave)"
+	WRITE_SRC_CMD=("${SSH_BASE[@]}" "$RSUDO cat -- $(printf '%q' "$REMOTE_DEV")")
+	WRITE_SRC_SIZE="$REMOTE_SIZE"
+	sh_write_image_to_device "$REMOTE_DEV" "$target" "$DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE:+ | $MODEL_SOURCE}" "$DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}"
+	nchoice=$?
+	unset WRITE_SRC_CMD WRITE_SRC_SIZE SSHPASS
+	sh_end_time_elapsed
+	sh_log_result "$nchoice"
+
+	if ((nchoice != 0)); then
+		info "${cmsg_falha_clonagem}"
+	else
+		display_result "fdisk -l $target" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+			"$(sh_time_summary)\n" \
+			"${BOLD}${WHITE}$(fdisk -l "$target" 2>&1)"
+		sh_ask_regen_uuids "$target"
+	fi
+	sh_reset_conf
+	return $nchoice
+}
+
+# Restaura uma imagem que está num servidor SSH direto para um disco ou partição
+sh_restore_network_ssh() {
+	local -i nchoice
+	local ssh_user="root" ssh_porta="22" rfile="/mnt/backup/" ssh_ip txt rsize kind local_ip
+	local -a fields=()
+
+	local_ip=$(sh_get_local_ip)
+	ssh_ip="${local_ip%.*}.100"
+
+	# 1. servidor e arquivo remoto
+	while true; do
+		exec 3>&1
+		txt=$(${DIALOG} \
+			--backtitle "$ccabec" \
+			--title "** ${cmsg_dir_rede_restaura^^} **" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--colors \
+			--mixedform "${cmsg_credenciais_restauracao}" \
+			14 90 0 \
+			"${cmsg_Usuario_Remoto}" 1 1 "$ssh_user" 1 20 20 0 0 \
+			"${cmsg_IP_do_Servidor}" 2 1 "$ssh_ip" 2 20 30 0 0 \
+			"${cmsg_Porta_SSH}" 3 1 "$ssh_porta" 3 20 10 0 0 \
+			"${cmsg_Arquivo_Remoto}" 4 1 "$rfile" 4 20 60 0 0 \
+			2>&1 1>&3)
+		local st=$?
+		exec 3>&-
+		((st == 0)) || return 1
+
+		mapfile -t fields <<<"$txt"
+		ssh_user="${fields[0]}"
+		ssh_ip="${fields[1]}"
+		ssh_porta="${fields[2]}"
+		rfile="${fields[3]}"
+
+		if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$rfile" ]]; then
+			conf "*** ${cmsg_CONFIGURACAO_SSH} ***" "\n${cmsg_Todos_os_campos_devem_ser_preenchidos}\n"
+			continue
+		fi
+		# qcow2 precisa de acesso aleatório ao arquivo; não dá para ler em fluxo pela rede
+		if [[ "${rfile,,}" == *.qcow2 ]]; then
+			info "${cmsg_qcow2_rede_nao_suportado}"
+			continue
+		fi
+
+		sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
+		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
+
+		rsize=$("${SSH_BASE[@]}" "stat -c%s -- $(printf '%q' "$rfile")" 2>/dev/null)
+		if ! [[ "$rsize" =~ ^[0-9]+$ ]]; then
+			info "$(printf "${cmsg_arquivo_remoto_nao_encontrado}" "$ssh_user@$ssh_ip:$rfile")"
+			unset SSHPASS
+			continue
+		fi
+		break
+	done
+
+	DEVICE_SOURCE="$ssh_user@$ssh_ip:$rfile"
+	MODEL_SOURCE=""
+	SIZE_SOURCE=""
+	# tamanho real: da ficha remota (.info); sem ficha, só é conhecido em imagem sem compressão
+	local rbytes
+	rbytes="$(sh_meta_get "$rfile" conteudo_bytes remote)"
+	if ! [[ "$rbytes" =~ ^[0-9]+$ ]]; then
+		rbytes=""
+		case "${rfile,,}" in
+		*.zst | *.xz | *.gz) : ;;
+		*) rbytes="$rsize" ;;
+		esac
+	fi
+	[[ -n "$rbytes" ]] && SIZE_SOURCE="$(numfmt --to=iec "$rbytes")"
+
+	# 2. destino: disco inteiro ou partição
+	kind=$(${DIALOG} \
+		--stdout \
+		--backtitle "$ccabec" \
+		--title "${cmsg_Restaurar_em^^}" \
+		--ok-label "${cmsg_Select}" \
+		--cancel-label "${cmsg_button_voltar}" \
+		--menu "${DEVICE_SOURCE}" \
+		10 70 0 \
+		disco "${cmsg_Disco_inteiro}" \
+		part "${cmsg_Particao}") || {
+		unset SSHPASS
+		return 1
+	}
+
+	if [[ "$kind" == "disco" ]]; then
+		target=$(sh_list_disk "${cmsg_disco_destino}" "" destino)
+		[[ -z "$target" ]] && {
+			unset SSHPASS
+			return 1
+		}
+		sh_disk_info
+		DEVICE_TARGET="$target"
+		MODEL_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_MODEL")"
+		SIZE_TARGET="$(sh_splitarray "${AARRAY_DSK_DEVICES[$target]}" "$DSK_SIZE")"
+		if [[ -n "$rbytes" ]] && ((rbytes > $(blockdev --getsize64 "$target"))); then
+			conf "${cwarning}" "\n${RED}$(printf "${cmsg_imagem_maior_que_destino}" "$SIZE_SOURCE" "$SIZE_TARGET")${RESET}\n" || {
+				unset SSHPASS
+				return 1
+			}
+		fi
+	else
+		part_source=""
+		sh_choose_target_partition || {
+			unset SSHPASS
+			return 1
+		}
+		target="$part_target"
+		if [[ -n "$rbytes" ]] && ((rbytes > $(blockdev --getsize64 "$target"))); then
+			conf "${cwarning}" "\n${RED}$(printf "${cmsg_imagem_maior_que_destino}" "$SIZE_SOURCE" "$SIZE_TARGET")${RESET}\n" || {
+				unset SSHPASS
+				return 1
+			}
+		fi
+	fi
+
+	# 3. confirmação, backup da tabela e desmontagem
+	if ! conf "${cwarning}" \
+		"\n${cmsg_todos_os_dados_serao_perdidos}\n\n""\
+${BLUE} ${cmsg_imagem_origem}:  $DEVICE_SOURCE \n" \
+		"${RED}$(sh_label_destino "$target"): $DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}\n\n" \
+		"${BOLD}${WHITE}${cmsg_continuar_com_a_clonagem}?\n"; then
+		unset SSHPASS
+		return 1
+	fi
+	if ! sh_ask_verify_image "$rfile" remote; then
+		unset SSHPASS
+		return 1
+	fi
+	sh_backup_partitions "$target" "${target##*/}"
+	if ! sh_check_target_free "$target"; then
+		unset SSHPASS
+		return 1
+	fi
+
+	# 4. gravação: ssh cat -> pv -> descompressor -> dd
+	sh_start_time_elapsed
+	sh_log "origem=$DEVICE_SOURCE ($(numfmt --to=iec "$rsize")) | destino=$target ($SIZE_TARGET $MODEL_TARGET) | auth=$( ((SSH_USE_PASS)) && echo senha || echo chave)"
+	WRITE_SRC_CMD=("${SSH_BASE[@]}" "cat -- $(printf '%q' "$rfile")")
+	WRITE_SRC_SIZE="$rsize"
+	sh_write_image_to_device "$rfile" "$target" "$DEVICE_SOURCE" "$DEVICE_TARGET${SIZE_TARGET:+ | $SIZE_TARGET}${MODEL_TARGET:+ | $MODEL_TARGET}"
+	nchoice=$?
+	unset WRITE_SRC_CMD WRITE_SRC_SIZE SSHPASS
+	sh_end_time_elapsed
+	sh_log_result "$nchoice"
+
+	if ((nchoice != 0)); then
+		info "${cmsg_falha_clonagem}"
+	else
+		display_result "fdisk -l $target" \
+			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
+			"$(sh_time_summary)\n" \
+			"${BOLD}${WHITE}$(fdisk -l "$target" 2>&1)"
+		sh_ask_regen_uuids "$target"
+	fi
+	sh_reset_conf
+	return $nchoice
+}
+
+# Idiomas disponíveis: pt_BR (textos originais) + os que têm .mo instalado
+sh_available_languages() {
+	local mo
+	echo "pt_BR"
+	for mo in "$TEXTDOMAINDIR"/*/LC_MESSAGES/"$TEXTDOMAIN".mo; do
+		[[ -e "$mo" ]] || continue
+		mo="${mo#"$TEXTDOMAINDIR"/}"
+		[[ "${mo%%/*}" != "pt_BR" ]] && echo "${mo%%/*}"
+	done
+}
+
+# Troca o idioma da interface em tempo de execução
+sh_choose_language() {
+	local lang
+	local -a items=()
+
+	while read -r lang; do
+		items+=("$lang")
+	done < <(sh_available_languages)
+
+	lang=$(${DIALOG} \
+		--stdout \
+		--backtitle "$ccabec" \
+		--title "${cmsg_Idioma^^}" \
+		--ok-label "${cmsg_Select}" \
+		--cancel-label "${cmsg_button_voltar}" \
+		--default-item "${LANGUAGE%%:*}" \
+		--no-items \
+		--menu "${cmsg_Escolha_o_idioma}" \
+		0 50 0 "${items[@]}") || return 1
+
+	export LANGUAGE="$lang"
+	sh_Language # recarrega todas as mensagens no novo idioma
+	sh_log "idioma alterado para $lang"
+}
+
+# Executa uma operação registrando início e fim no log
+sh_run_op() {
+	local name="$1"
+	local -i st
+	shift
+
+	LOG_OP="$name"
+	sh_log "=== início da operação ==="
+	"$@"
+	st=$?
+	sh_log "=== fim da operação (status=$st) ==="
+	LOG_OP=""
+	return $st
+}
+
+sh_list_disks_menu() {
+	sh_list_disk "${cmsg_Listar_Discos^^}" "" lista >/dev/null
+}
+
+# Submenu de um grupo; ao terminar uma operação, volta ao mesmo submenu
+sh_submenu() {
+	local group="$1"
+	local title choice="" width pad i
+	local -a items=() pairs=()
+
+	while true; do
+		width=80
+		# montado a cada volta: se o idioma mudar, os textos já vêm traduzidos
+		case "$group" in
+		clonar)
+			title="${cmsg_Grupo_Clonar}"
+			pairs=("${cmsg_dir_disco_disco}" "${cmsg_desc_disco_disco}"
+				"${cmsg_dir_part_part}" "${cmsg_desc_part_part}")
+			;;
+		criar)
+			title="${cmsg_Grupo_Criar_imagem}"
+			pairs=("${cmsg_dir_disco_img}" "${cmsg_desc_disco_img}"
+				"${cmsg_dir_part_img}" "${cmsg_desc_part_img}")
+			;;
+		restaurar)
+			title="${cmsg_Grupo_Restaurar_imagem}"
+			pairs=("${cmsg_dir_img_disco}" "${cmsg_desc_img_disco}"
+				"${cmsg_dir_img_part}" "${cmsg_desc_img_part}"
+				"${cmsg_dir_iso}" "${cmsg_desc_iso}")
+			;;
+		rede)
+			title="${cmsg_Grupo_Rede}"
+			width=100
+			pairs=("${cmsg_dir_rede_envia}" "${cmsg_desc_rede_envia}"
+				"${cmsg_dir_rede_lpart_img}" "${cmsg_desc_rede_lpart_img}"
+				"${cmsg_dir_rede_disco_disco}" "${cmsg_desc_rede_disco_disco}"
+				"${cmsg_dir_rede_lpart_rpart}" "${cmsg_desc_rede_lpart_rpart}"
+				"${cmsg_dir_rede_restaura}" "${cmsg_desc_rede_restaura}"
+				"${cmsg_dir_rede_remoto_img}" "${cmsg_desc_rede_remoto_img}"
+				"${cmsg_dir_rede_rpart_img}" "${cmsg_desc_rede_rpart_img}"
+				"${cmsg_dir_rede_remoto_disco}" "${cmsg_desc_rede_remoto_disco}"
+				"${cmsg_dir_rede_rpart_part}" "${cmsg_desc_rede_rpart_part}")
+			;;
+		*) return 1 ;;
+		esac
+
+		# "origem -> destino : descrição", com o ":" alinhado (sh_pad conta caracteres)
+		pad=0
+		for ((i = 0; i < ${#pairs[@]}; i += 2)); do
+			((${#pairs[i]} > pad)) && pad=${#pairs[i]}
+		done
+		items=()
+		for ((i = 0; i < ${#pairs[@]}; i += 2)); do
+			items+=($((i / 2 + 1)) "$(sh_pad "${pairs[i]}" "$pad") : ${pairs[i + 1]}")
+		done
+
+		choice=$(
+			${DIALOG} \
+				--clear \
+				--stdout \
+				--backtitle "$ccabec" \
+				--colors \
+				--title "${cmsg_MENU_PRINCIPAL} > ${title^^}" \
+				--ok-label "${cmsg_Select}" \
+				--cancel-label "${cmsg_button_voltar}" \
+				--default-item "$choice" \
+				--menu "${cmsg_LABEL}\n\n${cmsg_Escolha_a_operacao}:" \
+				$((${#items[@]} / 2 + 10)) "$width" $((${#items[@]} / 2)) \
+				"${items[@]}"
+		) || return 0
+
+		case "$group:$choice" in
+		clonar:1) sh_run_op "Disco -> Disco" sh_clone_disk_to_disk ;;
+		clonar:2) sh_run_op "Partição -> Partição" sh_clone_part_to_part ;;
+		criar:1) sh_run_op "Disco -> Imagem" sh_clone_disk_to_image ;;
+		criar:2) sh_run_op "Partição -> Imagem" sh_clone_part_to_image ;;
+		restaurar:1) sh_run_op "Imagem -> Disco" sh_clone_image_to_disk ;;
+		restaurar:2) sh_run_op "Imagem -> Partição" sh_clone_image_to_part ;;
+		restaurar:3) sh_run_op "ISO -> Pendrive/Disco" sh_execute_iso2usb ;;
+		rede:1) sh_run_op "Disco local -> Imagem remota" sh_clone_network_ssh disk ;;
+		rede:2) sh_run_op "Partição local -> Imagem remota" sh_clone_network_ssh part ;;
+		rede:3) sh_run_op "Disco local -> Disco remoto" sh_local_disk_to_remote_disk disk ;;
+		rede:4) sh_run_op "Partição local -> Partição remota" sh_local_disk_to_remote_disk part ;;
+		rede:5) sh_run_op "Imagem remota -> Disco/Partição local" sh_restore_network_ssh ;;
+		rede:6) sh_run_op "Disco remoto -> Imagem local" sh_remote_disk_to_image disk ;;
+		rede:7) sh_run_op "Partição remota -> Imagem local" sh_remote_disk_to_image part ;;
+		rede:8) sh_run_op "Disco remoto -> Disco local" sh_remote_disk_to_disk disk ;;
+		rede:9) sh_run_op "Partição remota -> Partição local" sh_remote_disk_to_disk part ;;
+		esac
+	done
 }
 
 # --keep-tite \
 sh_choose_clone_type() {
+	local choice=""
+	local -a groups=("" clonar criar restaurar rede)
+
 	while true; do
-		clone_type=$(
+		choice=$(
 			${DIALOG} \
 				--clear \
 				--stdout \
-				--aspect 20 \
 				--backtitle "$ccabec" \
 				--colors \
-				--title "$(gettext "MENU PRINCIPAL")" \
+				--title "${cmsg_MENU_PRINCIPAL}" \
 				--ok-label "${cmsg_Select}" \
 				--cancel-label "${cmsg_Sair}" \
+				--default-item "$choice" \
 				--menu "${cmsg_LABEL}\n\n${cmsg_Escolha_o_tipo_de_clone}:" \
-				10 80 0 \
-				0 "${cmsg_Clonar_Disco_para_Disco}" \
-				1 "${cmsg_Clonar_Disco_para_Imagem}" \
-				2 "${cmsg_Clonar_via_Rede}" \
-				3 "${cmsg_Clonar_Particao_para_Imagem}" \
-				4 "${cmsg_Clonar_Particao_para_Particao}" \
-				5 "${cmsg_Clonar_Imagem_para_Particao}" \
-				6 "${cmsg_Clonar_Imagem_para_Disco}" \
-				7 "${cmsg_Gravar_ISO_para_Disco}" \
-				8 "${cmsg_Listar_Discos}" \
-				9 "${cmsg_Tema}"
+				17 80 7 \
+				1 "${cmsg_Grupo_Clonar}" \
+				2 "${cmsg_Grupo_Criar_imagem}" \
+				3 "${cmsg_Grupo_Restaurar_imagem}" \
+				4 "${cmsg_Grupo_Rede}" \
+				5 "${cmsg_Listar_Discos}" \
+				6 "${cmsg_Tema}" \
+				7 "${cmsg_Idioma}"
 		)
 
 		exit_status=$?
@@ -2463,50 +4166,152 @@ sh_choose_clone_type() {
 			exit 0
 			;;
 		esac
-		case $clone_type in
-		0) sh_clone_disk_to_disk ;;
-		1) sh_clone_disk_to_image ;;
-		2) sh_clone_network_ssh ;;
-		3) sh_clone_part_to_image ;;
-		4) sh_clone_part_to_part ;;
-		5) sh_clone_image_to_part ;;
-		6) sh_clone_image_to_disk ;;
-		7) sh_execute_iso2usb ;;
-		8) sh_list_disk ;;
-		9) sh_run_binary 'chili-dialog-theme-selector' ;;
+		case "$choice" in
+		5) sh_run_op "Listar Discos" sh_list_disks_menu ;;
+		6) sh_run_op "Seletor de temas" sh_run_binary 'chili-dialog-theme-selector' ;;
+		7) sh_run_op "Idioma da interface" sh_choose_language ;;
+		*) sh_submenu "${groups[choice]}" ;;
 		esac
 	done
 }
 
 sh_configure
-sh_getLocale
 sh_Language
 sh_display
-
-if ! opts=$(getopt -o Vnh --long version,nocolor,help -n "${0##*/}" -- "$@"); then
-	sh_usage
-	exit 0
-fi
-eval set -- "$opts"
-
-while true; do
-	case "$1" in
-	-V | --version)
-		sh_logo
-		exit 0
-		;;
-	-n | --nocolor)
-		sh_unsetvarcolors
-		break
-		;;
-	-h | --help)
-		sh_usage
-		exit 0
-		;;
-	*) break ;;
-	esac
-done
 sh_checkroot "$@"
+sh_log_init
 sh_checkDependencies "${DEPENDENCIES[*]}"
-#init "$@"
 sh_choose_clone_type
+
+#########################################################################
+# ChangeLog
+#########################################################################
+#
+# 2026-09-23 (v6.9.23.20260923)
+#
+# Internacionalização (gettext)
+#  - Todas as mensagens visíveis passam por gettext e ficam como variáveis
+#    cmsg_* em sh_Language(); nenhuma chamada gettext solta nas funções.
+#  - Removidos os ${cmsg_x[LC_DEFAULT]} (mensagens saíam vazias fora do pt_BR).
+#  - Removidos Alanguage, Alocale, LC_DEFAULT, sh_getLocale e flags de idioma.
+#  - Maiúsculas via expansão ${var^^}, sem variáveis duplicadas.
+#  - Fallback: sem o binário gettext, mostra o texto original (pt_BR).
+#  - Troca de idioma pelo menu, a partir dos .mo instalados (sem lista fixa).
+#  - sh_pad: alinhamento por caracteres (funciona com acentos e traduções).
+#  - Textos corrigidos: "Formatando partição" durante a clonagem, rótulos de
+#    disco/partição/imagem nas telas de partição e imagem, títulos "Info
+#    disco"/"Info imagem", menu de formato com "Voltar" em vez de "Sair".
+#
+# Interface
+#  - Menu principal reorganizado: Clonar (local), Criar imagem, Restaurar
+#    imagem, Rede (SSH), Listar Discos, Seletor de temas, Idioma.
+#  - Submenus no padrão "origem -> destino : descrição" com textos genéricos
+#    (disco/partição/imagem, local/remoto).
+#  - Altura dos menus corrigida (todas as opções visíveis).
+#  - Cabeçalho da lista de discos conforme o modo (origem, destino, lista).
+#  - Erros de nome/local da imagem voltam ao formulário, sem cair no menu.
+#  - Nome padrão da imagem sem "_none" e sem "_" inicial (local e remoto).
+#  - Tamanho real da imagem nas telas (qcow2 virtual, xz/zst descomprimido).
+#  - Somente -h/--help e -V/--version; o resto é via dialog, sem elevar
+#    privilégios para ajuda e versão.
+#  - Modo texto removido (tudo como grafico=true); has_command() no lugar de
+#    command -v; bloco # debug/PS4 movido para o topo.
+#
+# Correções
+#  - Imagem -> Partição e Partição -> Imagem usavam variáveis erradas.
+#  - Partição -> Imagem ignorava a compressão escolhida.
+#  - Imagem qcow2 era gravada crua no disco (agora qemu-img convert).
+#  - Backup da tabela de partições nunca era feito (sh_diahora/log_exec).
+#  - Nome de imagem vazio respondido com "Não" encerrava o script.
+#  - Funções inexistentes chamadas (log_info_msg, evaluate_retval) e
+#    variáveis indefinidas em sh_run_binary.
+#  - NAME_SOURCE preenchido como NAME_TARGET em sh_choose_source_disk.
+#  - Resultado final usava fdisk até em imagem comprimida/qcow2
+#    (sh_image_info mostra a informação certa por formato).
+#  - Status das operações: cancelamentos e falhas registrados corretamente;
+#    compressor e ssh verificados (pipefail).
+#  - sh_checkdisk: desmontagem não se perdia mais em subshell; swapoff.
+#  - Recursão sem return na escolha de destino; recusar desmontar voltava a
+#    encerrar o script (die) — agora volta ao menu.
+#  - Desmontagem do destino só depois da confirmação.
+#  - Gravação em dispositivo com dd bs=4M iflag=fullblock conv=fsync + sync;
+#    o gauge mostrava um comando dd diferente do executado.
+#  - sudo desnecessário em blockdev (script já roda como root).
+#  - pacman --needed, distros sem suporte não fingem sucesso, instala só os
+#    pacotes que faltam.
+#  - Novas dependências verificadas: fdisk, sfdisk, blockdev, lsblk, numfmt,
+#    stdbuf, gettext e findmnt; qemu-img exigido ao escolher qcow2.
+#  - Instalação de dependências funciona mesmo sem o dialog instalado.
+#  - Tabela de partições relida após gravar disco inteiro (partx/udevadm).
+#  - Arquivo incompleto apagado em caso de falha (local e remoto).
+#  - Senha SSH via SSHPASS (sshpass -e), sem eval nem senha no ps.
+#  - Elevação por su com argumentos protegidos.
+#  - Dispositivos repetidos em /dev/mapper (LVM thin) e volumes internos do
+#    LVM removidos das listas; zram/ram e dispositivos de 0 bytes também.
+#  - Funções e variáveis mortas removidas.
+#  - Linhas DEBUG do formulário de imagem vão para o log, não para a tela.
+#  - Copyright do -V atualizado para 2019-2026.
+#  - Seta "→" trocada por "->" em todos os textos (colava na palavra seguinte
+#    em fontes que a desenham com largura dupla).
+#  - Aviso de origem igual ao destino vale para disco e partição.
+#  - Disco/Partição remota -> Imagem local: rótulo da origem aparecia vazio
+#    na confirmação e no progresso.
+#  - Telas não mostram mais "| |" quando tamanho ou modelo são desconhecidos;
+#    imagem não repete "IMAGEM ORIGEM" no lugar do modelo.
+#  - Tamanho real da imagem lido da ficha (.info) quando o formato não o
+#    guarda (zstd gerado em fluxo, gzip); vale também para o aviso de imagem
+#    maior que o destino (inclusive na restauração remota, agora também
+#    quando o destino é uma partição).
+#
+# Segurança de dados
+#  - sh_disk_busy: detecta uso de disco/partição local e remoto — montagens
+#    (mountinfo, inclusive bind/btrfs), swap, LVM/LUKS/RAID (holders),
+#    processo com o dispositivo aberto (fuser) e pool ZFS.
+#  - Destino em uso é bloqueado (local e remoto); origem em uso gera aviso.
+#  - Disco do sistema nunca aparece como destino.
+#  - Detecta quando o "remoto" é a mesma máquina (boot_id) e impede origem e
+#    destino iguais.
+#  - Imagem: bloqueia gravar dentro do próprio disco de origem, diretório sem
+#    escrita, FAT32 com imagem > 4 GiB e falta de espaço (raw/qcow2); avisa
+#    em imagem comprimida.
+#  - Aviso de imagem maior que o destino; destino menor que a origem.
+#  - Arquivo remoto existente: pergunta antes de sobrescrever.
+#  - Novos UUIDs opcionais após clonar (disk-id, PARTUUID, ext2/3/4, xfs,
+#    btrfs, vfat, ntfs, swap e LVM via vgimportclone), padrão "Não".
+#
+# Novas operações
+#  - Formatos de imagem: raw, qcow2, zstd, xz e gzip; restauração de imagens
+#    comprimidas.
+#  - Imagem remota -> Disco/Partição local (ssh, sem cópia intermediária).
+#  - Disco remoto -> Imagem local.
+#  - Disco remoto -> Disco local.
+#  - Disco local -> Disco remoto.
+#  - Partição remota -> Imagem local.
+#  - Partição remota -> Partição local.
+#  - Partição local -> Imagem remota.
+#  - Partição local -> Partição remota.
+#  - Remoto -> Imagem local: com zstd/xz/gzip, comprime no computador remoto
+#    (quando ele tiver a ferramenta) e só o fluxo comprimido passa pela rede;
+#    aqui é descomprimido em paralelo para progresso, hash e validação.
+#
+# Integridade
+#  - Toda imagem criada (local ou remota) ganha <imagem>.sha256 (formato do
+#    "sha256sum -c") e <imagem>.info (ficha: origem, host, modelo, serial,
+#    tamanhos, formato, data, hash do conteúdo, hash do arquivo e tabela de
+#    partições da origem). O hash do conteúdo é calculado durante a cópia.
+#  - "Info imagem" mostra a ficha.
+#  - Antes de restaurar (local ou remoto), opcional: confere o sha256 do
+#    arquivo; sem hash, usa o checksum embutido (zstd/xz/gzip) ou a
+#    estrutura (qcow2) e informa o nível da verificação; raw sem hash avisa
+#    que não há verificação e oferece gerar o .sha256 a partir de agora.
+#  - Imagem corrompida ou alterada é bloqueada.
+#  - Depois de gravar em disco/partição (local ou remoto), opcional: relê o
+#    destino (sem cache) e compara com o hash do que foi enviado; em imagem
+#    com ficha, compara também com o conteúdo original.
+#
+# Log
+#  - Log por execução em /tmp/chili-clonedisk-AAAAMMDD-HHMM.log, com a
+#    operação do menu em cada linha, origem, destino, resultado e tempo.
+#  - Registra também desmontagens, backups de tabela, bloqueios por disco em
+#    uso, novos UUIDs, falhas e erros do compressor.
+#
