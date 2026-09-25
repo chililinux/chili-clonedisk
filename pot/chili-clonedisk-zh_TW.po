@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: chili-tradutor-go 2.1.24-20260816\n"
-"POT-Creation-Date: 2026-09-24 10:50-0400\n"
-"PO-Revision-Date: 2026-09-24 10:50-0400\n"
+"POT-Creation-Date: 2026-09-24 22:01-0400\n"
+"PO-Revision-Date: 2026-09-24 22:01-0400\n"
 "Last-Translator: Vilmar Catafesta <vcatafesta@gmail.com>\n"
 "Language-Team: Portuguese <https://github.com/chililinux/chili-tradutor-go>\n"
 "MIME-Version: 1.0\n"
@@ -585,419 +585,423 @@ msgid "MENU PRINCIPAL"
 msgstr "菜單校長"
 
 #: usr/local/bin/chili-clonedisk:2554
+msgid "sem sistema de arquivos"
+msgstr "沒有檔案系統"
+
+#: usr/local/bin/chili-clonedisk:2555
 #, sh-printf-format
 msgid ""
 "O computador remoto %s não tem as ferramentas necessárias para esta operação."
 msgstr "遠端電腦 %s 沒有執行此操作所需的工具。"
 
-#: usr/local/bin/chili-clonedisk:2555
+#: usr/local/bin/chili-clonedisk:2556
 #, sh-printf-format
 msgid "O computador remoto %s não tem algumas ferramentas opcionais."
 msgstr "遠端電腦 %s 缺少一些選用工具。"
 
-#: usr/local/bin/chili-clonedisk:2556
+#: usr/local/bin/chili-clonedisk:2557
 msgid "Obrigatórias (a operação não pode continuar):"
 msgstr "Obrigatórias (a operação não pode continuar):"
 
-#: usr/local/bin/chili-clonedisk:2557
+#: usr/local/bin/chili-clonedisk:2558
 msgid "Opcionais (a operação continua sem estas etapas):"
 msgstr "可選（無需執行這些步驟即可繼續操作）："
 
-#: usr/local/bin/chili-clonedisk:2558
+#: usr/local/bin/chili-clonedisk:2559
 #, sh-printf-format
 msgid "Para instalar no remoto (%s):"
 msgstr "若要安裝非遠端 (%s)："
 
-#: usr/local/bin/chili-clonedisk:2559
+#: usr/local/bin/chili-clonedisk:2560
 #, sh-printf-format
 msgid "Pacotes a instalar no remoto (%s):"
 msgstr "要在遠端安裝的軟體包 (%s)："
 
-#: usr/local/bin/chili-clonedisk:2560
+#: usr/local/bin/chili-clonedisk:2561
 #, sh-printf-format
 msgid "Lista salva em: %s"
 msgstr "清單儲存：%s"
 
-#: usr/local/bin/chili-clonedisk:2561
+#: usr/local/bin/chili-clonedisk:2562
 msgid "verificar processos usando o disco"
 msgstr "使用磁碟檢查進程"
 
-#: usr/local/bin/chili-clonedisk:2562
+#: usr/local/bin/chili-clonedisk:2563
 msgid "mostrar tipo e rótulo das partições"
 msgstr "顯示分區類型和標籤"
 
-#: usr/local/bin/chili-clonedisk:2563
+#: usr/local/bin/chili-clonedisk:2564
 msgid "backup da tabela de partições"
 msgstr "分割表備份"
 
-#: usr/local/bin/chili-clonedisk:2564
+#: usr/local/bin/chili-clonedisk:2565
 msgid "reler a tabela de partições"
 msgstr "重新讀取分割區表"
 
-#: usr/local/bin/chili-clonedisk:2565
+#: usr/local/bin/chili-clonedisk:2566
 msgid "mostrar o resultado final"
 msgstr "顯示最終結果"
 
-#: usr/local/bin/chili-clonedisk:2566
+#: usr/local/bin/chili-clonedisk:2567
 msgid "hash e verificação da imagem"
 msgstr "hash e verificação da imagem"
 
-#: usr/local/bin/chili-clonedisk:2567
+#: usr/local/bin/chili-clonedisk:2568
 msgid "comprimir/testar no remoto (passa a ser feito aqui)"
 msgstr "遠端壓縮/測試（現在將在此處完成）"
 
-#: usr/local/bin/chili-clonedisk:2568
+#: usr/local/bin/chili-clonedisk:2569
 msgid "conferir espaço livre e FAT32"
 msgstr "檢查可用空間和 FAT32"
 
-#: usr/local/bin/chili-clonedisk:2569
+#: usr/local/bin/chili-clonedisk:2570
 #, sh-printf-format
 msgid "não foi possível verificar se %s está em uso (falta: %s)"
 msgstr "無法檢查 %s 是否正在使用（缺少：%s）"
 
-#: usr/local/bin/chili-clonedisk:2570
+#: usr/local/bin/chili-clonedisk:2571
 #, sh-printf-format
 msgid ""
 "não foi possível verificar se %s está em uso (a verificação não respondeu)"
 msgstr "無法檢查 %s 是否正在使用（檢查沒有回應）"
 
-#: usr/local/bin/chili-clonedisk:2571
+#: usr/local/bin/chili-clonedisk:2572
 msgid "Partição local -> Imagem remota"
 msgstr "本機分區 -> 遠端鏡像"
 
-#: usr/local/bin/chili-clonedisk:2572
+#: usr/local/bin/chili-clonedisk:2573
 msgid "clonar partição local para imagem remota"
 msgstr "將本地分區複製到遠端映像"
 
-#: usr/local/bin/chili-clonedisk:2573
+#: usr/local/bin/chili-clonedisk:2574
 msgid "Partição local -> Partição remota"
 msgstr "本地分區->遠端分區"
 
-#: usr/local/bin/chili-clonedisk:2574
+#: usr/local/bin/chili-clonedisk:2575
 msgid "clonar partição local para partição remota"
 msgstr "將本地分區複製到遠端分區"
 
-#: usr/local/bin/chili-clonedisk:2575
+#: usr/local/bin/chili-clonedisk:2576
 msgid "Partição remota -> Imagem local"
 msgstr "遠端分區 -> 本機鏡像"
 
-#: usr/local/bin/chili-clonedisk:2576
+#: usr/local/bin/chili-clonedisk:2577
 msgid "clonar partição remota para imagem local"
 msgstr "將遠端分區複製到本地鏡像"
 
-#: usr/local/bin/chili-clonedisk:2577
+#: usr/local/bin/chili-clonedisk:2578
 msgid "Partição remota -> Partição local"
 msgstr "遠端分區->本地分區"
 
-#: usr/local/bin/chili-clonedisk:2578
+#: usr/local/bin/chili-clonedisk:2579
 msgid "clonar partição remota para partição local"
 msgstr "將遠端分區克隆到本地分區"
 
-#: usr/local/bin/chili-clonedisk:2579
+#: usr/local/bin/chili-clonedisk:2580
 msgid "Partição remota"
 msgstr "遠端分區"
 
-#: usr/local/bin/chili-clonedisk:2580
+#: usr/local/bin/chili-clonedisk:2581
 msgid "Verificação de integridade"
 msgstr "完整性檢查"
 
-#: usr/local/bin/chili-clonedisk:2581
+#: usr/local/bin/chili-clonedisk:2582
 msgid "Calculando sha256..."
 msgstr "正在計算 sha256..."
 
-#: usr/local/bin/chili-clonedisk:2582
+#: usr/local/bin/chili-clonedisk:2583
 msgid "Testando o checksum embutido no formato..."
 msgstr "測試格式中內建的校驗和..."
 
-#: usr/local/bin/chili-clonedisk:2583
+#: usr/local/bin/chili-clonedisk:2584
 msgid "Relendo o destino para comparar..."
 msgstr "重讀命運來比較…"
 
-#: usr/local/bin/chili-clonedisk:2584
+#: usr/local/bin/chili-clonedisk:2585
 #, sh-printf-format
 msgid "A imagem %s está corrompida ou foi alterada. Não é seguro gravá-la."
 msgstr "%s 映像已損壞或變更。記錄它並不安全。"
 
-#: usr/local/bin/chili-clonedisk:2585
+#: usr/local/bin/chili-clonedisk:2586
 msgid "esperado"
 msgstr "預期的"
 
-#: usr/local/bin/chili-clonedisk:2586
+#: usr/local/bin/chili-clonedisk:2587
 msgid "obtido"
 msgstr "獲得"
 
-#: usr/local/bin/chili-clonedisk:2587
+#: usr/local/bin/chili-clonedisk:2588
 #, sh-printf-format
 msgid "A imagem %s não tem hash guardado (.sha256/.info)."
 msgstr "A imagem %s não tem hash guardado (.sha256/.info)."
 
-#: usr/local/bin/chili-clonedisk:2588
+#: usr/local/bin/chili-clonedisk:2589
 msgid ""
 "Verificado só o checksum embutido no formato: detecta corrupção, mas não uma "
 "troca da imagem."
 msgstr "僅檢查格式中嵌入的校驗和：它檢測損壞，但不檢測影像變更。"
 
-#: usr/local/bin/chili-clonedisk:2589
+#: usr/local/bin/chili-clonedisk:2590
 msgid ""
 "Verificada só a estrutura do qcow2 (qemu-img check); os dados não puderam "
 "ser conferidos."
 msgstr "只檢查了qcow2結構（qemu-img檢查）；無法檢查資料。"
 
-#: usr/local/bin/chili-clonedisk:2590
+#: usr/local/bin/chili-clonedisk:2591
 msgid "Imagem raw sem hash: não há como verificar se ela está íntegra."
 msgstr "沒有哈希的原始圖像：無法檢查它是否完整。"
 
-#: usr/local/bin/chili-clonedisk:2591
+#: usr/local/bin/chili-clonedisk:2592
 msgid ""
 "Gerar o .sha256 agora? Ele não prova que a imagem está intacta desde a "
 "criação, mas serve de referência daqui para frente."
 msgstr "現在生成 .sha256 嗎？它並不能證明該圖像自創建以來就完好無損，但可以作為今後的參考。"
 
-#: usr/local/bin/chili-clonedisk:2592
+#: usr/local/bin/chili-clonedisk:2593
 msgid ""
 "Verificar a integridade da imagem antes de gravar? (lê a imagem inteira)"
 msgstr "錄製前檢查影像完整性？ （閱讀整個圖像）"
 
-#: usr/local/bin/chili-clonedisk:2593
+#: usr/local/bin/chili-clonedisk:2594
 #, sh-printf-format
 msgid "Verificar a gravação? Relê %s (%s) e compara com o que foi gravado."
 msgstr "檢查錄音？重新讀取 %s (%s) 並與記錄的內容進行比較。"
 
-#: usr/local/bin/chili-clonedisk:2594
+#: usr/local/bin/chili-clonedisk:2595
 #, sh-printf-format
 msgid "Gravação verificada: %s confere com o que foi gravado."
 msgstr "已驗證的錄音：%s 與錄音內容相符。"
 
-#: usr/local/bin/chili-clonedisk:2595
+#: usr/local/bin/chili-clonedisk:2596
 #, sh-printf-format
 msgid ""
 "O conteúdo lido de %s é diferente do que foi gravado! O destino pode estar "
 "com defeito."
 msgstr "從%s讀取的內容與寫入的內容不同！目標可能有故障。"
 
-#: usr/local/bin/chili-clonedisk:2596
+#: usr/local/bin/chili-clonedisk:2597
 msgid "Sem ficha (.info) para esta imagem."
 msgstr "此圖像沒有插件 (.info)。"
 
-#: usr/local/bin/chili-clonedisk:2597
+#: usr/local/bin/chili-clonedisk:2598
 #, sh-printf-format
 msgid ""
 "Não é possível gravar em '%s' (diretório inexistente, somente leitura ou sem "
 "permissão)."
 msgstr "無法寫入「%s」（不存在的目錄，唯讀或未經許可）。"
 
-#: usr/local/bin/chili-clonedisk:2598
+#: usr/local/bin/chili-clonedisk:2599
 #, sh-printf-format
 msgid ""
 "'%s' é FAT32, que não aceita arquivos maiores que 4 GiB, e a imagem terá %s. "
 "Escolha outro local ou um formato comprimido."
 msgstr "「%s」是FAT32，不接受大於4 GiB的文件，映像將具有%s。選擇其他位置或壓縮格式。"
 
-#: usr/local/bin/chili-clonedisk:2599
+#: usr/local/bin/chili-clonedisk:2600
 #, sh-printf-format
 msgid ""
 "'%s' é FAT32 (limite de 4 GiB por arquivo). A imagem comprimida pode passar "
 "disso e falhar no meio. Prosseguir?"
 msgstr "「%s」是 FAT32（每個檔案 4 GiB 限制）。壓縮影像可能會超出此範圍並在兩者之間失敗。繼續？"
 
-#: usr/local/bin/chili-clonedisk:2600
+#: usr/local/bin/chili-clonedisk:2601
 #, sh-printf-format
 msgid ""
 "Espaço livre em '%s' (%s) é menor que a origem (%s). A imagem comprimida "
 "pode não caber. Prosseguir?"
 msgstr "“%s”(%s) 中的可用空间小于原点 (%s)。壓縮後的影像可能不適合。繼續？"
 
-#: usr/local/bin/chili-clonedisk:2601
+#: usr/local/bin/chili-clonedisk:2602
 msgid "Disco local -> Disco remoto"
 msgstr "本機磁碟->遠端磁碟"
 
-#: usr/local/bin/chili-clonedisk:2602
+#: usr/local/bin/chili-clonedisk:2603
 msgid "clonar disco local para disco remoto"
 msgstr "將本機磁碟複製到遠端磁碟"
 
-#: usr/local/bin/chili-clonedisk:2603
+#: usr/local/bin/chili-clonedisk:2604
 #, sh-printf-format
 msgid "O destino %s está em uso e não pode ser sobrescrito:"
 msgstr "%s 目標正在使用且無法被覆寫："
 
-#: usr/local/bin/chili-clonedisk:2604
+#: usr/local/bin/chili-clonedisk:2605
 #, sh-printf-format
 msgid "A origem %s está em uso. A cópia pode ficar inconsistente:"
 msgstr "來源 %s 正在使用中。副本可能不一致："
 
-#: usr/local/bin/chili-clonedisk:2605
+#: usr/local/bin/chili-clonedisk:2606
 msgid "Libere o disco no computador remoto e tente de novo."
 msgstr "釋放遠端電腦上的磁碟並重試。"
 
-#: usr/local/bin/chili-clonedisk:2606
+#: usr/local/bin/chili-clonedisk:2607
 #, sh-printf-format
 msgid "%s montado em %s (sistema)"
 msgstr "%s 蒙塔多 em %s（系統）"
 
-#: usr/local/bin/chili-clonedisk:2607
+#: usr/local/bin/chili-clonedisk:2608
 #, sh-printf-format
 msgid "%s montado em %s"
 msgstr "%s 蒙塔多 em %s"
 
-#: usr/local/bin/chili-clonedisk:2608
+#: usr/local/bin/chili-clonedisk:2609
 #, sh-printf-format
 msgid "%s é swap ativa"
 msgstr "%s é swap ativa"
 
-#: usr/local/bin/chili-clonedisk:2609
+#: usr/local/bin/chili-clonedisk:2610
 #, sh-printf-format
 msgid "%s em uso por %s (LVM/LUKS/RAID)"
 msgstr "%s 用於 %s (LVM/LUKS/RAID)"
 
-#: usr/local/bin/chili-clonedisk:2610
+#: usr/local/bin/chili-clonedisk:2611
 #, sh-printf-format
 msgid "%s aberto pelo processo %s (%s)"
 msgstr "%s aberto pelo 流程 %s (%s)"
 
-#: usr/local/bin/chili-clonedisk:2611
+#: usr/local/bin/chili-clonedisk:2612
 #, sh-printf-format
 msgid "%s pertence a um pool ZFS"
 msgstr "%s 與 um 池 ZFS 相關"
 
-#: usr/local/bin/chili-clonedisk:2612
+#: usr/local/bin/chili-clonedisk:2613
 #, sh-printf-format
 msgid "O arquivo %s já existe. Sobrescrever?"
 msgstr "檔案 %s 已存在。覆蓋？"
 
-#: usr/local/bin/chili-clonedisk:2614
+#: usr/local/bin/chili-clonedisk:2615
 msgid "Disco -> Disco"
 msgstr "磁碟 -> 磁碟"
 
-#: usr/local/bin/chili-clonedisk:2615
+#: usr/local/bin/chili-clonedisk:2616
 msgid "clonar disco para outro disco"
 msgstr "將磁碟複製到另一個磁碟"
 
-#: usr/local/bin/chili-clonedisk:2616
+#: usr/local/bin/chili-clonedisk:2617
 msgid "Partição -> Partição"
 msgstr "分區 -> 分割區"
 
-#: usr/local/bin/chili-clonedisk:2617
+#: usr/local/bin/chili-clonedisk:2618
 msgid "clonar partição para outra partição"
 msgstr "將分區克隆到另一個分區"
 
-#: usr/local/bin/chili-clonedisk:2618
+#: usr/local/bin/chili-clonedisk:2619
 msgid "Disco -> Imagem"
 msgstr "磁碟 -> 映像"
 
-#: usr/local/bin/chili-clonedisk:2619
+#: usr/local/bin/chili-clonedisk:2620
 msgid "clonar disco para arquivo de imagem"
 msgstr "將磁碟複製到映像文件"
 
-#: usr/local/bin/chili-clonedisk:2620
+#: usr/local/bin/chili-clonedisk:2621
 msgid "Partição -> Imagem"
 msgstr "分區 -> 映像"
 
-#: usr/local/bin/chili-clonedisk:2621
+#: usr/local/bin/chili-clonedisk:2622
 msgid "clonar partição para arquivo de imagem"
 msgstr "將分區複製到映像文件"
 
-#: usr/local/bin/chili-clonedisk:2622
+#: usr/local/bin/chili-clonedisk:2623
 msgid "Imagem -> Disco"
 msgstr "影像 -> 光碟"
 
-#: usr/local/bin/chili-clonedisk:2623
+#: usr/local/bin/chili-clonedisk:2624
 msgid "clonar imagem para disco"
 msgstr "將映像複製到磁碟"
 
-#: usr/local/bin/chili-clonedisk:2624
+#: usr/local/bin/chili-clonedisk:2625
 msgid "Imagem -> Partição"
 msgstr "映像 -> 分割區"
 
-#: usr/local/bin/chili-clonedisk:2625
+#: usr/local/bin/chili-clonedisk:2626
 msgid "clonar imagem para partição"
 msgstr "將映像複製到分割區"
 
-#: usr/local/bin/chili-clonedisk:2626
+#: usr/local/bin/chili-clonedisk:2627
 msgid "ISO -> Pendrive/Disco"
 msgstr "ISO -> 隨身碟/磁碟"
 
-#: usr/local/bin/chili-clonedisk:2627
+#: usr/local/bin/chili-clonedisk:2628
 msgid "gravar ISO para dar boot"
 msgstr "燒錄 ISO 啟動"
 
-#: usr/local/bin/chili-clonedisk:2628
+#: usr/local/bin/chili-clonedisk:2629
 msgid "Disco local -> Imagem remota"
 msgstr "本機磁碟->遠端鏡像"
 
-#: usr/local/bin/chili-clonedisk:2629
+#: usr/local/bin/chili-clonedisk:2630
 msgid "clonar disco local para imagem remota"
 msgstr "將本機磁碟複製到遠端鏡像"
 
-#: usr/local/bin/chili-clonedisk:2630
+#: usr/local/bin/chili-clonedisk:2631
 msgid "Imagem remota -> Disco/Partição local"
 msgstr "遠端鏡像 -> 本機磁碟/分割區"
 
-#: usr/local/bin/chili-clonedisk:2631
+#: usr/local/bin/chili-clonedisk:2632
 msgid "clonar imagem remota para disco/partição local"
 msgstr "將遠端鏡像複製到本機磁碟/分割區"
 
-#: usr/local/bin/chili-clonedisk:2632
+#: usr/local/bin/chili-clonedisk:2633
 msgid "Disco remoto -> Imagem local"
 msgstr "遠端磁碟->本機鏡像"
 
-#: usr/local/bin/chili-clonedisk:2633
+#: usr/local/bin/chili-clonedisk:2634
 msgid "clonar disco remoto para imagem local"
 msgstr "將遠端磁碟複製到本機鏡像"
 
-#: usr/local/bin/chili-clonedisk:2634
+#: usr/local/bin/chili-clonedisk:2635
 msgid "Disco remoto -> Disco local"
 msgstr "遠端磁碟->本機磁碟"
 
-#: usr/local/bin/chili-clonedisk:2635
+#: usr/local/bin/chili-clonedisk:2636
 msgid "clonar disco remoto para disco local"
 msgstr "將遠端磁碟複製到本機磁碟"
 
-#: usr/local/bin/chili-clonedisk:2636
+#: usr/local/bin/chili-clonedisk:2637
 msgid "Clonar (local)"
 msgstr "克隆（本地）"
 
-#: usr/local/bin/chili-clonedisk:2637
+#: usr/local/bin/chili-clonedisk:2638
 msgid "Criar imagem"
 msgstr "創建圖像"
 
-#: usr/local/bin/chili-clonedisk:2638
+#: usr/local/bin/chili-clonedisk:2639
 msgid "Restaurar imagem"
 msgstr "恢復影像"
 
-#: usr/local/bin/chili-clonedisk:2639
+#: usr/local/bin/chili-clonedisk:2640
 msgid "Rede (SSH)"
 msgstr "雷德 (SSH)"
 
-#: usr/local/bin/chili-clonedisk:2640
+#: usr/local/bin/chili-clonedisk:2641
 msgid "Escolha a operação"
 msgstr "選擇操作"
 
-#: usr/local/bin/chili-clonedisk:2641
+#: usr/local/bin/chili-clonedisk:2642
 msgid "Entre com as credenciais do servidor SSH:"
 msgstr "輸入您的 SSH 伺服器憑證："
 
-#: usr/local/bin/chili-clonedisk:2642
+#: usr/local/bin/chili-clonedisk:2643
 msgid ""
 "Para ler discos, o usuário remoto precisa ser root ou ter sudo sem senha."
 msgstr "要讀取磁碟，遠端使用者必須是 root 或具有 sudo（無需密碼）。"
 
-#: usr/local/bin/chili-clonedisk:2643
+#: usr/local/bin/chili-clonedisk:2644
 msgid "Nenhum disco encontrado no servidor remoto."
 msgstr "在遠端伺服器上找不到磁碟。"
 
-#: usr/local/bin/chili-clonedisk:2644
+#: usr/local/bin/chili-clonedisk:2645
 msgid "Disco remoto"
 msgstr "遠端磁碟"
 
-#: usr/local/bin/chili-clonedisk:2645
+#: usr/local/bin/chili-clonedisk:2646
 msgid "em uso"
 msgstr "使用中"
 
-#: usr/local/bin/chili-clonedisk:2646
+#: usr/local/bin/chili-clonedisk:2647
 msgid "Novos UUIDs"
 msgstr "新的 UUID"
 
-#: usr/local/bin/chili-clonedisk:2647
+#: usr/local/bin/chili-clonedisk:2648
 msgid ""
 "O destino ficou com os mesmos identificadores da origem (UUID do sistema de "
 "arquivos, PARTUUID, disk-id e UUID/nome do VG no LVM).\\n\\nGere novos se "
@@ -1008,101 +1012,101 @@ msgid ""
 "destino?"
 msgstr "目標具有與來源相同的識別碼（LVM 中的檔案系統 UUID、PARTUUID、磁碟 ID 和 UUID/VG 名稱）。 \\\n\\\n如果來源和目標要連接到同一台機器，則產生新的：否則系統可能會安裝錯誤的磁碟或 LVM 將報告重複的 PV。 \\\n\\\n如果目標將替換來源或需要啟動，則不要產生：克隆系統的 fstab 和 GRUB 使用這些識別碼。 \\\n\\\n在目標上產生新的 UUID？"
 
-#: usr/local/bin/chili-clonedisk:2648
+#: usr/local/bin/chili-clonedisk:2649
 msgid "Nenhum identificador encontrado para alterar."
 msgstr "沒有發現標識符發生變化。"
 
-#: usr/local/bin/chili-clonedisk:2649
+#: usr/local/bin/chili-clonedisk:2650
 msgid "Entre com as credenciais do servidor SSH e o caminho da imagem:"
 msgstr "輸入您的 SSH 伺服器憑證和影像路徑："
 
-#: usr/local/bin/chili-clonedisk:2650
+#: usr/local/bin/chili-clonedisk:2651
 msgid "Arquivo Remoto  :"
 msgstr "遠端檔案："
 
-#: usr/local/bin/chili-clonedisk:2651
+#: usr/local/bin/chili-clonedisk:2652
 msgid ""
 "Imagens QCOW2 não podem ser restauradas direto pela rede. Copie o arquivo "
 "para esta máquina e use Imagem para Disco/Partição."
 msgstr "QCOW2 影像無法直接透過網路恢復。將檔案複製到本機並使用映像到磁碟/分割區。"
 
-#: usr/local/bin/chili-clonedisk:2652
+#: usr/local/bin/chili-clonedisk:2653
 #, sh-printf-format
 msgid "Arquivo remoto não encontrado ou sem permissão de leitura: %s"
 msgstr "找不到遠端檔案或沒有讀取權限：%s"
 
-#: usr/local/bin/chili-clonedisk:2653
+#: usr/local/bin/chili-clonedisk:2654
 msgid "Restaurar em"
 msgstr "恢復到"
 
-#: usr/local/bin/chili-clonedisk:2654
+#: usr/local/bin/chili-clonedisk:2655
 msgid "Disco inteiro"
 msgstr "整張光碟"
 
-#: usr/local/bin/chili-clonedisk:2655
+#: usr/local/bin/chili-clonedisk:2656
 msgid "Partição"
 msgstr "分割"
 
-#: usr/local/bin/chili-clonedisk:2656
+#: usr/local/bin/chili-clonedisk:2657
 #, sh-printf-format
 msgid "A imagem (%s) é maior que o destino (%s). Prosseguir?"
 msgstr "图像 (%s) 大于目标 (%s)。繼續？"
 
-#: usr/local/bin/chili-clonedisk:2657
+#: usr/local/bin/chili-clonedisk:2658
 msgid "Uso:"
 msgstr "使用："
 
-#: usr/local/bin/chili-clonedisk:2658
+#: usr/local/bin/chili-clonedisk:2659
 msgid "sem parâmetros, abre a interface (dialog)"
 msgstr "不含參數，開啟介面（對話框）"
 
-#: usr/local/bin/chili-clonedisk:2659
+#: usr/local/bin/chili-clonedisk:2660
 msgid "exibir esta ajuda e sair"
 msgstr "顯示此幫助並退出"
 
-#: usr/local/bin/chili-clonedisk:2660
+#: usr/local/bin/chili-clonedisk:2661
 msgid "mostrar versão"
 msgstr "顯示版本"
 
-#: usr/local/bin/chili-clonedisk:2661
+#: usr/local/bin/chili-clonedisk:2662
 msgid "Idioma da interface"
 msgstr "介面語言"
 
-#: usr/local/bin/chili-clonedisk:2662
+#: usr/local/bin/chili-clonedisk:2663
 msgid "Escolha o idioma:"
 msgstr "選擇語言："
 
-#: usr/local/bin/chili-clonedisk:2663
+#: usr/local/bin/chili-clonedisk:2664
 #, sh-printf-format
 msgid ""
 "O destino '%s' está no próprio dispositivo de origem (%s). Escolha outro "
 "local."
 msgstr "目標「%s」位於來源設備本身 (%s) 上。選擇另一個位置。"
 
-#: usr/local/bin/chili-clonedisk:2664
+#: usr/local/bin/chili-clonedisk:2665
 #, sh-printf-format
 msgid ""
 "Espaço livre insuficiente em '%s': necessário %s, disponível %s. Escolha "
 "outro local."
 msgstr "「%s」的可用空間不足：需要 %s，可用 %s。選擇另一個位置。"
 
-#: usr/local/bin/chili-clonedisk:2665
+#: usr/local/bin/chili-clonedisk:2666
 #, sh-printf-format
 msgid "Falha na conversão para QCOW2. O arquivo RAW foi mantido em '%s'."
 msgstr "轉換到 QCOW2 失敗。 RAW 檔案儲存在「%s」。"
 
-#: usr/local/bin/chili-clonedisk:2666
+#: usr/local/bin/chili-clonedisk:2667
 msgid "Falha na clonagem!"
 msgstr "克隆失敗！"
 
-#: usr/local/bin/chili-clonedisk:2667
+#: usr/local/bin/chili-clonedisk:2668
 msgid "Falha na clonagem remota!"
 msgstr "遠程克隆失敗！"
 
-#: usr/local/bin/chili-clonedisk:2668
+#: usr/local/bin/chili-clonedisk:2669
 msgid "instalação automática não suportada. Instale manualmente:"
 msgstr "不支援自動安裝。手動安裝："
 
-#: usr/local/bin/chili-clonedisk:2675
+#: usr/local/bin/chili-clonedisk:2676
 msgid "_"
 msgstr "_"
