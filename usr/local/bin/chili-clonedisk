@@ -5,7 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Updated: qui 24 set 2026 10:45:02 -04
+#  Updated: qui 24 set 2026 21:52:46 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -51,7 +51,7 @@ has_command gettext || gettext() { printf '%s' "$1"; }
 
 #declare -r APP="${0##*/}"
 declare -r _APP_="chili-clonedisk"
-declare -r _VERSION_="6.9.23.20260923"
+declare -r _VERSION_="6.9.24.20260924"
 declare dialogRcFile="$HOME/.dialogrc"
 # Log de operações: $LOGDIR/chili-clonedisk-AAAAMMDD-HHMM.log (pode ser trocado via ambiente)
 declare LOGDIR="${LOGDIR:-/tmp}"
@@ -2551,6 +2551,7 @@ $cLB7 ${ccolor}↵ ENTER${RESET} $cLB8"
 	cmsg_Tamanho_Remoto="$(gettext "Tamanho Remoto   :")"
 	cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
 	cmsg_MENU_PRINCIPAL="$(gettext "MENU PRINCIPAL")"
+	cmsg_sem_fs="$(gettext "sem sistema de arquivos")"
 	cmsg_remoto_sem_ferramentas="$(gettext "O computador remoto %s não tem as ferramentas necessárias para esta operação.")"
 	cmsg_remoto_ferramentas_opcionais="$(gettext "O computador remoto %s não tem algumas ferramentas opcionais.")"
 	cmsg_tools_obrigatorias="$(gettext "Obrigatórias (a operação não pode continuar):")"
@@ -3442,6 +3443,27 @@ sh_remote_check_tools() {
 	conf "${cwarning}" "\n$(printf "${cmsg_remoto_ferramentas_opcionais}" "$REMOTE_HOST")\n\n$text\n\n${cmsg_Prosseguir}"
 }
 
+# Nome do tipo de partição a partir do código da tabela (GUID do GPT ou hex do MBR).
+# Usado quando o lsblk remoto não informa PARTTYPENAME (sem udev ou util-linux antigo).
+sh_parttype_name() {
+	case "${1,,}" in
+	21686148-6449-6e6f-744e-656564454649) echo "BIOS boot" ;;
+	c12a7328-f81f-11d2-ba4b-00a0c93ec93b | 0xef) echo "EFI System" ;;
+	e3c9e316-0b5c-4db8-817d-f92df00215ae) echo "Microsoft reserved" ;;
+	ebd0a0a2-b9e5-4433-87c0-68b6b72699c7) echo "Microsoft basic data" ;;
+	de94bba4-06d1-4d40-a16a-bfd50179d6ac | 0x27) echo "Windows recovery" ;;
+	0fc63daf-8483-4772-8e79-3d69d8477de4 | 0x83) echo "Linux filesystem" ;;
+	0657fd6d-a4ab-43c4-84e5-0933c84b4f4f | 0x82) echo "Linux swap" ;;
+	e6d6d379-f507-44c2-a23c-238f2a3df928 | 0x8e) echo "Linux LVM" ;;
+	a19d880f-05fc-4d3b-a006-743f0f84911e | 0xfd) echo "Linux RAID" ;;
+	bc13c2ff-59e6-4262-a352-b275fd6f7172) echo "Linux extended boot" ;;
+	0x5 | 0xf | 0x85) echo "Extended" ;;
+	0x7) echo "NTFS/exFAT" ;;
+	0xb | 0xc) echo "FAT32" ;;
+	*) echo "" ;;
+	esac
+}
+
 # Conecta num servidor SSH e escolhe um disco remoto.
 # Define: REMOTE_HOST (usuario@ip), REMOTE_DEV, REMOTE_SIZE (bytes), REMOTE_DESC, REMOTE_SECTOR, RSUDO e SSH_BASE.
 sh_remote_pick_disk() {
@@ -3521,7 +3543,7 @@ sh_remote_pick_disk() {
 	fi
 
 	# discos remotos (disco, loop e LVM), sem repetidos e sem volumes internos do LVM
-	local -A r_type=() r_size=() r_tran=() r_model=() r_busy=() r_fs=() r_label=()
+	local -A r_type=() r_size=() r_tran=() r_model=() r_busy=() r_fs=() r_label=() r_ptype=()
 	local -a r_order=()
 	while IFS= read -r line; do
 		local -A f=()
@@ -3553,23 +3575,33 @@ sh_remote_pick_disk() {
 		r_model[$path]="${f[MODEL]:-${f[TYPE]} device}"
 		r_fs[$path]="${f[FSTYPE]}"
 		r_label[$path]="${f[LABEL]}"
-	done < <("${SSH_BASE[@]}" "$RSUDO lsblk -PAbo NAME,PATH,TYPE,SIZE,TRAN,MODEL,FSTYPE,LABEL" 2>/dev/null)
+		r_ptype[$path]="${f[PARTTYPENAME]}"
+	done < <(
+		# PARTTYPENAME não existe em util-linux antigo: sem ela o lsblk falharia inteiro
+		"${SSH_BASE[@]}" "$RSUDO lsblk -PAbo NAME,PATH,TYPE,SIZE,TRAN,MODEL,FSTYPE,LABEL,PARTTYPENAME 2>/dev/null ||
+			$RSUDO lsblk -PAbo NAME,PATH,TYPE,SIZE,TRAN,MODEL,FSTYPE,LABEL" 2>/dev/null
+	)
 
-	# sem udev o lsblk remoto pode não trazer tipo/rótulo: completa com blkid
+	# sem udev o lsblk remoto pode não trazer tipo/rótulo: completa com blkid -p
+	# (lê direto do dispositivo; também dá o código do tipo de partição)
 	if [[ "$kind" == "part" ]] && ((${#r_order[@]})); then
-		local dn="" bt="" bl=""
+		local dn="" bt="" bl="" bp=""
 		while IFS= read -r line; do
 			case "$line" in
-			DEVNAME=*) dn="${line#DEVNAME=}" bt="" bl="" ;;
+			DEVNAME=*) dn="${line#DEVNAME=}" bt="" bl="" bp="" ;;
 			TYPE=*) bt="${line#TYPE=}" ;;
 			LABEL=*) bl="${line#LABEL=}" ;;
+			PART_ENTRY_TYPE=*) bp="${line#PART_ENTRY_TYPE=}" ;;
 			"")
-				[[ -n "$dn" && -z "${r_fs[$dn]}" ]] && r_fs[$dn]="$bt"
-				[[ -n "$dn" && -z "${r_label[$dn]}" ]] && r_label[$dn]="$bl"
+				if [[ -n "$dn" ]]; then
+					[[ -z "${r_fs[$dn]}" ]] && r_fs[$dn]="$bt"
+					[[ -z "${r_label[$dn]}" ]] && r_label[$dn]="$bl"
+					[[ -z "${r_ptype[$dn]}" && -n "$bp" ]] && r_ptype[$dn]="$(sh_parttype_name "$bp")"
+				fi
 				dn=""
 				;;
 			esac
-		done < <("${SSH_BASE[@]}" "$RSUDO blkid -o export $(printf '%q ' "${r_order[@]}"); echo" 2>/dev/null)
+		done < <("${SSH_BASE[@]}" "for d in $(printf '%q ' "${r_order[@]}"); do $RSUDO blkid -p -o export \"\$d\" 2>/dev/null || $RSUDO blkid -o export \"\$d\"; echo; done" 2>/dev/null)
 	fi
 
 	# em uso (montado, swap, LVM/LUKS/RAID, processo, ZFS): uma só consulta para todos
@@ -3585,10 +3617,21 @@ sh_remote_pick_disk() {
 		return 1
 	fi
 
+	# coluna FS: sistema de arquivos, ou "none" quando não há (ex.: BIOS boot, Microsoft reserved)
+	sh_rpart_fs() { echo "${r_fs[$1]:-none}"; }
+	# coluna rótulo: rótulo; sem sistema de arquivos, mostra o tipo da partição entre parênteses
+	sh_rpart_label() {
+		if [[ -n "${r_label[$1]}" ]]; then
+			echo "${r_label[$1]}"
+		elif [[ -z "${r_fs[$1]}" ]]; then
+			echo "(${r_ptype[$1]:-${cmsg_sem_fs}})"
+		fi
+	}
+
 	local d desc
 	for d in "${r_order[@]}"; do
 		if [[ "$kind" == "part" ]]; then
-			desc="$(printf "$sep%-8s$sep%7s$sep%-20s" "${r_fs[$d]:-?}" "$(numfmt --to=iec "${r_size[$d]}")" "${r_label[$d]}")"
+			desc="$(printf "$sep%-12s$sep%7s$sep%-24s" "$(sh_rpart_fs "$d")" "$(numfmt --to=iec "${r_size[$d]}")" "$(sh_rpart_label "$d")")"
 		else
 			desc="$(printf "$sep%-6s$sep%7s$sep%-30s" "${r_tran[$d]}" "$(numfmt --to=iec "${r_size[$d]}")" "${r_model[$d]}")"
 		fi
@@ -3627,7 +3670,10 @@ sh_remote_pick_disk() {
 
 	REMOTE_SIZE="${r_size[$REMOTE_DEV]}"
 	REMOTE_DESC="$(numfmt --to=iec "$REMOTE_SIZE") | ${r_model[$REMOTE_DEV]}"
-	[[ "$kind" == "part" ]] && REMOTE_DESC="$(numfmt --to=iec "$REMOTE_SIZE") | ${r_fs[$REMOTE_DEV]:-?} ${r_label[$REMOTE_DEV]}"
+	if [[ "$kind" == "part" ]]; then
+		REMOTE_DESC="$(numfmt --to=iec "$REMOTE_SIZE") | $(sh_rpart_fs "$REMOTE_DEV")"
+		[[ -n "$(sh_rpart_label "$REMOTE_DEV")" ]] && REMOTE_DESC+=" | $(sh_rpart_label "$REMOTE_DEV")"
+	fi
 	REMOTE_SECTOR="$("${SSH_BASE[@]}" "$RSUDO blockdev --getss $(printf '%q' "$REMOTE_DEV")" 2>/dev/null)"
 	[[ "$REMOTE_SECTOR" =~ ^[0-9]+$ ]] || REMOTE_SECTOR=512
 
@@ -4384,7 +4430,7 @@ sh_choose_clone_type
 # ChangeLog
 #########################################################################
 #
-# 2026-09-24 (v6.9.23.20260923)
+# 2026-09-24 (v6.9.24.20260924)
 #
 # Segurança de dados
 #  - Ferramentas do computador remoto conferidas logo após o login, conforme
@@ -4399,6 +4445,16 @@ sh_choose_clone_type
 #    que cada opcional deixa de fazer), pacote de cada uma, comando de
 #    instalação conforme a distro remota (Void, Arch, Debian, Fedora, Alpine,
 #    openSUSE) e manifesto salvo em /tmp/chili-clonedisk-remoto-<ip>-<data>.txt.
+#
+# Interface
+#  - Lista de partições remotas mostrava "?" em partições sem sistema de
+#    arquivos (BIOS boot, Microsoft reserved, estendida...). Agora mostra
+#    "none" e o tipo da partição, ex.: "(BIOS boot)", vindo do PARTTYPENAME do lsblk
+#    ou, sem udev/util-linux antigo, do blkid -p (código GPT/MBR traduzido).
+#  - Detecção do sistema de arquivos remoto com "blkid -p" (lê direto do
+#    dispositivo, sem cache) e, se não achar nada, o blkid normal.
+#  - lsblk remoto sem a coluna PARTTYPENAME (util-linux antigo) não deixa a
+#    lista vazia: repete a consulta sem ela.
 #
 # 2026-09-23 (v6.9.23.20260923)
 #
