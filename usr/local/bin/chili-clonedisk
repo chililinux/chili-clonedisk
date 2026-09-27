@@ -5,7 +5,7 @@
 #  Chili GNU/Linux - https://chililinux.com
 #
 #  Created: 2019/04/05
-#  Updated: qui 24 set 2026 21:52:46 -04
+#  Updated: dom 27 set 2026 15:21:14 -04
 #
 #  Copyright (c) 2019-2026, Vilmar Catafesta <vcatafesta@gmail.com>
 #  Copyright (c) 2019-2026, ChiliLinux Development Team <https://chililinux.com> <https://github.com/chililinux>
@@ -57,7 +57,7 @@ declare dialogRcFile="$HOME/.dialogrc"
 declare LOGDIR="${LOGDIR:-/tmp}"
 declare LOGFILE=""
 declare LOG_OP="" # operação do menu em andamento (aparece em cada linha do log)
-readonly -a DEPENDENCIES=(dd awk ionice dialog pv tput find smartctl fdisk sfdisk blockdev lsblk numfmt stdbuf gettext findmnt)
+readonly -a DEPENDENCIES=(dd awk ionice dialog pv tput find smartctl fdisk sfdisk blockdev lsblk numfmt stdbuf gettext findmnt ssh-keygen)
 readonly -A PACKAGEDEP=(
 	['dd']='coreutils'
 	['awk']='gawk'
@@ -75,6 +75,7 @@ readonly -A PACKAGEDEP=(
 	['stdbuf']='coreutils'
 	['gettext']='gettext'
 	['findmnt']='util-linux'
+	['ssh-keygen']='openssh'
 )
 
 # Captura e exporta o caminho correto do vdisk do usuário comum antes de elevar
@@ -364,7 +365,8 @@ readconf() {
 }
 
 conf() {
-	xtitle="$1"
+	# nchoice local: sem isso o conf sobrescrevia o nchoice (resultado da cópia) de quem chamou
+	local xtitle="$1" nchoice
 	shift
 	${DIALOG} \
 		--colors \
@@ -646,6 +648,7 @@ sh_choose_image_format() {
 				--title "${cmsg_FORMATO_DA_IMAGEM}" \
 				--ok-label "${cmsg_Select}" \
 				--cancel-label "${cmsg_button_voltar}" \
+				--default-item "${RS_IMGFMT:-raw}" \
 				--menu "${cmsg_LABEL}\n\n${YELLOW}${cmsg_Escolha_o_formato_e_compressao_da}${RESET}" \
 				15 80 5 \
 				"raw" "${cmsg_Imagem_Bruta} (.img)" \
@@ -1674,7 +1677,7 @@ sh_list_disk() {
 				"${ARRAY_DSK_SIZE[$nc]}" \
 				"${ARRAY_DSK_PTTYPE[$nc]}" \
 				"${ARRAY_DSK_LABEL[$nc]}" \
-				"${ARRAY_DSK_MODEL[$nc]}")")
+				"${ARRAY_DSK_MODEL[$nc]}")$(sh_session_tag l "$i")")
 			((++nc))
 		done
 		((nlen += 6))
@@ -1687,7 +1690,7 @@ ${YELLOW}${cmsg_disco_destino}: ${REVERSE}(${cmsg_choose_disk_destino})${RESET}\
 		esac
 
 		selected=$(${DIALOG} \
-			--default-item "$target" \
+			--default-item "$( [[ -n "$RS_LAST_L" ]] && sh_next_item "$RS_LAST_L" "${ARRAY_DSK_DEVICES[@]}" || echo "$target")" \
 			--backtitle "$ccabec" \
 			--title "${localtitle}" \
 			--ok-label "${cmsg_Select}" \
@@ -1755,7 +1758,7 @@ sh_list_partition() {
 				"${ARRAY_DSK_SIZE[$nc]}" \
 				"${ARRAY_DSK_PTTYPE[$nc]}" \
 				"${ARRAY_DSK_LABEL[$nc]}" \
-				"${ARRAY_DSK_MODEL[$nc]}")")
+				"${ARRAY_DSK_MODEL[$nc]}")$(sh_session_tag l "$i")")
 			((++nc))
 		done
 		((nlen += 6))
@@ -1768,7 +1771,7 @@ ${YELLOW}${cmsg_part_destino}: ${REVERSE}(${cmsg_choose_part_destino})${RESET}\n
 		esac
 
 		selected=$(${DIALOG} \
-			--default-item "$target" \
+			--default-item "$( [[ -n "$RS_LAST_L" ]] && sh_next_item "$RS_LAST_L" "${ARRAY_DSK_DEVICES[@]}" || echo "$target")" \
 			--backtitle "$ccabec" \
 			--title "${localtitle}" \
 			--ok-label "${cmsg_Select}" \
@@ -2551,6 +2554,18 @@ $cLB7 ${ccolor}↵ ENTER${RESET} $cLB8"
 	cmsg_Tamanho_Remoto="$(gettext "Tamanho Remoto   :")"
 	cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA="$(gettext "SELECIONE O DISCO DE ORIGEM PARA REDE")"
 	cmsg_MENU_PRINCIPAL="$(gettext "MENU PRINCIPAL")"
+	cmsg_remotos_salvos="$(gettext "Remotos salvos")"
+	cmsg_escolha_remoto="$(gettext "Escolha um remoto salvo ou um novo:")"
+	cmsg_novo_remoto="$(gettext "Novo remoto")"
+	cmsg_Remover="$(gettext "Remover")"
+	cmsg_remover_remoto="$(gettext "Remover %s da lista de remotos salvos?")"
+	cmsg_copiada="$(gettext "copiada")"
+	cmsg_gravada="$(gettext "gravada")"
+	cmsg_Acesso_por_chave="$(gettext "Acesso por chave")"
+	cmsg_chave_pergunta="$(gettext "Configurar acesso por chave SSH em %s?\n\nA chave do root deste computador é instalada no remoto e os próximos logins não pedem senha. Nenhuma senha é guardada.")"
+	cmsg_chave_nunca="$(gettext "Não perguntar mais")"
+	cmsg_chave_ok="$(gettext "Acesso por chave configurado em %s. Os próximos logins não pedirão senha.")"
+	cmsg_chave_falhou="$(gettext "Não foi possível configurar o acesso por chave. O login continua por senha.")"
 	cmsg_sem_fs="$(gettext "sem sistema de arquivos")"
 	cmsg_remoto_sem_ferramentas="$(gettext "O computador remoto %s não tem as ferramentas necessárias para esta operação.")"
 	cmsg_remoto_ferramentas_opcionais="$(gettext "O computador remoto %s não tem algumas ferramentas opcionais.")"
@@ -2943,6 +2958,19 @@ sh_menu_network_ssh() {
 	local ssh_password=""
 	local use_sshpass=0
 	local format_type=""
+	local rdir="/mnt/backup"
+
+	# remoto: o da sessão, um salvo ou novo
+	if ((RS_ACTIVE)); then
+		ssh_user="$RS_USER" ssh_ip="$RS_IP" ssh_porta="$RS_PORT"
+	else
+		sh_hosts_pick
+		case $? in
+		0) ssh_user="$HP_USER" ssh_ip="$HP_IP" ssh_porta="$HP_PORT" && [[ -n "$HP_RDIR" ]] && rdir="$HP_RDIR" ;;
+		1) return 1 ;; # volta à lista de origem
+		esac
+	fi
+	[[ -n "$RS_RDIR" ]] && rdir="$RS_RDIR"
 
 	while true; do
 		# 1. Chama a nova função modular para obter o formato desejado
@@ -2955,9 +2983,9 @@ sh_menu_network_ssh() {
 		# 2. Define dinamicamente o arquivo padrão com base no formato retornado
 		local base_name="${DEVICE_SOURCE//\//_}"
 		base_name="${base_name#_}"
-		local ssh_outfile="/mnt/backup/${base_name}_remote.img.${format_type}"
+		local ssh_outfile="${rdir%/}/${base_name}_remote.img.${format_type}"
 		if [[ "$format_type" == "img" ]]; then
-			ssh_outfile="/mnt/backup/${base_name}_remote.img"
+			ssh_outfile="${rdir%/}/${base_name}_remote.img"
 		fi
 
 		# 3. Abre o formulário com o nome do arquivo já preenchido com a extensão correta
@@ -2997,13 +3025,19 @@ sh_menu_network_ssh() {
 				continue
 			fi
 
-			sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
+			sh_remote_auth "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
 			use_sshpass=$SSH_USE_PASS
 			ssh_password=$SSH_PASSWORD
 
 			sh_make_clone_network_ssh "$source" "$ssh_user" "$ssh_ip" "$ssh_porta" "$ssh_outfile" "$use_sshpass" "$ssh_password" "$format_type"
 			local rc=$?
 			((rc == 2)) && continue # destino recusado (sem escrita, sem espaço, FAT32...): corrige no formulário
+			if ((rc == 0)); then
+				RS_RDIR="$(dirname "$ssh_outfile")"
+				RS_NETFMT="$format_type"
+				sh_hosts_save "$ssh_user" "$ssh_ip" "$ssh_porta" "$RS_RDIR"
+				sh_session_mark l "$source" copiada
+			fi
 			return $rc
 			;;
 		esac
@@ -3061,6 +3095,7 @@ sh_get_network_format() {
 		--title "${cmsg_FORMATO_DE_COMPRESSAO}" \
 		--ok-label "${cmsg_Select}" \
 		--cancel-label "${cmsg_button_voltar}" \
+		--default-item "${RS_NETFMT:-zst}" \
 		--menu "${cmsg_Escolha_o_formato_de_saida_para}" \
 		12 60 0 \
 		"zst" "Zstandard (${cmsg_Otimizado_Adaptativo})" \
@@ -3272,11 +3307,11 @@ sh_clone_network_ssh() {
 	if [[ "$kind" == "part" ]]; then
 		title="${cmsg_dir_rede_lpart_img}"
 		source=$(sh_list_partition "${cmsg_part_origem}" "" origem)
-		[[ -n "$source" ]] || return 1
+		[[ -n "$source" ]] || { SESSION_EXIT=1; return 1; }
 		sh_part_info
 	else
 		source=$(sh_list_disk "${cmsg_SELECIONE_O_DISCO_DE_ORIGEM_PARA}" "" origem)
-		[[ -n "$source" ]] || return 1
+		[[ -n "$source" ]] || { SESSION_EXIT=1; return 1; }
 		sh_disk_info
 	fi
 	DEVICE_SOURCE="$source"
@@ -3362,19 +3397,28 @@ sh_tool_desc() {
 sh_remote_check_tools() {
 	local req="$1"
 	local opt="$2"
+	# $3 = sudo: a operação roda com sudo no remoto (ler/gravar disco); o PATH do sudo pode
+	# incluir /sbin. Sem isso, confere com o usuário normal (que não precisa ser root).
+	local pre=""
+	[[ "$3" == "sudo" ]] && pre="$RSUDO"
 	local t line pk fam="" rid="" pkgs="" text="" missing_req="" missing_opt=""
 	local -A have=() seen=()
+
+	[[ -n "${RS_TOOLS_OK[$req|$opt|$3]}" ]] && return 0
 
 	while IFS= read -r line; do
 		case "$line" in
 		__ID__*) rid="${line#__ID__ }" ;;
 		?*) have[$line]=1 ;;
 		esac
-	done < <("${SSH_BASE[@]}" "$RSUDO sh -c 'for t in $req $opt; do command -v \$t >/dev/null 2>&1 && echo \$t; done; . /etc/os-release 2>/dev/null; echo \"__ID__ \$ID \$ID_LIKE\"'" 2>/dev/null)
+	done < <("${SSH_BASE[@]}" "$pre sh -c 'for t in $req $opt; do command -v \$t >/dev/null 2>&1 && echo \$t; done; . /etc/os-release 2>/dev/null; echo \"__ID__ \$ID \$ID_LIKE\"'" 2>/dev/null)
 
 	for t in $req; do [[ -n "${have[$t]}" ]] || missing_req+=" $t"; done
 	for t in $opt; do [[ -n "${have[$t]}" ]] || missing_opt+=" $t"; done
-	[[ -z "$missing_req$missing_opt" ]] && return 0
+	if [[ -z "$missing_req$missing_opt" ]]; then
+		RS_TOOLS_OK["$req|$opt|$3"]=1
+		return 0
+	fi
 
 	# família da distro remota (ID e depois ID_LIKE)
 	for t in $rid; do
@@ -3440,7 +3484,9 @@ sh_remote_check_tools() {
 		alerta "${cwarning}" "\n$(printf "${cmsg_remoto_sem_ferramentas}" "$REMOTE_HOST")\n\n$text"
 		return 1
 	fi
-	conf "${cwarning}" "\n$(printf "${cmsg_remoto_ferramentas_opcionais}" "$REMOTE_HOST")\n\n$text\n\n${cmsg_Prosseguir}"
+	conf "${cwarning}" "\n$(printf "${cmsg_remoto_ferramentas_opcionais}" "$REMOTE_HOST")\n\n$text\n\n${cmsg_Prosseguir}" || return 1
+	RS_TOOLS_OK["$req|$opt|$3"]=1
+	return 0
 }
 
 # Nome do tipo de partição a partir do código da tabela (GUID do GPT ou hex do MBR).
@@ -3464,19 +3510,310 @@ sh_parttype_name() {
 	esac
 }
 
-# Conecta num servidor SSH e escolhe um disco remoto.
-# Define: REMOTE_HOST (usuario@ip), REMOTE_DEV, REMOTE_SIZE (bytes), REMOTE_DESC, REMOTE_SECTOR, RSUDO e SSH_BASE.
-sh_remote_pick_disk() {
+# ============================ sessão remota (SSH) ============================
+# Uma "sessão" vale enquanto o usuário fica numa operação de Rede: o login é feito uma
+# vez e reaproveitado a cada cópia; só o "Voltar" da primeira tela encerra.
+# Nada da sessão vai para o disco: a senha (se houver) fica só na memória.
+declare -i RS_IN_SESSION=0 # dentro de uma operação de Rede
+declare -i RS_ACTIVE=0     # login feito e válido
+declare -i SESSION_EXIT=0  # a operação pediu para encerrar a sessão (Voltar na 1ª tela)
+declare RS_USER="" RS_IP="" RS_PORT=""
+declare RS_LAST_L="" RS_LAST_R="" # último dispositivo local/remoto usado (cursor vai para o próximo)
+declare RS_RDIR="" RS_RFILE="" RS_LDIR="" RS_NETFMT="" RS_IMGFMT="" RS_RKIND=""
+declare -A RS_MARK=()     # "l:/dev/x" ou "r:/dev/x" -> copiada|gravada
+declare -A RS_TOOLS_OK=() # checagens de ferramentas já aprovadas nesta sessão
+
+# Executa uma operação de Rede em sessão: repete até a operação pedir para sair
+sh_remote_session() {
+	local -i rc=1 last=1
+
+	RS_IN_SESSION=1
+	RS_MARK=()
+	RS_LAST_L="" RS_LAST_R="" RS_RDIR="" RS_RFILE="" RS_LDIR=""
+	while true; do
+		SESSION_EXIT=0
+		"$@"
+		rc=$?
+		((SESSION_EXIT)) && break
+		last=$rc
+	done
+	sh_remote_disconnect
+	RS_IN_SESSION=0
+	RS_MARK=()
+	return $last
+}
+
+# Encerra o login da sessão (apaga a senha da memória)
+sh_remote_disconnect() {
+	((RS_ACTIVE)) && sh_log "sessão remota encerrada: $RS_USER@$RS_IP:$RS_PORT"
+	RS_ACTIVE=0
+	RS_USER="" RS_IP="" RS_PORT=""
+	SSH_PASSWORD=""
+	SSH_USE_PASS=0
+	RS_TOOLS_OK=()
+	unset SSHPASS
+}
+
+# Marca um dispositivo como usado nesta sessão (aparece na lista e o cursor vai ao próximo)
+sh_session_mark() {
+	local side="$1" dev="$2" what="$3"
+	((RS_IN_SESSION)) || return 0
+	RS_MARK["$side:$dev"]="$what"
+	if [[ "$side" == "l" ]]; then RS_LAST_L="$dev"; else RS_LAST_R="$dev"; fi
+}
+
+# Texto da marca de um dispositivo (vazio se não foi usado nesta sessão)
+sh_session_tag() {
+	case "${RS_MARK[$1:$2]}" in
+	copiada) printf ' %s' "${GREEN}[${cmsg_copiada}]${RESET}" ;;
+	gravada) printf ' %s' "${GREEN}[${cmsg_gravada}]${RESET}" ;;
+	esac
+}
+
+# Próximo item depois de $1 na lista $2..; sem $1 na lista, devolve $1
+sh_next_item() {
+	local last="$1" i found=0
+	shift
+	for i in "$@"; do
+		if ((found)); then
+			echo "$i"
+			return
+		fi
+		[[ "$i" == "$last" ]] && found=1
+	done
+	echo "$last"
+}
+
+# ------------------------------ remotos salvos ------------------------------
+# ~/.config/chili-clonedisk/remotos.conf do usuário que chamou o sudo, permissão 600.
+# Formato: usuario|ip|porta|ultimo_diretorio_remoto|ultimo_uso(epoch)|nao_oferecer_chave
+# A senha NUNCA é gravada.
+sh_hosts_file() {
+	local u="${SUDO_USER:-$(id -un)}" h
+	h="$(getent passwd "$u" 2>/dev/null | cut -d: -f6)"
+	echo "${h:-$HOME}/.config/$_APP_/remotos.conf"
+}
+
+# Cria o diretório de configuração com o dono certo (o script roda como root)
+sh_hosts_prepare() {
+	local f="$1" d u="${SUDO_USER:-}"
+	for d in "$(dirname "$(dirname "$f")")" "$(dirname "$f")"; do
+		[[ -d "$d" ]] && continue
+		mkdir -m 700 "$d" 2>/dev/null || return 1
+		[[ -n "$u" ]] && chown "$u:" "$d" 2>/dev/null
+	done
+	[[ -f "$f" ]] || { : >"$f" && chmod 600 "$f"; } 2>/dev/null || return 1
+	[[ -n "$u" ]] && chown "$u:" "$f" 2>/dev/null
+	return 0
+}
+
+# Lê um remoto salvo; devolve a linha (ou nada)
+sh_hosts_get() {
+	local f
+	f="$(sh_hosts_file)"
+	[[ -r "$f" ]] || return 1
+	awk -F'|' -v u="$1" -v i="$2" -v p="$3" '$1==u && $2==i && $3==p {print; exit}' "$f"
+}
+
+# Grava/atualiza um remoto: usuário, ip, porta [, último diretório remoto [, não oferecer chave]]
+sh_hosts_save() {
+	local u="$1" ip="$2" port="$3" rdir="$4" nokey="$5"
+	local f old tmp
+	f="$(sh_hosts_file)"
+	sh_hosts_prepare "$f" || return 1
+	old="$(sh_hosts_get "$u" "$ip" "$port")"
+	[[ -z "$rdir" ]] && rdir="$(cut -d'|' -f4 <<<"$old")"
+	[[ -z "$nokey" ]] && nokey="$(cut -d'|' -f6 <<<"$old")"
+	tmp="$f.$$"
+	{
+		awk -F'|' -v u="$u" -v i="$ip" -v p="$port" '!($1==u && $2==i && $3==p)' "$f" 2>/dev/null
+		printf '%s|%s|%s|%s|%s|%s\n' "$u" "$ip" "$port" "${rdir//|/}" "$(date +%s)" "${nokey:-0}"
+	} >"$tmp" && mv -f "$tmp" "$f" && chmod 600 "$f"
+	[[ -n "$SUDO_USER" ]] && chown "$SUDO_USER:" "$f" 2>/dev/null
+	return 0
+}
+
+# Remove um remoto salvo
+sh_hosts_remove() {
+	local f tmp
+	f="$(sh_hosts_file)"
+	[[ -f "$f" ]] || return 0
+	tmp="$f.$$"
+	awk -F'|' -v u="$1" -v i="$2" -v p="$3" '!($1==u && $2==i && $3==p)' "$f" >"$tmp" && mv -f "$tmp" "$f" && chmod 600 "$f"
+	[[ -n "$SUDO_USER" ]] && chown "$SUDO_USER:" "$f" 2>/dev/null
+	sh_log "remoto removido da lista: $1@$2:$3"
+}
+
+# Escolhe um remoto salvo. Retorna 0 (escolhido: HP_USER/HP_IP/HP_PORT/HP_RDIR),
+# 2 (novo remoto) ou 1 (voltar). Sem remotos salvos, retorna 2 direto.
+sh_hosts_pick() {
+	local f line choice
+	local -a items=() rows=()
+	f="$(sh_hosts_file)"
+
+	while true; do
+		items=()
+		rows=()
+		if [[ -r "$f" ]]; then
+			while IFS= read -r line; do
+				local u ip port rdir when
+				IFS='|' read -r u ip port rdir when _ <<<"$line"
+				[[ -n "$u" && -n "$ip" && "$port" =~ ^[0-9]+$ ]] || continue
+				rows+=("$line")
+				items+=("${#rows[@]}" "$(printf '%-30s %s' "$u@$ip:$port" "${rdir:+$rdir  }($(date -d "@${when:-0}" '+%d/%m/%Y %H:%M' 2>/dev/null))")")
+			done < <(sort -t'|' -k5,5nr "$f" 2>/dev/null)
+		fi
+		((${#rows[@]})) || return 2
+		items+=("N" "${cmsg_novo_remoto}")
+
+		choice=$(${DIALOG} \
+			--stdout \
+			--backtitle "$ccabec" \
+			--title "${cmsg_remotos_salvos^^}" \
+			--ok-label "${cmsg_Select}" \
+			--cancel-label "${cmsg_button_voltar}" \
+			--extra-button \
+			--extra-label "${cmsg_Remover}" \
+			--menu "${cmsg_escolha_remoto}" \
+			16 90 8 "${items[@]}")
+		case $? in
+		0)
+			[[ "$choice" == "N" ]] && return 2
+			IFS='|' read -r HP_USER HP_IP HP_PORT HP_RDIR _ <<<"${rows[choice - 1]}"
+			return 0
+			;;
+		3) # remover
+			[[ "$choice" =~ ^[0-9]+$ ]] || continue
+			local ru rip rport
+			IFS='|' read -r ru rip rport _ <<<"${rows[choice - 1]}"
+			conf "${cwarning}" "\n$(printf "${cmsg_remover_remoto}" "$ru@$rip:$rport")" && sh_hosts_remove "$ru" "$rip" "$rport"
+			;;
+		*) return 1 ;;
+		esac
+	done
+}
+
+# ------------------------------ acesso por chave ------------------------------
+# Depois de um login por senha: oferece instalar a chave do root desta máquina no remoto.
+sh_offer_ssh_key() {
+	local u="$1" ip="$2" port="$3"
+	local home key line
+
+	line="$(sh_hosts_get "$u" "$ip" "$port")"
+	[[ "$(cut -d'|' -f6 <<<"$line")" == "1" ]] && return 0 # usuário pediu para não perguntar
+
+	${DIALOG} \
+		--colors \
+		--backtitle "$ccabec" \
+		--title "${cmsg_Acesso_por_chave^^}" \
+		--yes-label "${cmsg_yeslabel}" \
+		--no-label "${cmsg_nolabel}" \
+		--extra-button \
+		--extra-label "${cmsg_chave_nunca}" \
+		--yesno "\n$(printf "${cmsg_chave_pergunta}" "$u@$ip")" \
+		13 90 >/dev/tty
+	case $? in
+	0) ;;
+	3)
+		sh_hosts_save "$u" "$ip" "$port" "" 1
+		sh_log "acesso por chave: não oferecer mais para $u@$ip:$port"
+		return 0
+		;;
+	*) return 0 ;;
+	esac
+
+	home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+	key="${home:-/root}/.ssh/id_ed25519"
+	if [[ ! -f "$key" ]]; then
+		install -d -m 700 "$(dirname "$key")"
+		if ! ssh-keygen -q -t ed25519 -N '' -C "${_APP_}@$(cat /proc/sys/kernel/hostname 2>/dev/null)" -f "$key" </dev/null >/dev/null 2>&1; then
+			info "${cmsg_chave_falhou}"
+			return 1
+		fi
+		sh_log "chave criada: $key"
+	fi
+
+	# instala sem duplicar (não depende de ssh-copy-id no remoto)
+	SSHPASS="$SSH_PASSWORD" sshpass -e ssh -p "$port" -o StrictHostKeyChecking=no "$u@$ip" \
+		'umask 077; mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys && k=$(cat) && { grep -qxF "$k" ~/.ssh/authorized_keys || printf "%s\n" "$k" >> ~/.ssh/authorized_keys; }' \
+		<"$key.pub" >/dev/null 2>&1
+
+	if ssh -p "$port" -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$u@$ip" true >/dev/null 2>&1; then
+		SSH_USE_PASS=0
+		SSH_PASSWORD="" # não é mais necessária
+		unset SSHPASS
+		sh_log "acesso por chave configurado: $u@$ip:$port"
+		info "${GREEN}$(printf "${cmsg_chave_ok}" "$u@$ip")${RESET}"
+	else
+		sh_log "acesso por chave: remoto $u@$ip:$port não aceitou a chave"
+		info "${cmsg_chave_falhou}"
+	fi
+}
+
+# ------------------------------ login da sessão ------------------------------
+# Faz o login (ou reaproveita o da sessão). Define SSH_BASE, REMOTE_HOST, RSUDO e SAME_MACHINE.
+sh_remote_auth() {
+	local u="$1" ip="$2" port="$3"
+
+	if ((RS_ACTIVE)) && [[ "$u" == "$RS_USER" && "$ip" == "$RS_IP" && "$port" == "$RS_PORT" ]]; then
+		sh_ssh_base "$u" "$ip" "$port"
+		REMOTE_HOST="$u@$ip"
+		return 0
+	fi
+	((RS_ACTIVE)) && sh_remote_disconnect # outro remoto
+
+	sh_ssh_login "$u" "$ip" "$port" || return 1
+	((SSH_USE_PASS)) && sh_offer_ssh_key "$u" "$ip" "$port"
+	sh_ssh_base "$u" "$ip" "$port"
+	REMOTE_HOST="$u@$ip"
+
+	# root pelo uid (não pelo nome); sem id no remoto, decide pelo nome
+	RSUDO=""
+	local ruid
+	ruid="$("${SSH_BASE[@]}" "id -u" 2>/dev/null)"
+	if [[ "$ruid" =~ ^[0-9]+$ ]]; then
+		((ruid == 0)) || RSUDO="sudo -n"
+	elif [[ "$u" != "root" ]]; then
+		RSUDO="sudo -n"
+	fi
+
+	# o "remoto" pode ser esta mesma máquina (ex.: 127.0.0.1): compara o boot_id
+	SAME_MACHINE=0
+	if [[ "$("${SSH_BASE[@]}" "cat /proc/sys/kernel/random/boot_id" 2>/dev/null)" == "$(cat /proc/sys/kernel/random/boot_id)" ]]; then
+		SAME_MACHINE=1
+		sh_log "remoto $u@$ip é esta mesma máquina"
+	fi
+
+	RS_ACTIVE=1
+	RS_USER="$u" RS_IP="$ip" RS_PORT="$port"
+	RS_TOOLS_OK=()
+	sh_hosts_save "$u" "$ip" "$port"
+	sh_log "sessão remota aberta: $u@$ip:$port ($( ((SSH_USE_PASS)) && echo senha || echo chave))"
+	return 0
+}
+
+# Garante a conexão: reaproveita a sessão ou mostra remotos salvos/formulário e faz o login
+sh_remote_connect() {
 	local title="$1"
-	local mode="${2:-origem}" # origem (vai ser lido) | destino (vai ser sobrescrito)
-	local kind="${3:-disk}"   # disk (disco/loop/LVM) | part (partição)
-	REMOTE_KIND="$kind"
-	local ssh_user="root" ssh_porta="22" ssh_ip txt local_ip line key val
-	local -a fields=() items=()
-	local -A seen=()
+	local u="root" ip port="22" txt local_ip
+	local -a fields=()
+
+	if ((RS_ACTIVE)); then
+		sh_remote_auth "$RS_USER" "$RS_IP" "$RS_PORT"
+		return
+	fi
 
 	local_ip=$(sh_get_local_ip)
-	ssh_ip="${local_ip%.*}.100"
+	ip="${local_ip%.*}.100"
+
+	sh_hosts_pick
+	case $? in
+	0)
+		u="$HP_USER" ip="$HP_IP" port="$HP_PORT"
+		sh_remote_auth "$u" "$ip" "$port" && return 0 # login direto; se falhar, cai no formulário
+		;;
+	1) return 1 ;;
+	esac
 
 	while true; do
 		exec 3>&1
@@ -3488,59 +3825,56 @@ sh_remote_pick_disk() {
 			--colors \
 			--mixedform "${cmsg_credenciais_servidor}" \
 			12 90 0 \
-			"${cmsg_Usuario_Remoto}" 1 1 "$ssh_user" 1 20 20 0 0 \
-			"${cmsg_IP_do_Servidor}" 2 1 "$ssh_ip" 2 20 30 0 0 \
-			"${cmsg_Porta_SSH}" 3 1 "$ssh_porta" 3 20 10 0 0 \
+			"${cmsg_Usuario_Remoto}" 1 1 "$u" 1 20 20 0 0 \
+			"${cmsg_IP_do_Servidor}" 2 1 "$ip" 2 20 30 0 0 \
+			"${cmsg_Porta_SSH}" 3 1 "$port" 3 20 10 0 0 \
 			2>&1 1>&3)
 		local st=$?
 		exec 3>&-
 		((st == 0)) || return 1
 
 		mapfile -t fields <<<"$txt"
-		ssh_user="${fields[0]}"
-		ssh_ip="${fields[1]}"
-		ssh_porta="${fields[2]}"
-		if [[ -z "$ssh_user" || -z "$ssh_ip" || -z "$ssh_porta" ]]; then
+		u="${fields[0]}" ip="${fields[1]}" port="${fields[2]}"
+		if [[ -z "$u" || -z "$ip" || ! "$port" =~ ^[0-9]+$ ]]; then
 			conf "*** ${cmsg_CONFIGURACAO_SSH} ***" "\n${cmsg_Todos_os_campos_devem_ser_preenchidos}\n"
 			continue
 		fi
+		sh_remote_auth "$u" "$ip" "$port" && return 0
+	done
+}
 
-		sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
-		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
+# Conecta num servidor SSH e escolhe um disco remoto.
+# Define: REMOTE_HOST (usuario@ip), REMOTE_DEV, REMOTE_SIZE (bytes), REMOTE_DESC, REMOTE_SECTOR, RSUDO e SSH_BASE.
+sh_remote_pick_disk() {
+	local title="$1"
+	local mode="${2:-origem}" # origem (vai ser lido) | destino (vai ser sobrescrito)
+	local kind="${3:-disk}"   # disk (disco/loop/LVM) | part (partição)
+	REMOTE_KIND="$kind"
+	local ssh_user ssh_ip line key val
+	local -a items=()
+	local -A seen=()
 
-		# ler disco cru exige root: sudo sem senha quando o usuário não é root
-		# root pelo uid (não pelo nome); sem id no remoto, decide pelo nome
-		RSUDO=""
-		local ruid
-		ruid="$("${SSH_BASE[@]}" "id -u" 2>/dev/null)"
-		if [[ "$ruid" =~ ^[0-9]+$ ]]; then
-			((ruid == 0)) || RSUDO="sudo -n"
-		elif [[ "$ssh_user" != "root" ]]; then
-			RSUDO="sudo -n"
+	# login (reaproveita a sessão); remoto sem root ou sem ferramentas: volta aos remotos/formulário
+	while true; do
+		if ! sh_remote_connect "$title"; then
+			[[ "$mode" == "origem" ]] && SESSION_EXIT=1 # 1ª tela das operações remoto -> local
+			return 1
 		fi
+		ssh_user="$RS_USER" ssh_ip="$RS_IP"
 		if ! "${SSH_BASE[@]}" "$RSUDO true" >/dev/null 2>&1; then
 			info "${cmsg_remoto_sem_root}"
-			unset SSHPASS
+			sh_remote_disconnect
 			continue
 		fi
-
 		# ferramentas: ler um disco remoto / gravar num disco remoto
-		REMOTE_HOST="$ssh_user@$ssh_ip"
 		local req="lsblk awk readlink blockdev cat" opt="fuser blkid"
 		[[ "$mode" == "destino" ]] && req="lsblk awk readlink blockdev dd" opt="fuser blkid sfdisk partx fdisk sha256sum"
-		if ! sh_remote_check_tools "$req" "$opt"; then
-			unset SSHPASS
+		if ! sh_remote_check_tools "$req" "$opt" sudo; then
+			sh_remote_disconnect
 			continue
 		fi
 		break
 	done
-
-	# o "remoto" pode ser esta mesma máquina (ex.: 127.0.0.1): compara o boot_id
-	SAME_MACHINE=0
-	if [[ "$("${SSH_BASE[@]}" "cat /proc/sys/kernel/random/boot_id" 2>/dev/null)" == "$(cat /proc/sys/kernel/random/boot_id)" ]]; then
-		SAME_MACHINE=1
-		sh_log "remoto $ssh_user@$ssh_ip é esta mesma máquina"
-	fi
 
 	# discos remotos (disco, loop e LVM), sem repetidos e sem volumes internos do LVM
 	local -A r_type=() r_size=() r_tran=() r_model=() r_busy=() r_fs=() r_label=() r_ptype=()
@@ -3613,7 +3947,7 @@ sh_remote_pick_disk() {
 
 	if ((${#r_order[@]} == 0)); then
 		info "${cmsg_nenhum_disco_remoto}"
-		unset SSHPASS
+		SESSION_EXIT=1
 		return 1
 	fi
 
@@ -3636,6 +3970,7 @@ sh_remote_pick_disk() {
 			desc="$(printf "$sep%-6s$sep%7s$sep%-30s" "${r_tran[$d]}" "$(numfmt --to=iec "${r_size[$d]}")" "${r_model[$d]}")"
 		fi
 		[[ -n "${r_busy[$d]}" ]] && desc+=" ${RED}[${cmsg_em_uso}]${RESET}"
+		desc+="$(sh_session_tag r "$d")"
 		items+=("$d" "$desc")
 	done
 
@@ -3648,6 +3983,9 @@ sh_remote_pick_disk() {
 		rtitle="${cmsg_Particao_remota}"
 	fi
 	REMOTE_HOST="$ssh_user@$ssh_ip"
+	# na sessão, o cursor começa no dispositivo seguinte ao último usado
+	REMOTE_DEV=""
+	[[ -n "$RS_LAST_R" ]] && REMOTE_DEV="$(sh_next_item "$RS_LAST_R" "${r_order[@]}")"
 
 	while true; do
 		REMOTE_DEV=$(${DIALOG} \
@@ -3660,7 +3998,7 @@ sh_remote_pick_disk() {
 			--default-item "$REMOTE_DEV" \
 			--menu "$prompt" \
 			20 100 12 "${items[@]}") || {
-			unset SSHPASS
+			[[ "$mode" == "origem" ]] && SESSION_EXIT=1 # voltar na 1ª lista encerra a sessão
 			return 1
 		}
 		[[ "$mode" != "destino" ]] && break
@@ -3679,7 +4017,6 @@ sh_remote_pick_disk() {
 
 	# origem remota em uso: avisa (cópia pode ficar inconsistente)
 	if [[ "$mode" != "destino" ]] && ! sh_check_source_busy "$REMOTE_DEV" remote; then
-		unset SSHPASS
 		return 1
 	fi
 	return 0
@@ -3705,11 +4042,11 @@ sh_local_disk_to_remote_disk() {
 		lbl_dst="${cmsg_part_destino}"
 		msg_menor="${cmsg_A_particao_de_DESTINO_e_menor}"
 		src=$(sh_list_partition "${cmsg_part_origem}" "" origem)
-		[[ -z "$src" ]] && return 1
+		[[ -z "$src" ]] && { SESSION_EXIT=1; return 1; }
 		sh_part_info
 	else
 		src=$(sh_list_disk "${cmsg_disco_origem}" "" origem)
-		[[ -z "$src" ]] && return 1
+		[[ -z "$src" ]] && { SESSION_EXIT=1; return 1; }
 		sh_disk_info
 	fi
 	DEVICE_SOURCE="$src"
@@ -3805,6 +4142,8 @@ ${cmsg_Destino^^}: ${RED}$REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}" \
 	if ((nchoice != 0)); then
 		info "${cmsg_falha_clonagem}"
 	else
+		sh_session_mark r "$REMOTE_DEV" gravada
+		sh_session_mark l "$src" copiada
 		display_result "$REMOTE_HOST:$REMOTE_DEV" \
 			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
 			"$(sh_time_summary)\n" \
@@ -3828,13 +4167,12 @@ sh_remote_disk_to_image() {
 	sh_remote_pick_disk "$title" origem "$kind" || return 1
 
 	image_format=$(sh_choose_image_format) || {
-		unset SSHPASS
 		return 1
 	}
 
 	base="${REMOTE_HOST#*@}_${REMOTE_DEV//\//_}"
 	base="${base//__/_}"
-	outfile="${PWD}/${base}"
+	outfile="${RS_LDIR:-$PWD}/${base}"
 	case "$image_format" in
 	raw) outfile+=".img" ;;
 	qcow2) outfile+=".qcow2" ;;
@@ -3853,17 +4191,14 @@ sh_remote_disk_to_image() {
 			--cancel-label "${cmsg_button_voltar}" \
 			--inputbox "$REMOTE_HOST:$REMOTE_DEV ($REMOTE_DESC)\n\n${cmsg_Entre_com_o_nome_da_imagem}:" \
 			12 100 "$outfile") || {
-			unset SSHPASS
 			return 1
 		}
 		if [[ -z "$outfile" ]]; then
 			conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "\n${cmsg_Nome_da_imagem_invalido_Tente_novamente}\n" && continue
-			unset SSHPASS
 			return 1
 		fi
 		if [[ -e "$outfile" ]]; then
 			conf "*** ${cmsg_NOME_DA_IMAGEM} ***" "${RED}$(printf "${cmsg_Imagem_s_ja_existe_Tentar_outro}" "$outfile")" && continue
-			unset SSHPASS
 			return 1
 		fi
 		# o caminho do disco remoto só vale aqui se o remoto for esta mesma máquina
@@ -3879,7 +4214,6 @@ sh_remote_disk_to_image() {
 		"${lbl}: ${GREEN}$REMOTE_HOST:$REMOTE_DEV | $REMOTE_DESC${RESET}\n\
 ${cmsg_imagem_destino} : ${RED}$outfile\n\n" \
 		"${BOLD}${YELLOW}${cmsg_continuar_com_a_clonagem}?\n"; then
-		unset SSHPASS
 		return 1
 	fi
 
@@ -3929,7 +4263,7 @@ ${cmsg_imagem_destino} : ${RED}$outfile" \
 	if ((nchoice == 0)); then
 		sh_meta_from_remote_dev "$REMOTE_DEV" # ainda com acesso ao remoto
 	fi
-	unset SSHPASS
+	:
 
 	if ((nchoice == 0)) && [[ "$image_format" == "qcow2" ]]; then
 		local tmp_raw="$outfile.tmp.raw"
@@ -3962,6 +4296,10 @@ ${cmsg_imagem_destino} : ${RED}$outfile" \
 	sh_wait_file "$chash" && META_CONTENT_HASH="$(<"$chash")"
 	rm -f "$chash"
 	sh_write_image_meta "$outfile"
+
+	RS_LDIR="$(dirname "$outfile")"
+	RS_IMGFMT="$image_format"
+	sh_session_mark r "$REMOTE_DEV" copiada
 
 	SECTOR_SIZE="$REMOTE_SECTOR"
 	display_result "$outfile" \
@@ -4057,6 +4395,8 @@ ${BLUE} ${lbl_src}:  $DEVICE_SOURCE${SIZE_SOURCE:+ | $SIZE_SOURCE}${MODEL_SOURCE
 	if ((nchoice != 0)); then
 		info "${cmsg_falha_clonagem}"
 	else
+		sh_session_mark r "$REMOTE_DEV" copiada
+		sh_session_mark l "$target" gravada
 		display_result "fdisk -l $target" \
 			"${BOLD}${GREEN}${REVERSE}${cmsg_clonagem_concluida}${RESET}\n\n" \
 			"$(sh_time_summary)\n" \
@@ -4076,6 +4416,21 @@ sh_restore_network_ssh() {
 	local_ip=$(sh_get_local_ip)
 	ssh_ip="${local_ip%.*}.100"
 
+	# remoto: o da sessão, um salvo ou novo; arquivo: o último digitado na sessão
+	if ((RS_ACTIVE)); then
+		ssh_user="$RS_USER" ssh_ip="$RS_IP" ssh_porta="$RS_PORT"
+	else
+		sh_hosts_pick
+		case $? in
+		0) ssh_user="$HP_USER" ssh_ip="$HP_IP" ssh_porta="$HP_PORT" && [[ -n "$HP_RDIR" ]] && rfile="${HP_RDIR%/}/" ;;
+		1)
+			SESSION_EXIT=1
+			return 1
+			;;
+		esac
+	fi
+	[[ -n "$RS_RFILE" ]] && rfile="$RS_RFILE"
+
 	# 1. servidor e arquivo remoto
 	while true; do
 		exec 3>&1
@@ -4094,7 +4449,10 @@ sh_restore_network_ssh() {
 			2>&1 1>&3)
 		local st=$?
 		exec 3>&-
-		((st == 0)) || return 1
+		if ((st != 0)); then
+			SESSION_EXIT=1 # o formulário é a 1ª tela desta operação
+			return 1
+		fi
 
 		mapfile -t fields <<<"$txt"
 		ssh_user="${fields[0]}"
@@ -4112,9 +4470,8 @@ sh_restore_network_ssh() {
 			continue
 		fi
 
-		sh_ssh_login "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
-		sh_ssh_base "$ssh_user" "$ssh_ip" "$ssh_porta"
-		REMOTE_HOST="$ssh_user@$ssh_ip"
+		RS_RFILE="$rfile"
+		sh_remote_auth "$ssh_user" "$ssh_ip" "$ssh_porta" || continue
 		if ! sh_remote_check_tools "cat stat" "sha256sum zstd xz gzip"; then
 			unset SSHPASS
 			continue
@@ -4151,6 +4508,7 @@ sh_restore_network_ssh() {
 		--title "${cmsg_Restaurar_em^^}" \
 		--ok-label "${cmsg_Select}" \
 		--cancel-label "${cmsg_button_voltar}" \
+		--default-item "${RS_RKIND:-disco}" \
 		--menu "${DEVICE_SOURCE}" \
 		10 70 0 \
 		disco "${cmsg_Disco_inteiro}" \
@@ -4228,6 +4586,9 @@ ${BLUE} ${cmsg_imagem_origem}:  $DEVICE_SOURCE \n" \
 			"$(sh_time_summary)\n" \
 			"${BOLD}${WHITE}$(fdisk -l "$target" 2>&1)"
 		sh_ask_regen_uuids "$target"
+		sh_hosts_save "$ssh_user" "$ssh_ip" "$ssh_porta" "$(dirname "$rfile")"
+		RS_RKIND="$kind"
+		sh_session_mark l "$target" gravada
 	fi
 	sh_reset_conf
 	return $nchoice
@@ -4363,15 +4724,15 @@ sh_submenu() {
 		restaurar:1) sh_run_op "Imagem -> Disco" sh_clone_image_to_disk ;;
 		restaurar:2) sh_run_op "Imagem -> Partição" sh_clone_image_to_part ;;
 		restaurar:3) sh_run_op "ISO -> Pendrive/Disco" sh_execute_iso2usb ;;
-		rede:1) sh_run_op "Disco local -> Imagem remota" sh_clone_network_ssh disk ;;
-		rede:2) sh_run_op "Partição local -> Imagem remota" sh_clone_network_ssh part ;;
-		rede:3) sh_run_op "Disco local -> Disco remoto" sh_local_disk_to_remote_disk disk ;;
-		rede:4) sh_run_op "Partição local -> Partição remota" sh_local_disk_to_remote_disk part ;;
-		rede:5) sh_run_op "Imagem remota -> Disco/Partição local" sh_restore_network_ssh ;;
-		rede:6) sh_run_op "Disco remoto -> Imagem local" sh_remote_disk_to_image disk ;;
-		rede:7) sh_run_op "Partição remota -> Imagem local" sh_remote_disk_to_image part ;;
-		rede:8) sh_run_op "Disco remoto -> Disco local" sh_remote_disk_to_disk disk ;;
-		rede:9) sh_run_op "Partição remota -> Partição local" sh_remote_disk_to_disk part ;;
+		rede:1) sh_run_op "Disco local -> Imagem remota" sh_remote_session sh_clone_network_ssh disk ;;
+		rede:2) sh_run_op "Partição local -> Imagem remota" sh_remote_session sh_clone_network_ssh part ;;
+		rede:3) sh_run_op "Disco local -> Disco remoto" sh_remote_session sh_local_disk_to_remote_disk disk ;;
+		rede:4) sh_run_op "Partição local -> Partição remota" sh_remote_session sh_local_disk_to_remote_disk part ;;
+		rede:5) sh_run_op "Imagem remota -> Disco/Partição local" sh_remote_session sh_restore_network_ssh ;;
+		rede:6) sh_run_op "Disco remoto -> Imagem local" sh_remote_session sh_remote_disk_to_image disk ;;
+		rede:7) sh_run_op "Partição remota -> Imagem local" sh_remote_session sh_remote_disk_to_image part ;;
+		rede:8) sh_run_op "Disco remoto -> Disco local" sh_remote_session sh_remote_disk_to_disk disk ;;
+		rede:9) sh_run_op "Partição remota -> Partição local" sh_remote_session sh_remote_disk_to_disk part ;;
 		esac
 	done
 }
@@ -4429,6 +4790,29 @@ sh_choose_clone_type
 #########################################################################
 # ChangeLog
 #########################################################################
+#
+# 2026-09-27 (v6.9.24.20260924)
+#
+# Rede (SSH)
+#  - Menu Rede em sessão: depois de uma cópia, continua conectado ao mesmo
+#    remoto e volta à primeira lista da operação; só o "Voltar" dela encerra.
+#    Itens usados aparecem marcados [copiada]/[gravada] e o cursor vai para
+#    o seguinte; formato, diretório e último arquivo ficam sugeridos. A senha
+#    (se usada) fica só na memória e é apagada ao encerrar.
+#  - Remotos salvos em ~/.config/chili-clonedisk/remotos.conf (usuário, IP,
+#    porta, último diretório remoto; sem senha, permissão 600): lista para
+#    escolher ao entrar em Rede, com "Novo remoto" e "Remover".
+#  - Depois de um login por senha, oferece configurar acesso por chave SSH
+#    (cria a chave do root se preciso e instala no remoto sem duplicar);
+#    "Não perguntar mais" fica gravado para aquele remoto.
+#  - ssh-keygen (openssh) incluído nas dependências.
+#
+# Correções
+#  - conf() alterava a variável nchoice de quem a chamava: responder "Não"
+#    à verificação da gravação em "Disco/Partição local -> remoto" fazia a
+#    cópia (bem-sucedida) ser registrada como FALHA.
+#  - Checagem de ferramentas no remoto só usa sudo nas operações que leem ou
+#    gravam discos; enviar/restaurar imagem com usuário comum não exige sudo.
 #
 # 2026-09-24 (v6.9.24.20260924)
 #
